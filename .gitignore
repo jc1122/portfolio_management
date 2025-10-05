@@ -22,6 +22,9 @@ dist/
 .vscode/
 .idea/
 
+# Codex CLI artifacts (contains secrets/api keys)
+.codex/
+
 # Logs
 *.log
 
