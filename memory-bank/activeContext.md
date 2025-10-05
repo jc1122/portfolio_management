@@ -1,0 +1,26 @@
+# Active Context
+
+## Current Focus
+- Documenting state-of-the-art portfolio guidelines and translating them into a modular offline Python CLI design.
+
+## Recent Changes
+- Captured project scope, architectural patterns, and technology stack in the Memory Bank based on the detailed brief and literature survey.
+- Recorded portfolio construction goals (core diversification, factor tilts, risk overlays) and future sentiment-integration ambitions.
+
+## Next Steps
+- Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data.
+- Prototype the data acquisition and sanitation modules, including local caching of Stooq datasets.
+- Scaffold the CLI application structure with configuration management and plug-in strategy adapters (equal weight, risk parity, mean-variance).
+- Design the backtesting engine with transaction cost modeling, rebalance bands, and performance reporting outputs.
+- Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.
+
+## Decisions & Considerations
+- Rebalance cadence set to monthly/quarterly with ±20% opportunistic bands to limit turnover and commissions.
+- Portfolio guardrails enforce diversification (max 25% per ETF, min 10% bonds/cash, cap 90% equities post-overlays).
+- Preference for leveraging established libraries (`PyPortfolioOpt`, `riskparityportfolio`, `empyrical`) to minimize bespoke optimization code.
+- Future sentiment overlays will be treated as satellite tilts blended through Black–Litterman or capped allocation shifts.
+
+## Insights
+- Combining diversified core allocations with trend and volatility overlays can improve risk-adjusted returns without sacrificing long-term compounding.
+- Sentiment-driven signals tend to decay quickly; the planned architecture must support regime-aware controls and cooldowns before integration.
+- Maintaining rigorous documentation and run logs remains essential to combat agent memory resets and behavioral drift.
