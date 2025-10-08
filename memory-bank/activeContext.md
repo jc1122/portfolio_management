@@ -1,15 +1,16 @@
 # Active Context
 
 ## Current Focus
-- Documenting state-of-the-art portfolio guidelines and translating them into a modular offline Python CLI design.
+- Standing up the data ingestion and sanitization workflow, including tooling to align Stooq histories with the brokers' tradeable universe.
 
 ## Recent Changes
 - Captured project scope, architectural patterns, and technology stack in the Memory Bank based on the detailed brief and literature survey.
 - Recorded portfolio construction goals (core diversification, factor tilts, risk overlays) and future sentiment-integration ambitions.
+- Implemented an optimized `prepare_tradeable_data.py` script that indexes unpacked Stooq files, matches them against BOŚ/mBank universes, and exports price panels with multicore support and cached metadata.
 
 ## Next Steps
-- Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data.
-- Prototype the data acquisition and sanitation modules, including local caching of Stooq datasets.
+- Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
+- Finalize the data acquisition and sanitation modules, extending validation on price quality, missing data handling, and currency alignment.
 - Scaffold the CLI application structure with configuration management and plug-in strategy adapters (equal weight, risk parity, mean-variance).
 - Design the backtesting engine with transaction cost modeling, rebalance bands, and performance reporting outputs.
 - Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.

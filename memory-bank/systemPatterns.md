@@ -11,6 +11,7 @@
 - **Configuration-Driven Orchestration**: CLI arguments or YAML/JSON config dictate assets, rebalance frequency, transaction costs, and strategy choice to avoid hard-coded logic.
 - **Analytics Layer Separation**: Performance metrics (Empyrical/QuantStats) and visualization (Matplotlib) operate on standardized return series, decoupled from strategy implementation.
 - **Extension Hooks**: Reserve interfaces for advanced overlays (trend filters, volatility targeting, sentiment-based views) to be layered on post-MVP without rewriting core modules.
+- **Cached Data Indexing**: Stooq file discovery is front-loaded into a reusable metadata index, with multicore directory traversal and export to keep subsequent runs fast and deterministic.
 
 ## Component Relationships
 - `DataFetcher` feeds `DataSanitizer`, which outputs aligned price frames consumed by `AssetSelector` and strategy modules.
