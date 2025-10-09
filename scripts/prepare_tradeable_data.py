@@ -132,6 +132,8 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
     non_positive_close = 0
     zero_volume = 0
     missing_volume = 0
+    zero_volume_ratio = 0.0
+    zero_volume_severity: Optional[str] = None
     duplicate_dates = False
     non_monotonic_dates = False
     seen_dates: set[str] = set()
@@ -211,6 +213,18 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
             diagnostics["price_rows"] = str(row_count)
             diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
 
+            if row_count:
+                zero_volume_ratio = zero_volume / row_count
+                if zero_volume:
+                    if zero_volume_ratio >= 0.5:
+                        zero_volume_severity = "critical"
+                    elif zero_volume_ratio >= 0.1:
+                        zero_volume_severity = "high"
+                    elif zero_volume_ratio >= 0.01:
+                        zero_volume_severity = "moderate"
+                    else:
+                        zero_volume_severity = "low"
+
             if invalid_rows:
                 flags.append(f"invalid_rows={invalid_rows}")
             if non_numeric_prices:
@@ -221,12 +235,20 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
                 flags.append(f"missing_volume={missing_volume}")
             if zero_volume:
                 flags.append(f"zero_volume={zero_volume}")
+                flags.append(f"zero_volume_ratio={zero_volume_ratio:.4f}")
+                if zero_volume_severity:
+                    flags.append(f"zero_volume_severity={zero_volume_severity}")
             if duplicate_dates:
                 flags.append("duplicate_dates")
             if non_monotonic_dates:
                 flags.append("non_monotonic_dates")
-            if flags and diagnostics["data_status"] == "ok":
+
+            if zero_volume_severity:
+                if diagnostics["data_status"] == "ok":
+                    diagnostics["data_status"] = "warning"
+            elif flags and diagnostics["data_status"] == "ok":
                 diagnostics["data_status"] = "warning"
+
             diagnostics["data_flags"] = ";".join(flags)
     except OSError as exc:
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"

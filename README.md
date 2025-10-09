@@ -45,7 +45,7 @@ Optional flags: `--include-empty-prices` forces exports for tickers without usab
 
 ## Status
 - Documentation and repository scaffolding complete.
-- Stooq data preparation script now enriches match outputs with per-instrument price coverage and currency diagnostics while preventing cross-venue fallbacks.
+- Stooq data preparation script now enriches match outputs with per-instrument price coverage, currency diagnostics, and zero-volume severity tagging while preventing cross-venue fallbacks; flagged listings remain available but carry warnings in `data/metadata/tradeable_data_flags.csv`.
 - Latest data export matched 5,560 instruments (4,146 price files after dropping two empty histories) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
 - Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
 

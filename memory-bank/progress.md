@@ -1,7 +1,7 @@
 # Progress Log
 
 ## Current Status
-- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, and new validation flags for suspect price histories.
+- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, and zero-volume severity tagging to highlight suspect histories.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
@@ -12,11 +12,12 @@
 - Latest run matched 5 ,560 instruments, exported 4 ,146 price files (skipping two empty histories), and clearly tagged 1 ,262 unmatched assets by missing extension (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
 - Captured 258 LSE multi-currency ETFs as explicit currency overrides and surfaced two empty price files (`HSON.US`, `WPS.UK`) for remediation.
 - Enhanced `scripts/prepare_tradeable_data.py` with configurable LSE currency handling, deeper file-level validation (duplicate dates, non-positive closes, missing/zero volume), a `data_flags` column in the match report, and automatic skipping/pruning of empty Stooq exports.
+- Classified zero-volume issues into low/moderate/high/critical severities, regenerated the tradeable match report, and wrote `data/metadata/tradeable_data_flags.csv` to spotlight the 29 critical and 170 high-risk LSE listings alongside lower-severity U.S. blips—currently treated as warnings only, not filters.
 
 ## Outstanding Work
 - Assemble the tradable asset list and broker fee schedule to inform backtest assumptions.
 - Review `override` currency cases and decide whether FX conversion is required before backtesting; triage the empty Stooq histories now skipped during export.
-- Reconcile remaining unmatched broker instruments (especially those needing `.TO`, `.DE`, `.FR/.PA`, `.CH`) or document proxy decisions; enrich metadata with currency/asset-class tags and address the new validation flags surfaced in `data_flags`.
+- Reconcile remaining unmatched broker instruments (especially those needing `.TO`, `.DE`, `.FR/.PA`, `.CH`) or document proxy decisions; enrich metadata with currency/asset-class tags and monitor the high/critical zero-volume cohorts while remaining offline.
 - Implement modular Python components (data fetch/clean, strategy adapters, backtesting, reporting) leveraging identified libraries.
 - Define analytics/reporting templates (CLI summaries, CSV exports, charts) and establish logging conventions.
 - Research and catalog open-source sentiment/news pipelines for future integration.
@@ -27,6 +28,7 @@
 - Transaction cost assumptions and slippage modeling must be validated against real broker fees.
 - Potential complexity creep when integrating sentiment overlays; requires disciplined scope management.
 - Currency inconsistencies across venues (e.g., LSE USD share classes) require clear policy before portfolio analytics can be trusted.
+- Offline-only operation currently blocks automated dataset refresh; coordinate manual data transfer or wait for approval before attempting downloads.
 
 ## Notes
 - Update documentation after each development milestone, especially when integrating new libraries or changing risk controls.
