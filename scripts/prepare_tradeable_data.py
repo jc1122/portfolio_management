@@ -27,22 +27,39 @@ import csv
 import logging
 import os
 import re
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from queue import Queue
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@contextmanager
+def log_duration(step: str):
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        LOGGER.info("%s completed in %.2fs", step, elapsed)
+
+
 @dataclass
 class StooqFile:
     ticker: str
     stem: str
-    rel_path: Path
+    rel_path: str
     region: str
     category: str
+
+    def to_path(self) -> Path:
+        return Path(self.rel_path)
 
 
 @dataclass
@@ -63,26 +80,54 @@ class TradeableMatch:
     strategy: str
 
 
-def _scan_subtree(base_dir: Path, rel_prefix: Path) -> List[Path]:
-    """Return a list of relative TXT file paths within a subtree using os.scandir."""
-    pending: List[Tuple[Path, Path]] = [(base_dir, rel_prefix)]
-    rel_paths: List[Path] = []
+def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
+    """Collect relative TXT file paths within the Stooq tree using a worker queue."""
+    queue: Queue[Tuple[Path, Path]] = Queue()
+    queue.put((base_dir, Path()))
+    rel_paths: List[str] = []
+    lock = threading.Lock()
 
-    while pending:
-        dir_path, rel_dir = pending.pop()
-        try:
-            with os.scandir(dir_path) as it:
-                for entry in it:
-                    name = entry.name
-                    if not name or name.startswith("."):
-                        continue
-                    if entry.is_dir(follow_symlinks=False):
-                        pending.append((Path(entry.path), rel_dir / name))
-                    elif entry.is_file(follow_symlinks=False) and name.lower().endswith(".txt"):
-                        rel_paths.append(rel_dir / name)
-        except OSError as exc:
-            LOGGER.warning("Unable to scan %s: %s", dir_path, exc)
-            continue
+    max_workers = max(1, max_workers)
+
+    def worker() -> None:
+        while True:
+            item = queue.get()
+            if item is None:
+                queue.task_done()
+                break
+            dir_path, rel_dir = item
+            try:
+                with os.scandir(dir_path) as it:
+                    for entry in it:
+                        name = entry.name
+                        if not name or name.startswith("."):
+                            continue
+                        if entry.is_dir(follow_symlinks=False):
+                            queue.put((Path(entry.path), rel_dir / name))
+                        elif entry.is_file(follow_symlinks=False) and name.lower().endswith(".txt"):
+                            rel_file = rel_dir / name
+                            rel_str = rel_file.as_posix()
+                            with lock:
+                                rel_paths.append(rel_str)
+            except OSError as exc:
+                LOGGER.warning("Unable to scan %s: %s", dir_path, exc)
+            finally:
+                queue.task_done()
+
+    threads = [
+        threading.Thread(target=worker, name=f"stooq-scan-{idx}", daemon=True)
+        for idx in range(max_workers)
+    ]
+    for thread in threads:
+        thread.start()
+
+    queue.join()
+
+    for _ in threads:
+        queue.put(None)
+
+    for thread in threads:
+        thread.join()
 
     return rel_paths
 
@@ -111,45 +156,19 @@ def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> List[StooqFile
     if not data_dir.exists():
         raise FileNotFoundError(f"Data directory not found: {data_dir}")
 
-    relative_paths: List[Path] = []
-    subdirs: List[Path] = []
-
-    try:
-        with os.scandir(data_dir) as it:
-            for entry in it:
-                name = entry.name
-                if not name or name.startswith("."):
-                    continue
-                if entry.is_dir(follow_symlinks=False):
-                    subdirs.append(Path(entry.path))
-                elif entry.is_file(follow_symlinks=False) and name.lower().endswith(".txt"):
-                    relative_paths.append(Path(name))
-    except OSError as exc:
-        raise RuntimeError(f"Unable to scan data directory {data_dir}: {exc}") from exc
-
-    if max_workers > 1 and len(subdirs) > 1:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(_scan_subtree, subdir, Path(subdir.name)): subdir
-                for subdir in subdirs
-            }
-            for future in as_completed(futures):
-                relative_paths.extend(future.result())
-    else:
-        for subdir in subdirs:
-            relative_paths.extend(_scan_subtree(subdir, Path(subdir.name)))
-
-    relative_paths.sort(key=lambda p: p.as_posix())
+    relative_paths = _collect_relative_paths(data_dir, max_workers)
+    relative_paths.sort()
 
     entries: List[StooqFile] = []
-    for rel_path in relative_paths:
+    for rel_path_str in relative_paths:
+        rel_path = Path(rel_path_str)
         region, category = derive_region_and_category(rel_path)
         ticker = rel_path.stem.upper()
         entries.append(
             StooqFile(
                 ticker=ticker,
                 stem=rel_path.stem.upper(),
-                rel_path=rel_path,
+                rel_path=rel_path_str,
                 region=region,
                 category=category,
             )
@@ -169,7 +188,7 @@ def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
                 [
                     entry.ticker,
                     entry.stem,
-                    entry.rel_path.as_posix(),
+                    entry.rel_path,
                     entry.region,
                     entry.category,
                 ]
@@ -183,12 +202,12 @@ def read_stooq_index(csv_path: Path) -> List[StooqFile]:
     with open(csv_path, newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            rel_path = Path(row["relative_path"])
+            rel_path_str = row["relative_path"]
             entries.append(
                 StooqFile(
                     ticker=row["ticker"].upper(),
                     stem=row["stem"].upper(),
-                    rel_path=rel_path,
+                    rel_path=rel_path_str,
                     region=row.get("region", ""),
                     category=row.get("category", ""),
                 )
@@ -423,7 +442,7 @@ def write_match_report(matches: Sequence[TradeableMatch], output_path: Path) -> 
                     match.instrument.name,
                     match.instrument.currency,
                     match.matched_ticker,
-                    match.stooq_file.rel_path.as_posix(),
+                    match.stooq_file.rel_path,
                     match.stooq_file.region,
                     match.stooq_file.category,
                     match.strategy,
@@ -576,8 +595,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-workers",
         type=int,
-        default=1,
-        help="Maximum number of threads to use for matching and exporting.",
+        default=None,
+        help="Maximum number of threads to use for matching and exporting (auto if unset).",
     )
     parser.add_argument(
         "--index-workers",
@@ -601,33 +620,52 @@ def main() -> None:
 
     data_dir = args.data_dir
     metadata_path = args.metadata_output
-    index_workers = args.index_workers if args.index_workers > 0 else args.max_workers
+    cpu_count = os.cpu_count() or 1
+    auto_workers = min(8, cpu_count)
+    max_workers = args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
+    max_workers = max(1, max_workers)
+    index_workers = args.index_workers if args.index_workers and args.index_workers > 0 else max_workers
     index_workers = max(1, index_workers)
-    if metadata_path.exists() and not args.force_reindex:
-        stooq_index = read_stooq_index(metadata_path)
-    else:
-        stooq_index = build_stooq_index(data_dir, max_workers=index_workers)
-        write_stooq_index(stooq_index, metadata_path)
+    LOGGER.info(
+        "Worker configuration: match/export=%s, index=%s (cpu=%s)",
+        max_workers,
+        index_workers,
+        cpu_count,
+    )
 
-    tradeables = load_tradeable_instruments(args.tradeable_dir)
+    if metadata_path.exists() and not args.force_reindex:
+        with log_duration("stooq_index_load"):
+            stooq_index = read_stooq_index(metadata_path)
+    else:
+        with log_duration("stooq_index_build"):
+            stooq_index = build_stooq_index(data_dir, max_workers=index_workers)
+        with log_duration("stooq_index_write"):
+            write_stooq_index(stooq_index, metadata_path)
+
+    with log_duration("tradeable_load"):
+        tradeables = load_tradeable_instruments(args.tradeable_dir)
 
     stooq_by_ticker, stooq_by_stem = build_stooq_lookup(stooq_index)
-    matches, unmatched = match_tradeables(
-        tradeables,
-        stooq_by_ticker,
-        stooq_by_stem,
-        max_workers=max(1, args.max_workers),
-    )
-    write_match_report(matches, args.match_report)
-    write_unmatched_report(unmatched, args.unmatched_report)
+    with log_duration("tradeable_match"):
+        matches, unmatched = match_tradeables(
+            tradeables,
+            stooq_by_ticker,
+            stooq_by_stem,
+            max_workers=max_workers,
+        )
+    with log_duration("tradeable_match_report"):
+        write_match_report(matches, args.match_report)
+    with log_duration("tradeable_unmatched_report"):
+        write_unmatched_report(unmatched, args.unmatched_report)
 
-    export_tradeable_prices(
-        matches,
-        data_dir,
-        args.prices_output,
-        overwrite=args.overwrite_prices,
-        max_workers=max(1, args.max_workers),
-    )
+    with log_duration("tradeable_export"):
+        export_tradeable_prices(
+            matches,
+            data_dir,
+            args.prices_output,
+            overwrite=args.overwrite_prices,
+            max_workers=max_workers,
+        )
 
 
 if __name__ == "__main__":
