@@ -29,15 +29,24 @@ import os
 import re
 import threading
 import time
-from datetime import datetime
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
+try:
+    import pandas as pd
+except ImportError:  # pragma: no cover - fallback for environments without pandas
+    pd = None  # type: ignore[assignment]
+    _PANDAS_IMPORT_ERROR = True
+else:
+    _PANDAS_IMPORT_ERROR = False
+
+_LEGACY_WARNING_EMITTED = False
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +71,21 @@ SYMBOL_ALIAS_MAP: Dict[Tuple[str, str], List[str]] = {
     ("NRZ", ".US"): ["RITM.US"],
     ("DWAV", ".US"): ["QBTS.US"],
 }
+
+STOOQ_COLUMNS = [
+    "ticker",
+    "per",
+    "date",
+    "time",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "openint",
+]
+
+STOOQ_PANDAS_COLUMNS = ["date", "close", "volume"]
 
 
 @contextmanager
@@ -126,7 +150,139 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         diagnostics["data_status"] = "missing_file"
         return diagnostics
 
-    expected_cols = 10
+    if pd is None:
+        return _summarize_price_file_csv(file_path, diagnostics)
+
+    try:
+        raw_df = pd.read_csv(
+            file_path,
+            header=None,
+            names=STOOQ_COLUMNS,
+            usecols=STOOQ_PANDAS_COLUMNS,
+            comment="<",
+            dtype=str,
+            engine="c",
+            encoding="utf-8",
+            keep_default_na=False,
+            na_filter=False,
+        )
+    except ValueError:
+        raw_df = pd.read_csv(
+            file_path,
+            header=None,
+            names=STOOQ_COLUMNS,
+            usecols=STOOQ_PANDAS_COLUMNS,
+            comment="<",
+            dtype=str,
+            engine="python",
+            encoding="utf-8",
+            keep_default_na=False,
+            na_filter=False,
+        )
+    except pd.errors.EmptyDataError:
+        diagnostics["data_status"] = "empty"
+        return diagnostics
+    except pd.errors.ParserError as exc:
+        diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
+        return diagnostics
+    except OSError as exc:
+        diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
+        return diagnostics
+
+    if raw_df.empty:
+        diagnostics["data_status"] = "empty"
+        return diagnostics
+
+    for column in raw_df.columns:
+        raw_df[column] = raw_df[column].str.strip()
+
+    if not raw_df.empty:
+        first_row = raw_df.iloc[0]
+        if all(
+            isinstance(first_row[column], str) and first_row[column].lower() == column
+            for column in raw_df.columns
+        ):
+            raw_df = raw_df.iloc[1:].copy()
+
+    initial_rows = len(raw_df)
+    data_df = raw_df[raw_df["date"].str.fullmatch(r"\d{8}", na=False)].copy()
+    invalid_rows = initial_rows - len(data_df)
+
+    if data_df.empty:
+        diagnostics["data_status"] = "empty"
+        return diagnostics
+
+    first_date = data_df["date"].iloc[0]
+    last_date = data_df["date"].iloc[-1]
+    row_count = len(data_df)
+
+    close_numeric = pd.to_numeric(data_df["close"], errors="coerce")
+    volume_numeric = pd.to_numeric(data_df["volume"], errors="coerce")
+
+    non_numeric_prices = int(close_numeric.isna().sum())
+    non_positive_close = int((close_numeric[close_numeric.notna()] <= 0).sum())
+    missing_volume = int(volume_numeric.isna().sum())
+    zero_volume = int((volume_numeric == 0).sum())
+
+    duplicate_dates = bool(data_df["date"].duplicated().any())
+    non_monotonic_dates = not bool(data_df["date"].is_monotonic_increasing)
+
+    zero_volume_ratio = (zero_volume / row_count) if row_count else 0.0
+    zero_volume_severity: Optional[str] = None
+    if zero_volume:
+        if zero_volume_ratio >= 0.5:
+            zero_volume_severity = "critical"
+        elif zero_volume_ratio >= 0.1:
+            zero_volume_severity = "high"
+        elif zero_volume_ratio >= 0.01:
+            zero_volume_severity = "moderate"
+        else:
+            zero_volume_severity = "low"
+
+    diagnostics["price_start"] = format_stooq_date(first_date)
+    diagnostics["price_end"] = format_stooq_date(last_date)
+    diagnostics["price_rows"] = str(row_count)
+    diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
+
+    flags: List[str] = []
+    if invalid_rows:
+        flags.append(f"invalid_rows={invalid_rows}")
+    if non_numeric_prices:
+        flags.append(f"non_numeric_prices={non_numeric_prices}")
+    if non_positive_close:
+        flags.append(f"non_positive_close={non_positive_close}")
+    if missing_volume:
+        flags.append(f"missing_volume={missing_volume}")
+    if zero_volume:
+        flags.append(f"zero_volume={zero_volume}")
+        flags.append(f"zero_volume_ratio={zero_volume_ratio:.4f}")
+        if zero_volume_severity:
+            flags.append(f"zero_volume_severity={zero_volume_severity}")
+    if duplicate_dates:
+        flags.append("duplicate_dates")
+    if non_monotonic_dates:
+        flags.append("non_monotonic_dates")
+
+    if zero_volume_severity and diagnostics["data_status"] == "ok":
+        diagnostics["data_status"] = "warning"
+    elif flags and diagnostics["data_status"] == "ok":
+        diagnostics["data_status"] = "warning"
+
+    diagnostics["data_flags"] = ";".join(flags)
+    return diagnostics
+
+
+def _summarize_price_file_csv(file_path: Path, diagnostics: Dict[str, str]) -> Dict[str, str]:
+    """Legacy summarizer preserved temporarily for environments without pandas."""
+    global _LEGACY_WARNING_EMITTED
+    if not _LEGACY_WARNING_EMITTED and not _PANDAS_IMPORT_ERROR:
+        LOGGER.warning(
+            "Falling back to legacy CSV parsing for %s; this path is slated for removal once "
+            "all environments provide pandas.",
+            file_path,
+        )
+        _LEGACY_WARNING_EMITTED = True
+    expected_cols = len(STOOQ_COLUMNS)
     invalid_rows = 0
     non_numeric_prices = 0
     non_positive_close = 0
@@ -243,9 +399,8 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
             if non_monotonic_dates:
                 flags.append("non_monotonic_dates")
 
-            if zero_volume_severity:
-                if diagnostics["data_status"] == "ok":
-                    diagnostics["data_status"] = "warning"
+            if zero_volume_severity and diagnostics["data_status"] == "ok":
+                diagnostics["data_status"] = "warning"
             elif flags and diagnostics["data_status"] == "ok":
                 diagnostics["data_status"] = "warning"
 

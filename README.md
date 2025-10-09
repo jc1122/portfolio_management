@@ -17,7 +17,11 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 ## Getting Started
 1. Ensure Python 3.10+ is available.
 2. Create and activate a virtual environment.
-3. Install dependencies (list forthcoming as modules are implemented).
+3. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
 4. Populate cached historical data from Stooq or other free sources.
 5. Run the CLI (to be added) to construct and evaluate portfolios.
 
@@ -41,7 +45,7 @@ Optional flags: `--include-empty-prices` forces exports for tickers without usab
 
 > **Heads-up:** The matching heuristics now cover common TSX, Xetra, Euronext, Swiss, and Brussels suffixes. If venues such as Xetra still appear in the unmatched report, confirm that the corresponding Stooq directory bundles (e.g., `d_de_txt/…`) have been unpacked—those files are absent from the current repository snapshot.
 >
-> The match report now includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately.
+> The match report now includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately. Price diagnostics default to a pandas-backed summarizer for faster, more robust validation; the legacy CSV parser persists only as a temporary fallback.
 
 ## Status
 - Documentation and repository scaffolding complete.

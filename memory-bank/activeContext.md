@@ -12,6 +12,7 @@
 - Introduced currency overrides for LSE multi-currency share classes and flagged two empty Stooq histories (`HSON.US`, `WPS.UK`) for follow-up.
 - Hardened the ingestion pipeline with row-level validation (duplicate dates, non-positive prices, missing/zero volume), optional LSE currency policies, and automatic skipping of empty Stooq histories during export.
 - Enhanced the validation stage to classify zero-volume exposure severity (low/moderate/high/critical) and regenerated the tradeable match report; captured the details in `data/metadata/tradeable_data_flags.csv` for offline triage and now flag them as warnings without filtering.
+- Replaced the row-by-row CSV validator with a pandas-backed summarizer (C-engine, selective columns) as the default path, keeping the legacy parser only as a temporary fallback and benchmarking the new approach to parity/slight gains.
 
 ## Next Steps
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
@@ -20,7 +21,7 @@
 - Scaffold the CLI application structure with configuration management and plug-in strategy adapters (equal weight, risk parity, mean-variance).
 - Design the backtesting engine with transaction cost modeling, rebalance bands, and performance reporting outputs.
 - Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.
-- Acquire and unpack missing Stooq regional datasets (e.g., `d_de_txt`, Canadian `.TO`, Swiss `.CH`) to close the remaining unmatched gap before tuning heuristics further.
+- Confirm pandas availability across execution environments and remove the legacy CSV validation path once safe to do so.
 
 ## Decisions & Considerations
 - Rebalance cadence set to monthly/quarterly with ±20% opportunistic bands to limit turnover and commissions.
