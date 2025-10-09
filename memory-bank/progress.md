@@ -2,6 +2,7 @@
 
 ## Current Status
 - Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, zero-volume severity tagging, and a default pandas-backed validator for price diagnostics (legacy CSV path retained only as a temporary fallback).
+- Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers while preserving legacy fallbacks for no-pandas environments.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
