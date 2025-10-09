@@ -29,6 +29,7 @@ import os
 import re
 import threading
 import time
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -38,6 +39,28 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+REGION_CURRENCY_MAP = {
+    "us": "USD",
+    "world": "USD",
+    "uk": "GBP",
+    "pl": "PLN",
+    "hk": "HKD",
+    "jp": "JPY",
+    "hu": "HUF",
+}
+
+LEGACY_PREFIXES = ("L", "Q")
+SYMBOL_ALIAS_MAP: Dict[Tuple[str, str], List[str]] = {
+    ("FB", ".US"): ["META.US"],
+    ("BRKS", ".US"): ["AZTA.US"],
+    ("PKI", ".US"): ["RVTY.US"],
+    ("FISV", ".US"): ["FI.US"],
+    ("FBHS", ".US"): ["FBIN.US"],
+    ("NRZ", ".US"): ["RITM.US"],
+    ("DWAV", ".US"): ["QBTS.US"],
+}
 
 
 @contextmanager
@@ -76,6 +99,7 @@ class TradeableInstrument:
     name: str
     currency: str
     source_file: str
+    reason: str = ""
 
 
 @dataclass
@@ -84,6 +108,157 @@ class TradeableMatch:
     stooq_file: StooqFile
     matched_ticker: str
     strategy: str
+
+
+def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str]:
+    """Extract simple diagnostics from a Stooq price file."""
+    file_path = base_dir / stooq_file.rel_path
+    diagnostics = {
+        "price_start": "",
+        "price_end": "",
+        "price_rows": "0",
+        "data_status": "missing",
+    }
+
+    if not file_path.exists():
+        diagnostics["data_status"] = "missing_file"
+        return diagnostics
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as handle:
+            reader = csv.reader(handle)
+            header = next(reader, None)
+            if not header:
+                diagnostics["data_status"] = "empty"
+                return diagnostics
+
+            first_row = next(reader, None)
+            if not first_row:
+                diagnostics["data_status"] = "empty"
+                return diagnostics
+
+            first_date = first_row[2]
+            last_date = first_date
+            row_count = 1
+            for row in reader:
+                if len(row) < 3:
+                    continue
+                last_date = row[2]
+                row_count += 1
+
+            diagnostics["price_start"] = format_stooq_date(first_date)
+            diagnostics["price_end"] = format_stooq_date(last_date)
+            diagnostics["price_rows"] = str(row_count)
+            diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
+    except OSError as exc:
+        diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
+
+    return diagnostics
+
+
+def format_stooq_date(value: str) -> str:
+    """Convert Stooq YYYYMMDD date strings into ISO format when possible."""
+    if not value:
+        return ""
+    try:
+        parsed = datetime.strptime(value, "%Y%m%d")
+        return parsed.date().isoformat()
+    except ValueError:
+        return value
+
+
+def infer_currency(stooq_file: StooqFile) -> Optional[str]:
+    """Guess the trading currency from the Stooq region/category."""
+    region_key = (stooq_file.region or "").lower()
+    return REGION_CURRENCY_MAP.get(region_key)
+
+
+def resolve_currency(
+    instrument: TradeableInstrument,
+    stooq_file: StooqFile,
+    inferred_currency: Optional[str],
+) -> Tuple[str, str, str, str]:
+    """Determine effective currency and status for reporting."""
+
+    expected = (instrument.currency or "").upper()
+    inferred = (inferred_currency or "").upper()
+    market = (instrument.market or "").upper()
+    symbol = (instrument.symbol or "").upper()
+
+    # Default outputs
+    resolved = inferred
+    status = ""
+
+    if expected and inferred:
+        if expected == inferred:
+            resolved = inferred
+            status = "match"
+        elif stooq_file.region.lower() == "uk" and symbol.endswith(":LN"):
+            # LSE multi-currency lines are often denominated per share class; keep broker currency.
+            resolved = expected
+            status = "override"
+        else:
+            resolved = inferred
+            status = "mismatch"
+    elif expected:
+        resolved = expected
+        status = "expected_only"
+    elif inferred:
+        resolved = inferred
+        status = "inferred_only"
+    else:
+        resolved = ""
+        status = "unknown"
+
+    return expected, inferred, resolved, status
+
+
+def collect_available_extensions(entries: Sequence[StooqFile]) -> set[str]:
+    """Return the set of ticker extensions present in the Stooq index."""
+    extensions: set[str] = set()
+    for entry in entries:
+        if "." in entry.ticker:
+            extensions.add(entry.ticker[entry.ticker.find(".") :].upper())
+        else:
+            extensions.add("")
+    return extensions
+
+
+def determine_unmatched_reason(
+    instrument: TradeableInstrument,
+    stooq_by_base: Dict[str, List[StooqFile]],
+    available_extensions: set[str],
+) -> str:
+    """Explain why a tradeable instrument could not be matched."""
+    symbol = (instrument.symbol or "").upper().strip()
+    market = (instrument.market or "").upper()
+    base, suffix = split_symbol(symbol)
+    desired_exts = {ext.upper() for ext in suffix_to_extensions(suffix, market) if ext}
+    if not desired_exts:
+        desired_exts.update(
+            ext.upper() for ext in suffix_to_extensions("", market) if ext
+        )
+
+    if desired_exts and not any(ext in available_extensions for ext in desired_exts):
+        return f"no_source_data({','.join(sorted(desired_exts))})"
+
+    base_entries = stooq_by_base.get(base.upper())
+    if not base_entries:
+        return "no_stooq_ticker"
+
+    if desired_exts:
+        matching = [
+            entry
+            for entry in base_entries
+            if any(entry.ticker.upper().endswith(ext) for ext in desired_exts)
+        ]
+        if not matching:
+            return "alias_required"
+
+    if len(base_entries) > 1:
+        return "ambiguous_variants"
+
+    return "manual_review"
 
 
 def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
@@ -295,6 +470,21 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
 
     candidates.append(base.upper())
 
+    desired_exts = [ext for ext in extensions if ext]
+    if not desired_exts:
+        desired_exts = [ext for ext in suffix_to_extensions("", market) if ext]
+
+    base_upper = base.upper()
+    for ext in desired_exts:
+        key = (base_upper, ext.upper())
+        for alias in SYMBOL_ALIAS_MAP.get(key, []):
+            candidates.append(alias.upper())
+        for prefix in LEGACY_PREFIXES:
+            if ext:
+                candidates.append(f"{prefix}{base_upper}{ext.upper()}")
+            else:
+                candidates.append(f"{prefix}{base_upper}")
+
     seen = set()
     for cand in candidates:
         if cand not in seen:
@@ -330,6 +520,9 @@ def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
         "U": [".US"],
         "NYSE": [".US"],
         "NASDAQ": [".US"],
+        "NSQ": [".US"],
+        "NAS": [".US"],
+        "NASDAQ (USD)": [".US"],
         "NYSE-MKT": [".US"],
         "AMEX": [".US"],
         "HK": [".HK"],
@@ -338,11 +531,11 @@ def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
         "T": [".JP"],
         "HU": [".HU"],
         "BSE": [".HU"],
-        "TSX": [".TO", ".CN"],
-        "TSXV": [".V", ".TO"],
+        "TSX": [".TO"],
+        "TSXV": [".V"],
         "TO": [".TO"],
         "V": [".V"],
-        "CN": [".CN", ".TO"],
+        "CN": [".CN"],
         "C": [".TO"],
         "GR": [".DE"],
         "DE": [".DE"],
@@ -363,10 +556,10 @@ def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
 
     market_matchers = [
         (r"XETRA|FRANKFURT|GER|DEU", [".DE"]),
-        (r"EURONEXT\s*PARIS|PARIS|FRANCE", [".PA", ".FR"]),
+        (r"EURONEXT\s*PARIS|\bPAR\b|PARIS|FRANCE", [".PA", ".FR"]),
         (r"EURONEXT\s*AMSTERDAM|AMSTERDAM|NED|NETHERLANDS", [".NL", ".AS"]),
-        (r"NASDAQ|NYSE|USA|UNITED STATES|AMERICAN", [".US"]),
-        (r"TSX|TORONTO|CANADA", [".TO", ".CN", ".V"]),
+        (r"NSQ|NASDAQ|NYSE|USA|UNITED STATES|AMERICAN", [".US"]),
+        (r"TSX|TORONTO|CANADA", [".TO"]),
         (r"GPW|WARSAW|POL", [".PL"]),
         (r"LSE|LONDON|UNITED KINGDOM|UK", [".UK"]),
         (r"HK", [".HK"]),
@@ -390,13 +583,36 @@ def _match_instrument(
     by_base: Dict[str, List[StooqFile]],
 ) -> Tuple[Optional[TradeableMatch], Optional[TradeableInstrument]]:
     tried: List[str] = []
+    norm_symbol = (instrument.symbol or "").replace(" ", "").upper()
+    _, instrument_suffix = split_symbol(norm_symbol)
+    instrument_desired_exts = {
+        ext.upper()
+        for ext in suffix_to_extensions(instrument_suffix, instrument.market)
+        if ext
+    }
+    fallback_desired_exts = {
+        ext.upper() for ext in suffix_to_extensions("", instrument.market) if ext
+    }
     for candidate in candidate_tickers(instrument.symbol, instrument.market):
         tried.append(candidate)
+        candidate_ext = candidate[candidate.find(".") :].upper() if "." in candidate else ""
+        desired_exts_set = set(instrument_desired_exts)
+        if not desired_exts_set:
+            desired_exts_set.update(fallback_desired_exts)
+        if candidate_ext:
+            desired_exts_set.add(candidate_ext)
         if candidate in by_ticker:
+            entry = by_ticker[candidate]
+            entry_ext = entry.extension.upper()
+            if desired_exts_set:
+                if entry_ext and entry_ext not in desired_exts_set:
+                    continue
+                if not entry_ext and "" not in desired_exts_set:
+                    continue
             return (
                 TradeableMatch(
                     instrument=instrument,
-                    stooq_file=by_ticker[candidate],
+                    stooq_file=entry,
                     matched_ticker=candidate,
                     strategy="ticker",
                 ),
@@ -405,30 +621,72 @@ def _match_instrument(
         stem_candidate = candidate.split(".", 1)[0]
         if stem_candidate in by_stem:
             entry = by_stem[stem_candidate]
-            return (
-                TradeableMatch(
-                    instrument=instrument,
-                    stooq_file=entry,
-                    matched_ticker=entry.ticker,
-                    strategy="stem",
-                ),
-                None,
-            )
+            entry_ext = entry.extension.upper()
+            allow_stem_match = False
+            if desired_exts_set:
+                if entry_ext:
+                    allow_stem_match = entry_ext in desired_exts_set
+                else:
+                    allow_stem_match = "" in desired_exts_set
+            else:
+                allow_stem_match = True
+
+            if allow_stem_match:
+                return (
+                    TradeableMatch(
+                        instrument=instrument,
+                        stooq_file=entry,
+                        matched_ticker=entry.ticker,
+                        strategy="stem",
+                    ),
+                    None,
+                )
         base_entries = by_base.get(stem_candidate)
         if base_entries:
-            preferred_exts = [ext for ext in suffix_to_extensions("", instrument.market) if ext]
-            if "." in candidate:
-                preferred_exts.insert(0, candidate[candidate.find(".") :])
+            desired_exts: List[str] = []
+            desired_exts_set: set[str] = set()
+
+            for ext in suffix_to_extensions(instrument_suffix, instrument.market):
+                if ext:
+                    ext_up = ext.upper()
+                    if ext_up not in desired_exts_set:
+                        desired_exts.append(ext_up)
+                        desired_exts_set.add(ext_up)
+
+            for ext in suffix_to_extensions("", instrument.market):
+                if ext:
+                    ext_up = ext.upper()
+                    if ext_up not in desired_exts_set:
+                        desired_exts.append(ext_up)
+                        desired_exts_set.add(ext_up)
+
+            candidate_ext = (
+                candidate[candidate.find(".") :].upper() if "." in candidate else ""
+            )
+            if candidate_ext and candidate_ext not in desired_exts_set:
+                desired_exts.insert(0, candidate_ext)
+                desired_exts_set.add(candidate_ext)
+
+            available_exts = {
+                entry.ticker[entry.ticker.find(".") :].upper()
+                for entry in base_entries
+                if "." in entry.ticker
+            }
+
+            if desired_exts_set and not any(ext in available_exts for ext in desired_exts_set):
+                continue
+
+            preferred_exts = [ext for ext in desired_exts if ext]
             chosen: Optional[StooqFile] = None
             if preferred_exts:
                 for ext in preferred_exts:
                     for entry in base_entries:
-                        if entry.ticker.upper().endswith(ext.upper()):
+                        if entry.ticker.upper().endswith(ext):
                             chosen = entry
                             break
                     if chosen:
                         break
-            if not chosen and len(base_entries) == 1:
+            if not chosen and not desired_exts_set and len(base_entries) == 1:
                 chosen = base_entries[0]
             if chosen:
                 return (
@@ -485,7 +743,9 @@ def match_tradeables(
     return matches, unmatched
 
 
-def write_match_report(matches: Sequence[TradeableMatch], output_path: Path) -> None:
+def write_match_report(
+    matches: Sequence[TradeableMatch], output_path: Path, data_dir: Path
+) -> None:
     """Persist the match report showing which tradeables map to which Stooq files."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", newline="", encoding="utf-8") as handle:
@@ -502,9 +762,21 @@ def write_match_report(matches: Sequence[TradeableMatch], output_path: Path) -> 
                 "region",
                 "category",
                 "strategy",
+                "source_file",
+                "price_start",
+                "price_end",
+                "price_rows",
+                "inferred_currency",
+                "resolved_currency",
+                "currency_status",
+                "data_status",
             ]
         )
         for match in matches:
+            diagnostics = summarize_price_file(data_dir, match.stooq_file)
+            _expected, inferred, resolved, currency_status = resolve_currency(
+                match.instrument, match.stooq_file, infer_currency(match.stooq_file)
+            )
             writer.writerow(
                 [
                     match.instrument.symbol,
@@ -517,6 +789,14 @@ def write_match_report(matches: Sequence[TradeableMatch], output_path: Path) -> 
                     match.stooq_file.region,
                     match.stooq_file.category,
                     match.strategy,
+                    match.instrument.source_file,
+                    diagnostics["price_start"],
+                    diagnostics["price_end"],
+                    diagnostics["price_rows"],
+                    inferred,
+                    resolved,
+                    currency_status,
+                    diagnostics["data_status"],
                 ]
             )
     LOGGER.info("Match report written to %s", output_path)
@@ -527,7 +807,9 @@ def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["symbol", "isin", "market", "name", "currency", "source_file"])
+        writer.writerow(
+            ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
+        )
         for instrument in unmatched:
             writer.writerow(
                 [
@@ -537,9 +819,25 @@ def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path
                     instrument.name,
                     instrument.currency,
                     instrument.source_file,
+                    instrument.reason,
                 ]
             )
     LOGGER.info("Unmatched report written to %s", output_path)
+
+
+def annotate_unmatched_instruments(
+    unmatched: Sequence[TradeableInstrument],
+    stooq_by_base: Dict[str, List[StooqFile]],
+    available_extensions: set[str],
+) -> List[TradeableInstrument]:
+    """Attach diagnostic reasons to unmatched instruments."""
+    annotated: List[TradeableInstrument] = []
+    for instrument in unmatched:
+        instrument.reason = determine_unmatched_reason(
+            instrument, stooq_by_base, available_extensions
+        )
+        annotated.append(instrument)
+    return annotated
 
 
 def export_tradeable_prices(
@@ -702,6 +1000,7 @@ def main() -> None:
         tradeables = load_tradeable_instruments(args.tradeable_dir)
 
     stooq_by_ticker, stooq_by_stem, stooq_by_base = build_stooq_lookup(stooq_index)
+    available_extensions = collect_available_extensions(stooq_index)
     with log_duration("tradeable_match"):
         matches, unmatched = match_tradeables(
             tradeables,
@@ -710,8 +1009,9 @@ def main() -> None:
             stooq_by_base,
             max_workers=max_workers,
         )
+    unmatched = annotate_unmatched_instruments(unmatched, stooq_by_base, available_extensions)
     with log_duration("tradeable_match_report"):
-        write_match_report(matches, args.match_report)
+        write_match_report(matches, args.match_report, data_dir)
     with log_duration("tradeable_unmatched_report"):
         write_unmatched_report(unmatched, args.unmatched_report)
 

@@ -41,7 +41,8 @@ The first run builds a cached index (≈40 s for ~62k files); subsequent runs 
 
 ## Status
 - Documentation and repository scaffolding complete.
-- Stooq data preparation script delivers matched tradeable price panels with cached indexing and multicore exports.
+- Stooq data preparation script now enriches match outputs with per-instrument price coverage and currency diagnostics while preventing cross-venue fallbacks.
+- Latest data export matched 5,560 instruments (4,148 price files) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
 - Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
 
 ## Contributing

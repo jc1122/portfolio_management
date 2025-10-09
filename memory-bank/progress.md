@@ -1,26 +1,31 @@
 # Progress Log
 
 ## Current Status
-- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata and multicore performance.
+- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, and richer diagnostics for price coverage and currency alignment.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
 - Documented risk constraints, rebalancing policies, and future sentiment-integration objectives.
 - Built `scripts/prepare_tradeable_data.py` to scan unpacked Stooq archives, normalize broker tradeable lists, match symbols, and export curated price series; optimized the script with parallel directory traversal and caching (~40s first run, ~2s incremental).
 - Expanded broker-to-Stooq ticker heuristics to cover TSX, Xetra, Euronext, Swiss, and Brussels suffixes; regenerated metadata and 4,342 price CSVs from a clean slate (full run ≈173 s).
+- Hardened matching to reject cross-venue fallbacks, added alias rules for stubborn U.S. tickers, and augmented reports with per-instrument price range, row counts, and currency status.
+- Latest run matched 5 ,560 instruments, exported 4 ,148 price files, and clearly tagged 1 ,262 unmatched assets by missing extension (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
+- Captured 258 LSE multi-currency ETFs as explicit currency overrides and surfaced two empty price files (`HSON.US`, `WPS.UK`) for remediation.
 
 ## Outstanding Work
 - Assemble the tradable asset list and broker fee schedule to inform backtest assumptions.
-- Reconcile and map remaining unmatched broker instruments to Stooq tickers or flag gaps; enrich metadata with currency/asset-class tags.
+- Review `override` currency cases and decide whether FX conversion is required before backtesting; triage the empty Stooq histories found in the latest export.
+- Reconcile remaining unmatched broker instruments (especially those needing `.TO`, `.DE`, `.FR/.PA`, `.CH`) or document proxy decisions; enrich metadata with currency/asset-class tags.
 - Implement modular Python components (data fetch/clean, strategy adapters, backtesting, reporting) leveraging identified libraries.
 - Define analytics/reporting templates (CLI summaries, CSV exports, charts) and establish logging conventions.
 - Research and catalog open-source sentiment/news pipelines for future integration.
-- Download and unpack absent Stooq regional bundles (e.g., German/Xetra listings) to reduce the current ~1k unmatched instruments before the next matching pass.
+- Download and unpack absent Stooq regional bundles (Canadian `.TO`, German/Xetra `.DE`, Paris `.FR/.PA`, Swiss `.CH`) to reduce the current unmatched set before the next matching pass.
 
 ## Risks & Issues
 - Stooq coverage and history length may limit certain assets; alternative data sources might be needed.
 - Transaction cost assumptions and slippage modeling must be validated against real broker fees.
 - Potential complexity creep when integrating sentiment overlays; requires disciplined scope management.
+- Currency inconsistencies across venues (e.g., LSE USD share classes) require clear policy before portfolio analytics can be trusted.
 
 ## Notes
 - Update documentation after each development milestone, especially when integrating new libraries or changing risk controls.
