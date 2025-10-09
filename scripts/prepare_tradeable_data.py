@@ -61,6 +61,12 @@ class StooqFile:
     def to_path(self) -> Path:
         return Path(self.rel_path)
 
+    @property
+    def extension(self) -> str:
+        if "." in self.ticker:
+            return f".{self.ticker.split('.', 1)[1]}"
+        return ""
+
 
 @dataclass
 class TradeableInstrument:
@@ -246,14 +252,20 @@ def load_tradeable_instruments(tradeable_dir: Path) -> List[TradeableInstrument]
     return instruments
 
 
-def build_stooq_lookup(entries: Sequence[StooqFile]) -> Tuple[Dict[str, StooqFile], Dict[str, StooqFile]]:
-    """Create lookup dictionaries for Stooq tickers and stems."""
+def build_stooq_lookup(
+    entries: Sequence[StooqFile],
+) -> Tuple[Dict[str, StooqFile], Dict[str, StooqFile], Dict[str, List[StooqFile]]]:
+    """Create lookup dictionaries for Stooq tickers, stems, and base symbols."""
     by_ticker: Dict[str, StooqFile] = {}
     by_stem: Dict[str, StooqFile] = {}
+    by_base: Dict[str, List[StooqFile]] = {}
     for entry in entries:
-        by_ticker.setdefault(entry.ticker.upper(), entry)
+        ticker = entry.ticker.upper()
+        by_ticker.setdefault(ticker, entry)
         by_stem.setdefault(entry.stem.upper(), entry)
-    return by_ticker, by_stem
+        base = ticker.split(".", 1)[0]
+        by_base.setdefault(base, []).append(entry)
+    return by_ticker, by_stem, by_base
 
 
 def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
@@ -267,11 +279,17 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
     normalized = original.replace(" ", "").upper()
     base, suffix = split_symbol(normalized)
 
+    extensions = suffix_to_extensions(suffix, market)
     if suffix:
-        for ext in suffix_to_extensions(suffix, market):
-            candidates.append(f"{base}{ext}".upper())
+        for ext in extensions:
+            if ext:
+                candidates.append(f"{base}{ext}".upper())
+        candidates.append(normalized.upper())
     else:
         candidates.append(base.upper())
+        for ext in extensions:
+            if ext:
+                candidates.append(f"{base}{ext}".upper())
         if "." in normalized:
             candidates.append(normalized.upper())
 
@@ -312,25 +330,50 @@ def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
         "U": [".US"],
         "NYSE": [".US"],
         "NASDAQ": [".US"],
+        "NYSE-MKT": [".US"],
+        "AMEX": [".US"],
         "HK": [".HK"],
         "H": [".HK"],
         "JP": [".JP"],
         "T": [".JP"],
         "HU": [".HU"],
         "BSE": [".HU"],
+        "TSX": [".TO", ".CN"],
+        "TSXV": [".V", ".TO"],
+        "TO": [".TO"],
+        "V": [".V"],
+        "CN": [".CN", ".TO"],
+        "C": [".TO"],
+        "GR": [".DE"],
+        "DE": [".DE"],
+        "PA": [".PA", ".FR"],
+        "PAR": [".PA", ".FR"],
+        "AMS": [".NL", ".AS"],
+        "AS": [".AS", ".NL"],
+        "SWX": [".CH"],
+        "SW": [".CH"],
+        "CH": [".CH"],
+        "BRU": [".BE"],
+        "BR": [".BE"],
+        "BRX": [".BE"],
     }
 
     if suffix in mapping:
         return mapping[suffix]
 
     market_matchers = [
-        (r"XETRA|FRANKFURT|GER", [".DE"]),
-        (r"NASDAQ|NYSE|USA|UNITED STATES", [".US"]),
+        (r"XETRA|FRANKFURT|GER|DEU", [".DE"]),
+        (r"EURONEXT\s*PARIS|PARIS|FRANCE", [".PA", ".FR"]),
+        (r"EURONEXT\s*AMSTERDAM|AMSTERDAM|NED|NETHERLANDS", [".NL", ".AS"]),
+        (r"NASDAQ|NYSE|USA|UNITED STATES|AMERICAN", [".US"]),
+        (r"TSX|TORONTO|CANADA", [".TO", ".CN", ".V"]),
         (r"GPW|WARSAW|POL", [".PL"]),
-        (r"LSE|LONDON", [".UK"]),
+        (r"LSE|LONDON|UNITED KINGDOM|UK", [".UK"]),
         (r"HK", [".HK"]),
-        (r"JPX|TOKYO", [".JP"]),
+        (r"JPX|TOKYO|JAPAN", [".JP"]),
         (r"HUNGARY|BUDAPEST", [".HU"]),
+        (r"SWISS|ZURICH|SWX|SIX|SWITZERLAND", [".CH"]),
+        (r"BRUSSELS|BELGIUM", [".BE"]),
     ]
 
     for pattern, exts in market_matchers:
@@ -344,6 +387,7 @@ def _match_instrument(
     instrument: TradeableInstrument,
     by_ticker: Dict[str, StooqFile],
     by_stem: Dict[str, StooqFile],
+    by_base: Dict[str, List[StooqFile]],
 ) -> Tuple[Optional[TradeableMatch], Optional[TradeableInstrument]]:
     tried: List[str] = []
     for candidate in candidate_tickers(instrument.symbol, instrument.market):
@@ -370,6 +414,32 @@ def _match_instrument(
                 ),
                 None,
             )
+        base_entries = by_base.get(stem_candidate)
+        if base_entries:
+            preferred_exts = [ext for ext in suffix_to_extensions("", instrument.market) if ext]
+            if "." in candidate:
+                preferred_exts.insert(0, candidate[candidate.find(".") :])
+            chosen: Optional[StooqFile] = None
+            if preferred_exts:
+                for ext in preferred_exts:
+                    for entry in base_entries:
+                        if entry.ticker.upper().endswith(ext.upper()):
+                            chosen = entry
+                            break
+                    if chosen:
+                        break
+            if not chosen and len(base_entries) == 1:
+                chosen = base_entries[0]
+            if chosen:
+                return (
+                    TradeableMatch(
+                        instrument=instrument,
+                        stooq_file=chosen,
+                        matched_ticker=chosen.ticker,
+                        strategy="base_market",
+                    ),
+                    None,
+                )
     LOGGER.debug(
         "Unmatched instrument %s (market=%s) candidates=%s",
         instrument.symbol,
@@ -383,6 +453,7 @@ def match_tradeables(
     instruments: Sequence[TradeableInstrument],
     by_ticker: Dict[str, StooqFile],
     by_stem: Dict[str, StooqFile],
+    by_base: Dict[str, List[StooqFile]],
     *,
     max_workers: int = 1,
 ) -> Tuple[List[TradeableMatch], List[TradeableInstrument]]:
@@ -392,7 +463,7 @@ def match_tradeables(
 
     if max_workers <= 1:
         for instrument in instruments:
-            match, missing = _match_instrument(instrument, by_ticker, by_stem)
+            match, missing = _match_instrument(instrument, by_ticker, by_stem, by_base)
             if match:
                 matches.append(match)
             elif missing:
@@ -400,7 +471,7 @@ def match_tradeables(
     else:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
-                executor.submit(_match_instrument, instrument, by_ticker, by_stem)
+                executor.submit(_match_instrument, instrument, by_ticker, by_stem, by_base)
                 for instrument in instruments
             ]
             for future in as_completed(futures):
@@ -481,18 +552,7 @@ def export_tradeable_prices(
 ) -> None:
     """Convert matched Stooq price files into CSVs stored in the destination directory."""
     dest_dir.mkdir(parents=True, exist_ok=True)
-    header = [
-        "ticker",
-        "per",
-        "date",
-        "time",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
-        "openint",
-    ]
+    header_line = "ticker,per,date,time,open,high,low,close,volume,openint\n"
 
     unique_matches: Dict[str, TradeableMatch] = {}
     for match in matches:
@@ -506,17 +566,13 @@ def export_tradeable_prices(
             return False
         try:
             with open(source_path, "r", encoding="utf-8") as src, open(
-                target_path, "w", newline="", encoding="utf-8"
+                target_path, "w", encoding="utf-8"
             ) as dst:
-                reader = csv.reader(src)
-                writer = csv.writer(dst)
-                writer.writerow(header)
-                for row in reader:
-                    if not row:
+                dst.write(header_line)
+                for line in src:
+                    if not line or line.startswith("<"):
                         continue
-                    if row[0].startswith("<"):
-                        continue
-                    writer.writerow(row)
+                    dst.write(line)
             return True
         except OSError as exc:
             LOGGER.warning("Failed to export %s -> %s: %s", source_path, target_path, exc)
@@ -645,12 +701,13 @@ def main() -> None:
     with log_duration("tradeable_load"):
         tradeables = load_tradeable_instruments(args.tradeable_dir)
 
-    stooq_by_ticker, stooq_by_stem = build_stooq_lookup(stooq_index)
+    stooq_by_ticker, stooq_by_stem, stooq_by_base = build_stooq_lookup(stooq_index)
     with log_duration("tradeable_match"):
         matches, unmatched = match_tradeables(
             tradeables,
             stooq_by_ticker,
             stooq_by_stem,
+            stooq_by_base,
             max_workers=max_workers,
         )
     with log_duration("tradeable_match_report"):

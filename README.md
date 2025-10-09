@@ -37,6 +37,8 @@ python scripts/prepare_tradeable_data.py \
 
 The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for <3 s incremental updates.
 
+> **Heads-up:** The matching heuristics now cover common TSX, Xetra, Euronext, Swiss, and Brussels suffixes. If venues such as Xetra still appear in the unmatched report, confirm that the corresponding Stooq directory bundles (e.g., `d_de_txt/…`) have been unpacked—those files are absent from the current repository snapshot.
+
 ## Status
 - Documentation and repository scaffolding complete.
 - Stooq data preparation script delivers matched tradeable price panels with cached indexing and multicore exports.

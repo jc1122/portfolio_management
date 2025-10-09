@@ -7,6 +7,8 @@
 - Captured project scope, architectural patterns, and technology stack in the Memory Bank based on the detailed brief and literature survey.
 - Recorded portfolio construction goals (core diversification, factor tilts, risk overlays) and future sentiment-integration ambitions.
 - Implemented an optimized `prepare_tradeable_data.py` script that indexes unpacked Stooq files, matches them against BOŚ/mBank universes, and exports price panels with multicore support and cached metadata.
+- Extended ticker-matching heuristics to cover TSX, Xetra, Euronext, Swiss, and Brussels suffixes/market strings, then regenerated metadata/price outputs from scratch (≈173 s export pass).
+- Confirmed that the remaining ~1k unmatched instruments are driven by missing Stooq region bundles (e.g., Xetra data not yet unpacked).
 
 ## Next Steps
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
@@ -14,6 +16,7 @@
 - Scaffold the CLI application structure with configuration management and plug-in strategy adapters (equal weight, risk parity, mean-variance).
 - Design the backtesting engine with transaction cost modeling, rebalance bands, and performance reporting outputs.
 - Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.
+- Acquire and unpack missing Stooq regional datasets (e.g., `d_de_txt` for Xetra) to close the remaining unmatched gap before tuning heuristics further.
 
 ## Decisions & Considerations
 - Rebalance cadence set to monthly/quarterly with ±20% opportunistic bands to limit turnover and commissions.
