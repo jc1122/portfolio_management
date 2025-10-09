@@ -30,6 +30,7 @@ import re
 import threading
 import time
 from datetime import datetime
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -111,18 +112,31 @@ class TradeableMatch:
 
 
 def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str]:
-    """Extract simple diagnostics from a Stooq price file."""
+    """Extract diagnostics and validation flags from a Stooq price file."""
     file_path = base_dir / stooq_file.rel_path
     diagnostics = {
         "price_start": "",
         "price_end": "",
         "price_rows": "0",
         "data_status": "missing",
+        "data_flags": "",
     }
 
     if not file_path.exists():
         diagnostics["data_status"] = "missing_file"
         return diagnostics
+
+    expected_cols = 10
+    invalid_rows = 0
+    non_numeric_prices = 0
+    non_positive_close = 0
+    zero_volume = 0
+    missing_volume = 0
+    duplicate_dates = False
+    non_monotonic_dates = False
+    seen_dates: set[str] = set()
+    previous_date: Optional[str] = None
+    flags: List[str] = []
 
     try:
         with open(file_path, "r", encoding="utf-8") as handle:
@@ -132,7 +146,14 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
                 diagnostics["data_status"] = "empty"
                 return diagnostics
 
-            first_row = next(reader, None)
+            first_row: Optional[List[str]] = None
+            for initial_row in reader:
+                if len(initial_row) < expected_cols:
+                    invalid_rows += 1
+                    continue
+                first_row = initial_row
+                break
+
             if not first_row:
                 diagnostics["data_status"] = "empty"
                 return diagnostics
@@ -140,16 +161,73 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
             first_date = first_row[2]
             last_date = first_date
             row_count = 1
+            previous_date = first_date
+            seen_dates.add(first_date)
+
+            def _parse_float(value: str) -> Optional[float]:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return None
+
+            close_value = _parse_float(first_row[7])
+            volume_value = _parse_float(first_row[8]) if len(first_row) > 8 else None
+            if close_value is None:
+                non_numeric_prices += 1
+            elif close_value <= 0:
+                non_positive_close += 1
+            if volume_value is None:
+                missing_volume += 1
+            elif volume_value == 0:
+                zero_volume += 1
+
             for row in reader:
-                if len(row) < 3:
+                if len(row) < expected_cols:
+                    invalid_rows += 1
                     continue
-                last_date = row[2]
+                date_value = row[2]
+                if date_value in seen_dates:
+                    duplicate_dates = True
+                else:
+                    seen_dates.add(date_value)
+                if previous_date and date_value < previous_date:
+                    non_monotonic_dates = True
+                previous_date = date_value
+                last_date = date_value
+                close_value = _parse_float(row[7])
+                if close_value is None:
+                    non_numeric_prices += 1
+                elif close_value <= 0:
+                    non_positive_close += 1
+                volume_value = _parse_float(row[8]) if len(row) > 8 else None
+                if volume_value is None:
+                    missing_volume += 1
+                elif volume_value == 0:
+                    zero_volume += 1
                 row_count += 1
 
             diagnostics["price_start"] = format_stooq_date(first_date)
             diagnostics["price_end"] = format_stooq_date(last_date)
             diagnostics["price_rows"] = str(row_count)
             diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
+
+            if invalid_rows:
+                flags.append(f"invalid_rows={invalid_rows}")
+            if non_numeric_prices:
+                flags.append(f"non_numeric_prices={non_numeric_prices}")
+            if non_positive_close:
+                flags.append(f"non_positive_close={non_positive_close}")
+            if missing_volume:
+                flags.append(f"missing_volume={missing_volume}")
+            if zero_volume:
+                flags.append(f"zero_volume={zero_volume}")
+            if duplicate_dates:
+                flags.append("duplicate_dates")
+            if non_monotonic_dates:
+                flags.append("non_monotonic_dates")
+            if flags and diagnostics["data_status"] == "ok":
+                diagnostics["data_status"] = "warning"
+            diagnostics["data_flags"] = ";".join(flags)
     except OSError as exc:
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
 
@@ -173,10 +251,20 @@ def infer_currency(stooq_file: StooqFile) -> Optional[str]:
     return REGION_CURRENCY_MAP.get(region_key)
 
 
+def _is_lse_listing(symbol: str, market: str) -> bool:
+    symbol_upper = (symbol or "").upper()
+    market_upper = (market or "").upper()
+    if "LSE" in market_upper or "LONDON" in market_upper or "GBR-LSE" in market_upper:
+        return True
+    return symbol_upper.endswith((":LN", ":L", ".LN", ".L"))
+
+
 def resolve_currency(
     instrument: TradeableInstrument,
     stooq_file: StooqFile,
     inferred_currency: Optional[str],
+    *,
+    lse_policy: str = "broker",
 ) -> Tuple[str, str, str, str]:
     """Determine effective currency and status for reporting."""
 
@@ -189,14 +277,28 @@ def resolve_currency(
     resolved = inferred
     status = ""
 
+    lse_listing = stooq_file.region.lower() == "uk" and _is_lse_listing(symbol, market)
+
     if expected and inferred:
         if expected == inferred:
             resolved = inferred
             status = "match"
-        elif stooq_file.region.lower() == "uk" and symbol.endswith(":LN"):
-            # LSE multi-currency lines are often denominated per share class; keep broker currency.
-            resolved = expected
-            status = "override"
+        elif lse_listing:
+            policy = lse_policy.lower()
+            if policy == "broker":
+                # LSE multi-currency lines are often denominated per share class; keep broker currency.
+                resolved = expected
+                status = "override"
+            elif policy == "stooq":
+                resolved = inferred
+                status = "mismatch"
+            elif policy == "strict":
+                resolved = ""
+                status = "error:lse_currency_override"
+            else:
+                LOGGER.warning("Unknown LSE currency policy '%s'; defaulting to broker.", lse_policy)
+                resolved = expected
+                status = "override"
         else:
             resolved = inferred
             status = "mismatch"
@@ -211,6 +313,20 @@ def resolve_currency(
         status = "unknown"
 
     return expected, inferred, resolved, status
+
+
+def log_summary_counts(currency_counts: Counter, data_status_counts: Counter) -> None:
+    """Log aggregate summaries for currency and data validation statuses."""
+    if currency_counts:
+        summary = ", ".join(
+            f"{key}={count}" for key, count in sorted(currency_counts.items())
+        )
+        LOGGER.info("Currency status summary: %s", summary)
+    if data_status_counts:
+        summary = ", ".join(
+            f"{key}={count}" for key, count in sorted(data_status_counts.items())
+        )
+        LOGGER.info("Data status summary: %s", summary)
 
 
 def collect_available_extensions(entries: Sequence[StooqFile]) -> set[str]:
@@ -744,10 +860,24 @@ def match_tradeables(
 
 
 def write_match_report(
-    matches: Sequence[TradeableMatch], output_path: Path, data_dir: Path
-) -> None:
-    """Persist the match report showing which tradeables map to which Stooq files."""
+    matches: Sequence[TradeableMatch],
+    output_path: Path,
+    data_dir: Path,
+    *,
+    lse_currency_policy: str,
+) -> Tuple[Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
+    """Persist the match report showing which tradeables map to which Stooq files.
+
+    Returns a tuple containing a diagnostics cache, currency status counts, data status
+    counts, a list of tickers with empty datasets, and a sample of records with data flags.
+    """
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    diagnostics_cache: Dict[str, Dict[str, str]] = {}
+    currency_counts: Counter = Counter()
+    data_status_counts: Counter = Counter()
+    empty_tickers: List[str] = []
+    flagged_samples: List[Tuple[str, str, str]] = []
+
     with open(output_path, "w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
         writer.writerow(
@@ -770,13 +900,28 @@ def write_match_report(
                 "resolved_currency",
                 "currency_status",
                 "data_status",
+                "data_flags",
             ]
         )
         for match in matches:
             diagnostics = summarize_price_file(data_dir, match.stooq_file)
+            diagnostics_cache[match.stooq_file.ticker.upper()] = diagnostics
             _expected, inferred, resolved, currency_status = resolve_currency(
-                match.instrument, match.stooq_file, infer_currency(match.stooq_file)
+                match.instrument,
+                match.stooq_file,
+                infer_currency(match.stooq_file),
+                lse_policy=lse_currency_policy,
             )
+            currency_counts[currency_status] += 1
+            data_status = diagnostics["data_status"]
+            data_status_counts[data_status] += 1
+            if data_status == "empty":
+                empty_tickers.append(match.stooq_file.ticker)
+            data_flags = diagnostics.get("data_flags", "")
+            if data_flags:
+                flagged_samples.append(
+                    (match.instrument.symbol, match.stooq_file.ticker, data_flags)
+                )
             writer.writerow(
                 [
                     match.instrument.symbol,
@@ -796,10 +941,12 @@ def write_match_report(
                     inferred,
                     resolved,
                     currency_status,
-                    diagnostics["data_status"],
+                    data_status,
+                    data_flags,
                 ]
             )
     LOGGER.info("Match report written to %s", output_path)
+    return diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
 
 
 def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path: Path) -> None:
@@ -847,8 +994,13 @@ def export_tradeable_prices(
     *,
     overwrite: bool = False,
     max_workers: int = 1,
-) -> None:
-    """Convert matched Stooq price files into CSVs stored in the destination directory."""
+    diagnostics: Optional[Dict[str, Dict[str, str]]] = None,
+    include_empty: bool = False,
+) -> Tuple[int, int]:
+    """Convert matched Stooq price files into CSVs stored in the destination directory.
+
+    Returns a tuple of (exported_count, skipped_count).
+    """
     dest_dir.mkdir(parents=True, exist_ok=True)
     header_line = "ticker,per,date,time,open,high,low,close,volume,openint\n"
 
@@ -857,9 +1009,39 @@ def export_tradeable_prices(
         ticker_upper = match.stooq_file.ticker.upper()
         unique_matches.setdefault(ticker_upper, match)
 
+    skipped = 0
+
     def _export_single(match: TradeableMatch) -> bool:
+        nonlocal skipped
         source_path = data_dir / match.stooq_file.rel_path
         target_path = dest_dir / f"{match.stooq_file.ticker.lower()}.csv"
+        diag = diagnostics.get(match.stooq_file.ticker.upper()) if diagnostics else None
+        if diag is None:
+            diag = summarize_price_file(data_dir, match.stooq_file)
+        status = diag.get("data_status", "")
+        if (
+            not include_empty
+            and (
+                status in {"empty", "missing", "missing_file"}
+                or (status.startswith("error:") if status else False)
+            )
+        ):
+            LOGGER.debug(
+                "Skipping export for %s due to data_status=%s",
+                match.stooq_file.ticker,
+                status,
+            )
+            skipped += 1
+            if target_path.exists() and overwrite:
+                try:
+                    target_path.unlink()
+                except OSError as exc:
+                    LOGGER.warning(
+                        "Unable to remove stale export for %s: %s",
+                        match.stooq_file.ticker,
+                        exc,
+                    )
+            return False
         if target_path.exists() and not overwrite:
             return False
         try:
@@ -890,6 +1072,9 @@ def export_tradeable_prices(
                     exported += 1
 
     LOGGER.info("Exported %s price files to %s", exported, dest_dir)
+    if skipped:
+        LOGGER.warning("Skipped %s price files without usable data", skipped)
+    return exported, skipped
 
 
 def parse_args() -> argparse.Namespace:
@@ -945,6 +1130,18 @@ def parse_args() -> argparse.Namespace:
         "--overwrite-prices",
         action="store_true",
         help="Rewrite price CSVs even if they already exist.",
+    )
+    parser.add_argument(
+        "--include-empty-prices",
+        action="store_true",
+        help="Export price CSVs even when the source file lacks usable data.",
+    )
+    parser.add_argument(
+        "--lse-currency-policy",
+        choices=["broker", "stooq", "strict"],
+        default="broker",
+        help="How to resolve LSE currency mismatches: keep broker currency (default), "
+        "force Stooq inferred currency, or treat overrides as errors.",
     )
     parser.add_argument(
         "--max-workers",
@@ -1011,7 +1208,36 @@ def main() -> None:
         )
     unmatched = annotate_unmatched_instruments(unmatched, stooq_by_base, available_extensions)
     with log_duration("tradeable_match_report"):
-        write_match_report(matches, args.match_report, data_dir)
+        (
+            diagnostics_cache,
+            currency_counts,
+            data_status_counts,
+            empty_tickers,
+            flagged_samples,
+        ) = write_match_report(
+            matches,
+            args.match_report,
+            data_dir,
+            lse_currency_policy=args.lse_currency_policy,
+        )
+    log_summary_counts(currency_counts, data_status_counts)
+    if empty_tickers:
+        sample = ", ".join(sorted(empty_tickers)[:5])
+        LOGGER.warning(
+            "Detected %s empty Stooq price files (e.g., %s)",
+            len(empty_tickers),
+            sample,
+        )
+    if flagged_samples:
+        preview = ", ".join(
+            f"{symbol}->{ticker} [{flags}]"
+            for symbol, ticker, flags in flagged_samples[:5]
+        )
+        LOGGER.warning(
+            "Detected validation flags for %s matched instruments (e.g., %s)",
+            len(flagged_samples),
+            preview,
+        )
     with log_duration("tradeable_unmatched_report"):
         write_unmatched_report(unmatched, args.unmatched_report)
 
@@ -1022,6 +1248,8 @@ def main() -> None:
             args.prices_output,
             overwrite=args.overwrite_prices,
             max_workers=max_workers,
+            diagnostics=diagnostics_cache,
+            include_empty=args.include_empty_prices,
         )
 
 

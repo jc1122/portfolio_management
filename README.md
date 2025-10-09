@@ -37,12 +37,16 @@ python scripts/prepare_tradeable_data.py \
 
 The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for <3 s incremental updates.
 
+Optional flags: `--include-empty-prices` forces exports for tickers without usable data (normally skipped) and `--lse-currency-policy` lets you choose whether London listings keep the broker currency (`broker`, default), adopt Stooq’s inferred currency (`stooq`), or raise an error when the currencies diverge (`strict`).
+
 > **Heads-up:** The matching heuristics now cover common TSX, Xetra, Euronext, Swiss, and Brussels suffixes. If venues such as Xetra still appear in the unmatched report, confirm that the corresponding Stooq directory bundles (e.g., `d_de_txt/…`) have been unpacked—those files are absent from the current repository snapshot.
+>
+> The match report now includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately.
 
 ## Status
 - Documentation and repository scaffolding complete.
 - Stooq data preparation script now enriches match outputs with per-instrument price coverage and currency diagnostics while preventing cross-venue fallbacks.
-- Latest data export matched 5,560 instruments (4,148 price files) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
+- Latest data export matched 5,560 instruments (4,146 price files after dropping two empty histories) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
 - Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
 
 ## Contributing
