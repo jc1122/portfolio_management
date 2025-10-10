@@ -15,6 +15,7 @@
 - Replaced the row-by-row CSV validator with a pandas-backed summarizer (C-engine, selective columns) as the default path, keeping the legacy parser only as a temporary fallback and benchmarking the new approach to parity/slight gains.
 - Refactored broker instrument ingestion and match/unmatched report writers to use pandas for vectorized CSV handling, keeping legacy fallbacks for environments without pandas.
 - Simplified the Stooq directory indexer to use `os.walk` with a thread pool (defaulting to CPU cores minus one) instead of custom queue/lock plumbing, improving maintainability at the cost of a ~1.8× slower scan on a 500-file sample.
+- Removed all legacy CSV fallbacks from `prepare_tradeable_data.py`, making pandas a hard dependency while keeping diagnostics/currency logic intact; benchmarked the pandas-only path on a 1,000-file sample (~12 % slower but identical outputs).
 
 ## Next Steps
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
@@ -23,7 +24,6 @@
 - Scaffold the CLI application structure with configuration management and plug-in strategy adapters (equal weight, risk parity, mean-variance).
 - Design the backtesting engine with transaction cost modeling, rebalance bands, and performance reporting outputs.
 - Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.
-- Confirm pandas availability across execution environments and remove the legacy CSV validation path once safe to do so.
 
 ## Decisions & Considerations
 - Rebalance cadence set to monthly/quarterly with ±20% opportunistic bands to limit turnover and commissions.

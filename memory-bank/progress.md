@@ -1,9 +1,10 @@
 # Progress Log
 
 ## Current Status
-- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, zero-volume severity tagging, and a default pandas-backed validator for price diagnostics (legacy CSV path retained only as a temporary fallback).
-- Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers while preserving legacy fallbacks for no-pandas environments.
+- Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, zero-volume severity tagging, and a pandas-backed validator for price diagnostics.
+- Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers.
 - The Stooq indexer now uses a thread-pooled `os.walk` traversal (default workers = CPU cores minus one) for maintainability; first benchmarks show identical outputs but roughly 1.8× slower scans versus the legacy queue/lock walker on a 500-file sample.
+- `prepare_tradeable_data.py` now mandates pandas for all I/O and diagnostics (legacy CSV fallbacks removed) and was benchmarked on a 1,000-file subset, producing identical reports with ~12 % slower runtime relative to the previous hybrid implementation.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
@@ -15,7 +16,8 @@
 - Captured 258 LSE multi-currency ETFs as explicit currency overrides and surfaced two empty price files (`HSON.US`, `WPS.UK`) for remediation.
 - Enhanced `scripts/prepare_tradeable_data.py` with configurable LSE currency handling, deeper file-level validation (duplicate dates, non-positive closes, missing/zero volume), a `data_flags` column in the match report, and automatic skipping/pruning of empty Stooq exports.
 - Classified zero-volume issues into low/moderate/high/critical severities, regenerated the tradeable match report, and wrote `data/metadata/tradeable_data_flags.csv` to spotlight the 29 critical and 170 high-risk LSE listings alongside lower-severity U.S. blips—currently treated as warnings only, not filters.
-- Benchmarked and promoted a pandas-based price-file summarizer (C-engine, selective column loads) to replace the manual CSV parser by default, logging warnings when the legacy path is used and measuring ~5 % average speedup over the fallback on 500-file batches.
+- Benchmarked and promoted a pandas-based price-file summarizer (C-engine, selective column loads) to replace the manual CSV parser by default, measuring ~5 % average speedup over the legacy fallback on 500-file batches prior to its removal.
+- Removed the legacy CSV fallbacks (summarizer, tradeable loaders, report writers, price exporter) in favour of a single pandas-backed implementation; validated behaviour parity on a 1,000-file sample while documenting the moderate runtime increase.
 
 ## Outstanding Work
 - Assemble the tradable asset list and broker fee schedule to inform backtest assumptions.
@@ -24,7 +26,6 @@
 - Implement modular Python components (data fetch/clean, strategy adapters, backtesting, reporting) leveraging identified libraries.
 - Define analytics/reporting templates (CLI summaries, CSV exports, charts) and establish logging conventions.
 - Research and catalog open-source sentiment/news pipelines for future integration.
-- Verify pandas availability in deployment environments and retire the legacy CSV summarizer once the dependency is ubiquitous.
 
 ## Risks & Issues
 - Stooq coverage and history length may limit certain assets; alternative data sources might be needed.

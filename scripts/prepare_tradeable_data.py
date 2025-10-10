@@ -23,7 +23,6 @@ Example usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import logging
 import os
 import re
@@ -32,19 +31,16 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
     import pandas as pd
-except ImportError:  # pragma: no cover - fallback for environments without pandas
-    pd = None  # type: ignore[assignment]
-    _PANDAS_IMPORT_ERROR = True
-else:
-    _PANDAS_IMPORT_ERROR = False
-
-_LEGACY_WARNING_EMITTED = False
+except ImportError as exc:  # pragma: no cover - pandas is required for this module
+    raise ImportError(
+        "pandas is required to run prepare_tradeable_data.py. "
+        "Please install pandas before executing this script."
+    ) from exc
 
 LOGGER = logging.getLogger(__name__)
 
@@ -148,9 +144,6 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         diagnostics["data_status"] = "missing_file"
         return diagnostics
 
-    if pd is None:
-        return _summarize_price_file_csv(file_path, diagnostics)
-
     try:
         raw_df = pd.read_csv(
             file_path,
@@ -191,8 +184,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         diagnostics["data_status"] = "empty"
         return diagnostics
 
-    for column in raw_df.columns:
-        raw_df[column] = raw_df[column].str.strip()
+    raw_df = raw_df.apply(lambda col: col.str.strip())
 
     if not raw_df.empty:
         first_row = raw_df.iloc[0]
@@ -203,16 +195,19 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
             raw_df = raw_df.iloc[1:].copy()
 
     initial_rows = len(raw_df)
-    data_df = raw_df[raw_df["date"].str.fullmatch(r"\d{8}", na=False)].copy()
-    invalid_rows = initial_rows - len(data_df)
+    date_series = pd.to_datetime(raw_df["date"], format="%Y%m%d", errors="coerce")
+    valid_mask = date_series.notna()
+    invalid_rows = int((~valid_mask).sum())
+    data_df = raw_df.loc[valid_mask].copy()
+    valid_dates = date_series.loc[valid_mask]
 
-    if data_df.empty:
+    if data_df.empty or valid_dates.empty:
         diagnostics["data_status"] = "empty"
         return diagnostics
 
-    first_date = data_df["date"].iloc[0]
-    last_date = data_df["date"].iloc[-1]
     row_count = len(data_df)
+    first_date = valid_dates.iloc[0]
+    last_date = valid_dates.iloc[-1]
 
     close_numeric = pd.to_numeric(data_df["close"], errors="coerce")
     volume_numeric = pd.to_numeric(data_df["volume"], errors="coerce")
@@ -222,8 +217,8 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
     missing_volume = int(volume_numeric.isna().sum())
     zero_volume = int((volume_numeric == 0).sum())
 
-    duplicate_dates = bool(data_df["date"].duplicated().any())
-    non_monotonic_dates = not bool(data_df["date"].is_monotonic_increasing)
+    duplicate_dates = bool(valid_dates.duplicated().any())
+    non_monotonic_dates = not bool(valid_dates.is_monotonic_increasing)
 
     zero_volume_ratio = (zero_volume / row_count) if row_count else 0.0
     zero_volume_severity: Optional[str] = None
@@ -237,8 +232,8 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         else:
             zero_volume_severity = "low"
 
-    diagnostics["price_start"] = format_stooq_date(first_date)
-    diagnostics["price_end"] = format_stooq_date(last_date)
+    diagnostics["price_start"] = first_date.date().isoformat()
+    diagnostics["price_end"] = last_date.date().isoformat()
     diagnostics["price_rows"] = str(row_count)
     diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
 
@@ -268,156 +263,6 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
 
     diagnostics["data_flags"] = ";".join(flags)
     return diagnostics
-
-
-def _summarize_price_file_csv(file_path: Path, diagnostics: Dict[str, str]) -> Dict[str, str]:
-    """Legacy summarizer preserved temporarily for environments without pandas."""
-    global _LEGACY_WARNING_EMITTED
-    if not _LEGACY_WARNING_EMITTED and not _PANDAS_IMPORT_ERROR:
-        LOGGER.warning(
-            "Falling back to legacy CSV parsing for %s; this path is slated for removal once "
-            "all environments provide pandas.",
-            file_path,
-        )
-        _LEGACY_WARNING_EMITTED = True
-    expected_cols = len(STOOQ_COLUMNS)
-    invalid_rows = 0
-    non_numeric_prices = 0
-    non_positive_close = 0
-    zero_volume = 0
-    missing_volume = 0
-    zero_volume_ratio = 0.0
-    zero_volume_severity: Optional[str] = None
-    duplicate_dates = False
-    non_monotonic_dates = False
-    seen_dates: set[str] = set()
-    previous_date: Optional[str] = None
-    flags: List[str] = []
-
-    try:
-        with open(file_path, "r", encoding="utf-8") as handle:
-            reader = csv.reader(handle)
-            header = next(reader, None)
-            if not header:
-                diagnostics["data_status"] = "empty"
-                return diagnostics
-
-            first_row: Optional[List[str]] = None
-            for initial_row in reader:
-                if len(initial_row) < expected_cols:
-                    invalid_rows += 1
-                    continue
-                first_row = initial_row
-                break
-
-            if not first_row:
-                diagnostics["data_status"] = "empty"
-                return diagnostics
-
-            first_date = first_row[2]
-            last_date = first_date
-            row_count = 1
-            previous_date = first_date
-            seen_dates.add(first_date)
-
-            def _parse_float(value: str) -> Optional[float]:
-                try:
-                    return float(value)
-                except (TypeError, ValueError):
-                    return None
-
-            close_value = _parse_float(first_row[7])
-            volume_value = _parse_float(first_row[8]) if len(first_row) > 8 else None
-            if close_value is None:
-                non_numeric_prices += 1
-            elif close_value <= 0:
-                non_positive_close += 1
-            if volume_value is None:
-                missing_volume += 1
-            elif volume_value == 0:
-                zero_volume += 1
-
-            for row in reader:
-                if len(row) < expected_cols:
-                    invalid_rows += 1
-                    continue
-                date_value = row[2]
-                if date_value in seen_dates:
-                    duplicate_dates = True
-                else:
-                    seen_dates.add(date_value)
-                if previous_date and date_value < previous_date:
-                    non_monotonic_dates = True
-                previous_date = date_value
-                last_date = date_value
-                close_value = _parse_float(row[7])
-                if close_value is None:
-                    non_numeric_prices += 1
-                elif close_value <= 0:
-                    non_positive_close += 1
-                volume_value = _parse_float(row[8]) if len(row) > 8 else None
-                if volume_value is None:
-                    missing_volume += 1
-                elif volume_value == 0:
-                    zero_volume += 1
-                row_count += 1
-
-            diagnostics["price_start"] = format_stooq_date(first_date)
-            diagnostics["price_end"] = format_stooq_date(last_date)
-            diagnostics["price_rows"] = str(row_count)
-            diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
-
-            if row_count:
-                zero_volume_ratio = zero_volume / row_count
-                if zero_volume:
-                    if zero_volume_ratio >= 0.5:
-                        zero_volume_severity = "critical"
-                    elif zero_volume_ratio >= 0.1:
-                        zero_volume_severity = "high"
-                    elif zero_volume_ratio >= 0.01:
-                        zero_volume_severity = "moderate"
-                    else:
-                        zero_volume_severity = "low"
-
-            if invalid_rows:
-                flags.append(f"invalid_rows={invalid_rows}")
-            if non_numeric_prices:
-                flags.append(f"non_numeric_prices={non_numeric_prices}")
-            if non_positive_close:
-                flags.append(f"non_positive_close={non_positive_close}")
-            if missing_volume:
-                flags.append(f"missing_volume={missing_volume}")
-            if zero_volume:
-                flags.append(f"zero_volume={zero_volume}")
-                flags.append(f"zero_volume_ratio={zero_volume_ratio:.4f}")
-                if zero_volume_severity:
-                    flags.append(f"zero_volume_severity={zero_volume_severity}")
-            if duplicate_dates:
-                flags.append("duplicate_dates")
-            if non_monotonic_dates:
-                flags.append("non_monotonic_dates")
-
-            if zero_volume_severity and diagnostics["data_status"] == "ok":
-                diagnostics["data_status"] = "warning"
-            elif flags and diagnostics["data_status"] == "ok":
-                diagnostics["data_status"] = "warning"
-
-            diagnostics["data_flags"] = ";".join(flags)
-    except OSError as exc:
-        diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
-
-    return diagnostics
-
-
-def format_stooq_date(value: str) -> str:
-    """Convert Stooq YYYYMMDD date strings into ISO format when possible."""
-    if not value:
-        return ""
-    try:
-        parsed = datetime.strptime(value, "%Y%m%d")
-        return parsed.date().isoformat()
-    except ValueError:
-        return value
 
 
 def infer_currency(stooq_file: StooqFile) -> Optional[str]:
@@ -651,62 +496,29 @@ def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> List[StooqFile
 def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
     """Persist the Stooq index to CSV."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if pd is None:
-        # Legacy fallback for environments still missing pandas support.
-        with open(output_path, "w", newline="", encoding="utf-8") as handle:
-            writer = csv.writer(handle)
-            writer.writerow(["ticker", "stem", "relative_path", "region", "category"])
-            for entry in entries:
-                writer.writerow(
-                    [
-                        entry.ticker,
-                        entry.stem,
-                        entry.rel_path,
-                        entry.region,
-                        entry.category,
-                    ]
-                )
-    else:
-        records = []
-        for entry in entries:
-            record = asdict(entry)
-            record["relative_path"] = record.pop("rel_path")
-            records.append(record)
-        columns = ["ticker", "stem", "relative_path", "region", "category"]
-        pd.DataFrame.from_records(records, columns=columns).to_csv(output_path, index=False)
+    records = []
+    for entry in entries:
+        record = asdict(entry)
+        record["relative_path"] = record.pop("rel_path")
+        records.append(record)
+    columns = ["ticker", "stem", "relative_path", "region", "category"]
+    pd.DataFrame.from_records(records, columns=columns).to_csv(output_path, index=False)
     LOGGER.info("Stooq index written to %s", output_path)
 
 
 def read_stooq_index(csv_path: Path) -> List[StooqFile]:
     """Load the Stooq index from an existing CSV."""
-    if pd is None:
-        # Legacy fallback for environments still missing pandas support.
-        entries: List[StooqFile] = []
-        with open(csv_path, newline="", encoding="utf-8") as handle:
-            reader = csv.DictReader(handle)
-            for row in reader:
-                rel_path_str = row["relative_path"]
-                entries.append(
-                    StooqFile(
-                        ticker=row["ticker"].upper(),
-                        stem=row["stem"].upper(),
-                        rel_path=rel_path_str,
-                        region=row.get("region", ""),
-                        category=row.get("category", ""),
-                    )
-                )
-    else:
-        df = pd.read_csv(csv_path, dtype=str).fillna("")
-        entries = [
-            StooqFile(
-                ticker=row["ticker"].upper(),
-                stem=row["stem"].upper(),
-                rel_path=row["relative_path"],
-                region=row.get("region", ""),
-                category=row.get("category", ""),
-            )
-            for row in df.to_dict(orient="records")
-        ]
+    df = pd.read_csv(csv_path, dtype=str).fillna("")
+    entries = [
+        StooqFile(
+            ticker=row["ticker"].upper(),
+            stem=row["stem"].upper(),
+            rel_path=row["relative_path"],
+            region=row.get("region", ""),
+            category=row.get("category", ""),
+        )
+        for row in df.to_dict(orient="records")
+    ]
     LOGGER.info("Loaded %s Stooq index entries from %s", len(entries), csv_path)
     return entries
 
@@ -715,66 +527,40 @@ def load_tradeable_instruments(tradeable_dir: Path) -> List[TradeableInstrument]
     """Load and normalize tradeable instrument CSV files."""
     instruments: List[TradeableInstrument] = []
     csv_paths = sorted(tradeable_dir.glob("*.csv"))
-    if pd is None:
-        # Legacy fallback for environments still missing pandas support.
-        for csv_path in csv_paths:
-            with open(csv_path, newline="", encoding="utf-8") as handle:
-                reader = csv.DictReader(handle)
-                lower_map = {field.lower(): field for field in reader.fieldnames or []}
-                get_field = lower_map.get
-                for row in reader:
-                    symbol = row.get(get_field("symbol") or "", "").strip()
-                    isin = row.get(get_field("isin") or "", "").strip()
-                    market = row.get(get_field("market") or "", "").strip()
-                    name = row.get(get_field("name") or "", "").strip()
-                    currency = row.get(get_field("currency") or "", "").strip()
-                    if not symbol:
-                        continue
-                    instruments.append(
-                        TradeableInstrument(
-                            symbol=symbol,
-                            isin=isin,
-                            market=market,
-                            name=name,
-                            currency=currency,
-                            source_file=csv_path.name,
-                        )
-                    )
-    else:
-        frames = []
-        expected_cols = ["symbol", "isin", "market", "name", "currency"]
-        for csv_path in csv_paths:
-            df = pd.read_csv(
-                csv_path,
-                dtype=str,
-                keep_default_na=False,
-                na_filter=False,
-                encoding="utf-8",
+    frames = []
+    expected_cols = ["symbol", "isin", "market", "name", "currency"]
+    for csv_path in csv_paths:
+        df = pd.read_csv(
+            csv_path,
+            dtype=str,
+            keep_default_na=False,
+            na_filter=False,
+            encoding="utf-8",
+        )
+        df.columns = [col.lower() for col in df.columns]
+        for col in expected_cols:
+            if col not in df.columns:
+                df[col] = ""
+        for col in expected_cols:
+            df[col] = df[col].astype(str).str.strip()
+        df = df[df["symbol"] != ""].copy()
+        if df.empty:
+            continue
+        df["source_file"] = csv_path.name
+        frames.append(df[expected_cols + ["source_file"]])
+    if frames:
+        combined = pd.concat(frames, ignore_index=True)
+        instruments = [
+            TradeableInstrument(
+                symbol=row["symbol"],
+                isin=row.get("isin", ""),
+                market=row.get("market", ""),
+                name=row.get("name", ""),
+                currency=row.get("currency", ""),
+                source_file=row.get("source_file", ""),
             )
-            df.columns = [col.lower() for col in df.columns]
-            for col in expected_cols:
-                if col not in df.columns:
-                    df[col] = ""
-            for col in expected_cols:
-                df[col] = df[col].astype(str).str.strip()
-            df = df[df["symbol"] != ""].copy()
-            if df.empty:
-                continue
-            df["source_file"] = csv_path.name
-            frames.append(df[expected_cols + ["source_file"]])
-        if frames:
-            combined = pd.concat(frames, ignore_index=True)
-            instruments = [
-                TradeableInstrument(
-                    symbol=row["symbol"],
-                    isin=row.get("isin", ""),
-                    market=row.get("market", ""),
-                    name=row.get("name", ""),
-                    currency=row.get("currency", ""),
-                    source_file=row.get("source_file", ""),
-                )
-                for row in combined.to_dict(orient="records")
-            ]
+            for row in combined.to_dict(orient="records")
+        ]
     LOGGER.info("Loaded %s tradeable instruments", len(instruments))
     return instruments
 
@@ -1114,142 +900,72 @@ def write_match_report(
     empty_tickers: List[str] = []
     flagged_samples: List[Tuple[str, str, str]] = []
 
-    if pd is None:
-        # Legacy fallback for environments still missing pandas support.
-        with open(output_path, "w", newline="", encoding="utf-8") as handle:
-            writer = csv.writer(handle)
-            writer.writerow(
-                [
-                    "symbol",
-                    "isin",
-                    "market",
-                    "name",
-                    "currency",
-                    "matched_ticker",
-                    "stooq_path",
-                    "region",
-                    "category",
-                    "strategy",
-                    "source_file",
-                    "price_start",
-                    "price_end",
-                    "price_rows",
-                    "inferred_currency",
-                    "resolved_currency",
-                    "currency_status",
-                    "data_status",
-                    "data_flags",
-                ]
+    columns = [
+        "symbol",
+        "isin",
+        "market",
+        "name",
+        "currency",
+        "matched_ticker",
+        "stooq_path",
+        "region",
+        "category",
+        "strategy",
+        "source_file",
+        "price_start",
+        "price_end",
+        "price_rows",
+        "inferred_currency",
+        "resolved_currency",
+        "currency_status",
+        "data_status",
+        "data_flags",
+    ]
+    rows: List[Dict[str, str]] = []
+    for match in matches:
+        diagnostics = summarize_price_file(data_dir, match.stooq_file)
+        diagnostics_cache[match.stooq_file.ticker.upper()] = diagnostics
+        _expected, inferred, resolved, currency_status = resolve_currency(
+            match.instrument,
+            match.stooq_file,
+            infer_currency(match.stooq_file),
+            lse_policy=lse_currency_policy,
+        )
+        currency_counts[currency_status] += 1
+        data_status = diagnostics["data_status"]
+        data_status_counts[data_status] += 1
+        if data_status == "empty":
+            empty_tickers.append(match.stooq_file.ticker)
+        data_flags = diagnostics.get("data_flags", "")
+        if data_flags:
+            flagged_samples.append(
+                (match.instrument.symbol, match.stooq_file.ticker, data_flags)
             )
-            for match in matches:
-                diagnostics = summarize_price_file(data_dir, match.stooq_file)
-                diagnostics_cache[match.stooq_file.ticker.upper()] = diagnostics
-                _expected, inferred, resolved, currency_status = resolve_currency(
-                    match.instrument,
-                    match.stooq_file,
-                    infer_currency(match.stooq_file),
-                    lse_policy=lse_currency_policy,
-                )
-                currency_counts[currency_status] += 1
-                data_status = diagnostics["data_status"]
-                data_status_counts[data_status] += 1
-                if data_status == "empty":
-                    empty_tickers.append(match.stooq_file.ticker)
-                data_flags = diagnostics.get("data_flags", "")
-                if data_flags:
-                    flagged_samples.append(
-                        (match.instrument.symbol, match.stooq_file.ticker, data_flags)
-                    )
-                writer.writerow(
-                    [
-                        match.instrument.symbol,
-                        match.instrument.isin,
-                        match.instrument.market,
-                        match.instrument.name,
-                        match.instrument.currency,
-                        match.matched_ticker,
-                        match.stooq_file.rel_path,
-                        match.stooq_file.region,
-                        match.stooq_file.category,
-                        match.strategy,
-                        match.instrument.source_file,
-                        diagnostics["price_start"],
-                        diagnostics["price_end"],
-                        diagnostics["price_rows"],
-                        inferred,
-                        resolved,
-                        currency_status,
-                        data_status,
-                        data_flags,
-                    ]
-                )
-    else:
-        columns = [
-            "symbol",
-            "isin",
-            "market",
-            "name",
-            "currency",
-            "matched_ticker",
-            "stooq_path",
-            "region",
-            "category",
-            "strategy",
-            "source_file",
-            "price_start",
-            "price_end",
-            "price_rows",
-            "inferred_currency",
-            "resolved_currency",
-            "currency_status",
-            "data_status",
-            "data_flags",
-        ]
-        rows: List[Dict[str, str]] = []
-        for match in matches:
-            diagnostics = summarize_price_file(data_dir, match.stooq_file)
-            diagnostics_cache[match.stooq_file.ticker.upper()] = diagnostics
-            _expected, inferred, resolved, currency_status = resolve_currency(
-                match.instrument,
-                match.stooq_file,
-                infer_currency(match.stooq_file),
-                lse_policy=lse_currency_policy,
-            )
-            currency_counts[currency_status] += 1
-            data_status = diagnostics["data_status"]
-            data_status_counts[data_status] += 1
-            if data_status == "empty":
-                empty_tickers.append(match.stooq_file.ticker)
-            data_flags = diagnostics.get("data_flags", "")
-            if data_flags:
-                flagged_samples.append(
-                    (match.instrument.symbol, match.stooq_file.ticker, data_flags)
-                )
-            rows.append(
-                {
-                    "symbol": match.instrument.symbol,
-                    "isin": match.instrument.isin,
-                    "market": match.instrument.market,
-                    "name": match.instrument.name,
-                    "currency": match.instrument.currency,
-                    "matched_ticker": match.matched_ticker,
-                    "stooq_path": match.stooq_file.rel_path,
-                    "region": match.stooq_file.region,
-                    "category": match.stooq_file.category,
-                    "strategy": match.strategy,
-                    "source_file": match.instrument.source_file,
-                    "price_start": diagnostics["price_start"],
-                    "price_end": diagnostics["price_end"],
-                    "price_rows": diagnostics["price_rows"],
-                    "inferred_currency": inferred,
-                    "resolved_currency": resolved,
-                    "currency_status": currency_status,
-                    "data_status": data_status,
-                    "data_flags": data_flags,
-                }
-            )
-        df = pd.DataFrame(rows, columns=columns)
-        df.to_csv(output_path, index=False)
+        rows.append(
+            {
+                "symbol": match.instrument.symbol,
+                "isin": match.instrument.isin,
+                "market": match.instrument.market,
+                "name": match.instrument.name,
+                "currency": match.instrument.currency,
+                "matched_ticker": match.matched_ticker,
+                "stooq_path": match.stooq_file.rel_path,
+                "region": match.stooq_file.region,
+                "category": match.stooq_file.category,
+                "strategy": match.strategy,
+                "source_file": match.instrument.source_file,
+                "price_start": diagnostics["price_start"],
+                "price_end": diagnostics["price_end"],
+                "price_rows": diagnostics["price_rows"],
+                "inferred_currency": inferred,
+                "resolved_currency": resolved,
+                "currency_status": currency_status,
+                "data_status": data_status,
+                "data_flags": data_flags,
+            }
+        )
+    df = pd.DataFrame(rows, columns=columns)
+    df.to_csv(output_path, index=False)
     LOGGER.info("Match report written to %s", output_path)
     return diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
 
@@ -1257,41 +973,21 @@ def write_match_report(
 def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path: Path) -> None:
     """Persist the unmatched instrument list for manual follow-up."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if pd is None:
-        # Legacy fallback for environments still missing pandas support.
-        with open(output_path, "w", newline="", encoding="utf-8") as handle:
-            writer = csv.writer(handle)
-            writer.writerow(
-                ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
-            )
-            for instrument in unmatched:
-                writer.writerow(
-                    [
-                        instrument.symbol,
-                        instrument.isin,
-                        instrument.market,
-                        instrument.name,
-                        instrument.currency,
-                        instrument.source_file,
-                        instrument.reason,
-                    ]
-                )
-    else:
-        rows = [
-            {
-                "symbol": instrument.symbol,
-                "isin": instrument.isin,
-                "market": instrument.market,
-                "name": instrument.name,
-                "currency": instrument.currency,
-                "source_file": instrument.source_file,
-                "reason": instrument.reason,
-            }
-            for instrument in unmatched
-        ]
-        columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
-        df = pd.DataFrame(rows, columns=columns)
-        df.to_csv(output_path, index=False)
+    rows = [
+        {
+            "symbol": instrument.symbol,
+            "isin": instrument.isin,
+            "market": instrument.market,
+            "name": instrument.name,
+            "currency": instrument.currency,
+            "source_file": instrument.source_file,
+            "reason": instrument.reason,
+        }
+        for instrument in unmatched
+    ]
+    columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
+    df = pd.DataFrame(rows, columns=columns)
+    df.to_csv(output_path, index=False)
     LOGGER.info("Unmatched report written to %s", output_path)
 
 
@@ -1325,7 +1021,6 @@ def export_tradeable_prices(
     Returns a tuple of (exported_count, skipped_count).
     """
     dest_dir.mkdir(parents=True, exist_ok=True)
-    header_line = "ticker,per,date,time,open,high,low,close,volume,openint\n"
 
     unique_matches: Dict[str, TradeableMatch] = {}
     for match in matches:
@@ -1368,14 +1063,28 @@ def export_tradeable_prices(
         if target_path.exists() and not overwrite:
             return False
         try:
-            with open(source_path, "r", encoding="utf-8") as src, open(
-                target_path, "w", encoding="utf-8"
-            ) as dst:
-                dst.write(header_line)
-                for line in src:
-                    if not line or line.startswith("<"):
-                        continue
-                    dst.write(line)
+            df = pd.read_csv(
+                source_path,
+                header=None,
+                names=STOOQ_COLUMNS,
+                comment="<",
+                dtype=str,
+                encoding="utf-8",
+                keep_default_na=False,
+                na_filter=False,
+            )
+            if df.empty and not include_empty:
+                if target_path.exists() and overwrite:
+                    try:
+                        target_path.unlink()
+                    except OSError as exc:
+                        LOGGER.warning(
+                            "Unable to remove empty export for %s: %s",
+                            match.stooq_file.ticker,
+                            exc,
+                        )
+                return False
+            df.to_csv(target_path, index=False)
             return True
         except OSError as exc:
             LOGGER.warning("Failed to export %s -> %s: %s", source_path, target_path, exc)

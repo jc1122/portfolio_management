@@ -22,6 +22,7 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
    ```bash
    pip install -r requirements.txt
    ```
+   > **Note:** `prepare_tradeable_data.py` now requires pandas; there is no CSV fallback. Confirm the dependency installs cleanly in every execution environment before running the script.
 4. Populate cached historical data from Stooq or other free sources.
 5. Run the CLI (to be added) to construct and evaluate portfolios.
 
@@ -47,14 +48,17 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 
 > **Heads-up:** The matching heuristics now cover common TSX, Xetra, Euronext, Swiss, and Brussels suffixes. If venues such as Xetra still appear in the unmatched report, confirm that the corresponding Stooq directory bundles (e.g., `d_de_txt/…`) have been unpacked—those files are absent from the current repository snapshot.
 >
-> The match report now includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately. Price diagnostics default to a pandas-backed summarizer for faster, more robust validation; the legacy CSV parser persists only as a temporary fallback.
+> The match report includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately.
+>
+> The script now mandates pandas for all data access (indexing, tradeable ingestion, report writing, price exports). A 1,000-file benchmark shows identical outputs with roughly a 12 % runtime increase versus the previous hybrid implementation.
 
 ## Status
 - Documentation and repository scaffolding complete.
 - Stooq data preparation script now enriches match outputs with per-instrument price coverage, currency diagnostics, and zero-volume severity tagging while preventing cross-venue fallbacks; flagged listings remain available but carry warnings in `data/metadata/tradeable_data_flags.csv`.
 - Latest data export matched 5,560 instruments (4,146 price files after dropping two empty histories) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
-- Matching CLI now leans on pandas to ingest broker CSVs and assemble reports, reducing custom CSV plumbing while retaining legacy fallbacks for no-pandas environments.
+- Matching CLI now leans entirely on pandas to ingest broker CSVs and assemble reports, eliminating the former CSV fallbacks.
 - Directory indexing uses a thread-pooled `os.walk` implementation (maintainability win versus the bespoke queue/lock walker) with identical outputs but slightly higher runtime (~1.8× slower on a 500-file sample).
+- Data preparation workflow is now pandas-only (legacy fallback removed) and validated against a 1,000-file subset; behaviour matches prior outputs with a small (~12 %) runtime penalty.
 - Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
 
 ## Contributing
