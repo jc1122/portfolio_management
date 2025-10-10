@@ -3,6 +3,7 @@
 ## Current Status
 - Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, zero-volume severity tagging, and a default pandas-backed validator for price diagnostics (legacy CSV path retained only as a temporary fallback).
 - Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers while preserving legacy fallbacks for no-pandas environments.
+- The Stooq indexer now uses a thread-pooled `os.walk` traversal (default workers = CPU cores minus one) for maintainability; first benchmarks show identical outputs but roughly 1.8× slower scans versus the legacy queue/lock walker on a 500-file sample.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.

@@ -14,6 +14,7 @@
 - Enhanced the validation stage to classify zero-volume exposure severity (low/moderate/high/critical) and regenerated the tradeable match report; captured the details in `data/metadata/tradeable_data_flags.csv` for offline triage and now flag them as warnings without filtering.
 - Replaced the row-by-row CSV validator with a pandas-backed summarizer (C-engine, selective columns) as the default path, keeping the legacy parser only as a temporary fallback and benchmarking the new approach to parity/slight gains.
 - Refactored broker instrument ingestion and match/unmatched report writers to use pandas for vectorized CSV handling, keeping legacy fallbacks for environments without pandas.
+- Simplified the Stooq directory indexer to use `os.walk` with a thread pool (defaulting to CPU cores minus one) instead of custom queue/lock plumbing, improving maintainability at the cost of a ~1.8× slower scan on a 500-file sample.
 
 ## Next Steps
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.

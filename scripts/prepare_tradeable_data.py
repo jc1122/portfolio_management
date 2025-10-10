@@ -27,15 +27,13 @@ import csv
 import logging
 import os
 import re
-import threading
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from queue import Queue
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
@@ -555,54 +553,53 @@ def determine_unmatched_reason(
 
 
 def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
-    """Collect relative TXT file paths within the Stooq tree using a worker queue."""
-    queue: Queue[Tuple[Path, Path]] = Queue()
-    queue.put((base_dir, Path()))
+    """Collect relative TXT file paths within the Stooq tree using parallel os.walk scanning."""
+
+    def _scan_directory(start_dir: Path) -> List[str]:
+        local_paths: List[str] = []
+        try:
+            for root, dirs, files in os.walk(start_dir, followlinks=False):
+                dirs[:] = [d for d in dirs if not d.startswith(".")]
+                for file_name in files:
+                    if file_name.startswith(".") or not file_name.lower().endswith(".txt"):
+                        continue
+                    full_path = Path(root) / file_name
+                    try:
+                        relative = full_path.relative_to(base_dir)
+                    except ValueError:
+                        continue
+                    if any(part.startswith(".") for part in relative.parts):
+                        continue
+                    local_paths.append(relative.as_posix())
+        except OSError as exc:
+            LOGGER.warning("Unable to scan %s: %s", start_dir, exc)
+        return local_paths
+
     rel_paths: List[str] = []
-    lock = threading.Lock()
+    top_level_dirs: List[Path] = []
+    try:
+        for entry in base_dir.iterdir():
+            if entry.name.startswith("."):
+                continue
+            if entry.is_dir():
+                top_level_dirs.append(entry)
+            elif entry.is_file() and entry.suffix.lower() == ".txt":
+                rel_paths.append(entry.relative_to(base_dir).as_posix())
+    except OSError as exc:
+        LOGGER.warning("Unable to iterate %s: %s", base_dir, exc)
+        return rel_paths
 
-    max_workers = max(1, max_workers)
+    worker_count = max(1, max_workers)
+    if worker_count <= 1 or not top_level_dirs:
+        for directory in top_level_dirs:
+            rel_paths.extend(_scan_directory(directory))
+    else:
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            futures = {executor.submit(_scan_directory, directory): directory for directory in top_level_dirs}
+            for future in as_completed(futures):
+                rel_paths.extend(future.result())
 
-    def worker() -> None:
-        while True:
-            item = queue.get()
-            if item is None:
-                queue.task_done()
-                break
-            dir_path, rel_dir = item
-            try:
-                with os.scandir(dir_path) as it:
-                    for entry in it:
-                        name = entry.name
-                        if not name or name.startswith("."):
-                            continue
-                        if entry.is_dir(follow_symlinks=False):
-                            queue.put((Path(entry.path), rel_dir / name))
-                        elif entry.is_file(follow_symlinks=False) and name.lower().endswith(".txt"):
-                            rel_file = rel_dir / name
-                            rel_str = rel_file.as_posix()
-                            with lock:
-                                rel_paths.append(rel_str)
-            except OSError as exc:
-                LOGGER.warning("Unable to scan %s: %s", dir_path, exc)
-            finally:
-                queue.task_done()
-
-    threads = [
-        threading.Thread(target=worker, name=f"stooq-scan-{idx}", daemon=True)
-        for idx in range(max_workers)
-    ]
-    for thread in threads:
-        thread.start()
-
-    queue.join()
-
-    for _ in threads:
-        queue.put(None)
-
-    for thread in threads:
-        thread.join()
-
+    rel_paths.sort()
     return rel_paths
 
 
@@ -670,19 +667,13 @@ def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
                     ]
                 )
     else:
-        data = [
-            {
-                "ticker": entry.ticker,
-                "stem": entry.stem,
-                "relative_path": entry.rel_path,
-                "region": entry.region,
-                "category": entry.category,
-            }
-            for entry in entries
-        ]
-        pd.DataFrame(data, columns=["ticker", "stem", "relative_path", "region", "category"]).to_csv(
-            output_path, index=False
-        )
+        records = []
+        for entry in entries:
+            record = asdict(entry)
+            record["relative_path"] = record.pop("rel_path")
+            records.append(record)
+        columns = ["ticker", "stem", "relative_path", "region", "category"]
+        pd.DataFrame.from_records(records, columns=columns).to_csv(output_path, index=False)
     LOGGER.info("Stooq index written to %s", output_path)
 
 
@@ -1504,7 +1495,7 @@ def main() -> None:
     data_dir = args.data_dir
     metadata_path = args.metadata_output
     cpu_count = os.cpu_count() or 1
-    auto_workers = min(8, cpu_count)
+    auto_workers = max(1, (cpu_count - 1) or 1)
     max_workers = args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
     max_workers = max(1, max_workers)
     index_workers = args.index_workers if args.index_workers and args.index_workers > 0 else max_workers
