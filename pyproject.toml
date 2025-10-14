@@ -1,0 +1,18 @@
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C90", "I", "N", "D", "UP", "YTT", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.per-file-ignores]
+"scripts/prepare_tradeable_data.py" = ["C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "TRY300", "E402", "TCH003", "D407"]
+"tests/**/*.py" = ["D103", "S101", "PLR2004", "PT006", "ARG001", "D212", "D213", "PLR0913", "S603", "FLY002", "PD901"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["data", "data/*", ".git", ".venv", "venv", "__pycache__", "*.egg-info"]

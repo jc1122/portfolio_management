@@ -1,4 +1,4 @@
-"""Prepare tradeable instrument datasets from unpacked Stooq price files.
+r"""Prepare tradeable instrument datasets from unpacked Stooq price files.
 
 The script expects the unpacked Stooq directory tree (e.g., `data/stooq/d_pl_txt/...`)
 and three CSV files describing the tradeable universes. It performs the following steps:
@@ -9,14 +9,14 @@ and three CSV files describing the tradeable universes. It performs the followin
 4. Export matched price histories and emit reports for matched/unmatched assets.
 
 Example usage:
-    python scripts/prepare_tradeable_data.py \\
-        --data-dir data/stooq \\
-        --metadata-output data/metadata/stooq_index.csv \\
-        --tradeable-dir tradeable_instruments \\
-        --match-report data/metadata/tradeable_matches.csv \\
-        --unmatched-report data/metadata/tradeable_unmatched.csv \\
-        --prices-output data/processed/tradeable_prices \\
-        --max-workers 8 \\
+    python scripts/prepare_tradeable_data.py \
+        --data-dir data/stooq \
+        --metadata-output data/metadata/stooq_index.csv \
+        --tradeable-dir tradeable_instruments \
+        --match-report data/metadata/tradeable_matches.csv \
+        --unmatched-report data/metadata/tradeable_unmatched.csv \
+        --prices-output data/processed/tradeable_prices \
+        --max-workers 8 \
         --overwrite-prices
 """
 
@@ -28,34 +28,52 @@ import os
 import re
 import time
 from collections import Counter
+from collections.abc import Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
     import pandas as pd
 except ImportError as exc:  # pragma: no cover - pandas is required for this module
     raise ImportError(
         "pandas is required to run prepare_tradeable_data.py. "
-        "Please install pandas before executing this script."
+        "Please install pandas before executing this script.",
     ) from exc
 
 LOGGER = logging.getLogger(__name__)
 
 
 from src.portfolio_management.config import (
-    REGION_CURRENCY_MAP,
     LEGACY_PREFIXES,
-    SYMBOL_ALIAS_MAP,
+    REGION_CURRENCY_MAP,
     STOOQ_COLUMNS,
-    STOOQ_PANDAS_COLUMNS,
+    SYMBOL_ALIAS_MAP,
 )
+
+# Constants for zero volume thresholds
+ZERO_VOLUME_CRITICAL_THRESHOLD = 0.5
+ZERO_VOLUME_HIGH_THRESHOLD = 0.1
+ZERO_VOLUME_MODERATE_THRESHOLD = 0.01
+
+# Constants for path parsing
+DAILY_INDEX_OFFSET = 1
+DAILY_CATEGORY_OFFSET = 2
+MIN_PARTS_FOR_CATEGORY = 2
 
 
 @contextmanager
 def log_duration(step: str):
+    """Context manager to log the duration of an operation.
+
+    Args:
+        step: Description of the operation being timed.
+
+    Yields:
+        None
+
+    """
     start = time.perf_counter()
     try:
         yield
@@ -66,6 +84,8 @@ def log_duration(step: str):
 
 @dataclass
 class StooqFile:
+    """Represents a Stooq price file with metadata about its location and structure."""
+
     ticker: str
     stem: str
     rel_path: str
@@ -73,10 +93,12 @@ class StooqFile:
     category: str
 
     def to_path(self) -> Path:
+        """Convert the relative path string to a Path object."""
         return Path(self.rel_path)
 
     @property
     def extension(self) -> str:
+        """Extract the market extension from the ticker (e.g., '.UK' from 'ABC.UK')."""
         if "." in self.ticker:
             return f".{self.ticker.split('.', 1)[1]}"
         return ""
@@ -84,6 +106,8 @@ class StooqFile:
 
 @dataclass
 class TradeableInstrument:
+    """Represents a tradeable financial instrument from a broker's universe."""
+
     symbol: str
     isin: str
     market: str
@@ -95,6 +119,8 @@ class TradeableInstrument:
 
 @dataclass
 class TradeableMatch:
+    """Represents a successful match between a tradeable instrument and a Stooq file."""
+
     instrument: TradeableInstrument
     stooq_file: StooqFile
     matched_ticker: str
@@ -116,7 +142,7 @@ def _read_stooq_csv(file_path: Path, engine: str) -> pd.DataFrame:
     )
 
 
-def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str]:
+def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str]:
     """Extract diagnostics and validation flags from a Stooq price file."""
     file_path = base_dir / stooq_file.rel_path
     diagnostics = {
@@ -133,9 +159,9 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
 
     try:
         try:
-            raw_df = _read_stooq_csv(file_path, "c")
+            raw_price_frame = _read_stooq_csv(file_path, "c")
         except (ValueError, pd.errors.ParserError):
-            raw_df = _read_stooq_csv(file_path, "python")
+            raw_price_frame = _read_stooq_csv(file_path, "python")
     except (pd.errors.EmptyDataError, UnicodeDecodeError) as exc:
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
         return diagnostics
@@ -143,37 +169,40 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
         return diagnostics
 
-    if raw_df.empty:
+    if raw_price_frame.empty:
         diagnostics["data_status"] = "empty"
         return diagnostics
 
-    raw_df = raw_df.apply(lambda col: col.str.strip())
+    raw_price_frame = raw_price_frame.apply(lambda col: col.str.strip())
 
-    if not raw_df.empty:
-        first_row = raw_df.iloc[0]
+    if not raw_price_frame.empty:
+        first_row = raw_price_frame.iloc[0]
         if all(
             isinstance(first_row[column], str) and first_row[column].lower() == column
-            for column in raw_df.columns
+            for column in raw_price_frame.columns
         ):
-            raw_df = raw_df.iloc[1:].copy()
+            raw_price_frame = raw_price_frame.iloc[1:].copy()
 
-    initial_rows = len(raw_df)
-    date_series = pd.to_datetime(raw_df["date"], format="%Y%m%d", errors="coerce")
+    date_series = pd.to_datetime(
+        raw_price_frame["date"],
+        format="%Y%m%d",
+        errors="coerce",
+    )
     invalid_rows = int(date_series.isna().sum())
     valid_mask = date_series.notna()
-    data_df = raw_df.loc[valid_mask].copy()
+    valid_price_frame = raw_price_frame.loc[valid_mask].copy()
     valid_dates = date_series.loc[valid_mask]
 
-    if data_df.empty or valid_dates.empty:
+    if valid_price_frame.empty or valid_dates.empty:
         diagnostics["data_status"] = "empty"
         return diagnostics
 
-    row_count = len(data_df)
+    row_count = len(valid_price_frame)
     first_date = valid_dates.iloc[0]
     last_date = valid_dates.iloc[-1]
 
-    close_numeric = pd.to_numeric(data_df["close"], errors="coerce")
-    volume_numeric = pd.to_numeric(data_df["volume"], errors="coerce")
+    close_numeric = pd.to_numeric(valid_price_frame["close"], errors="coerce")
+    volume_numeric = pd.to_numeric(valid_price_frame["volume"], errors="coerce")
 
     non_numeric_prices = int(close_numeric.isna().sum())
     non_positive_close = int((close_numeric[close_numeric.notna()] <= 0).sum())
@@ -184,13 +213,13 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
     non_monotonic_dates = not bool(valid_dates.is_monotonic_increasing)
 
     zero_volume_ratio = (zero_volume / row_count) if row_count else 0.0
-    zero_volume_severity: Optional[str] = None
+    zero_volume_severity: str | None = None
     if zero_volume:
-        if zero_volume_ratio >= 0.5:
+        if zero_volume_ratio >= ZERO_VOLUME_CRITICAL_THRESHOLD:
             zero_volume_severity = "critical"
-        elif zero_volume_ratio >= 0.1:
+        elif zero_volume_ratio >= ZERO_VOLUME_HIGH_THRESHOLD:
             zero_volume_severity = "high"
-        elif zero_volume_ratio >= 0.01:
+        elif zero_volume_ratio >= ZERO_VOLUME_MODERATE_THRESHOLD:
             zero_volume_severity = "moderate"
         else:
             zero_volume_severity = "low"
@@ -200,7 +229,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
     diagnostics["price_rows"] = str(row_count)
     diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
 
-    flags: List[str] = []
+    flags: list[str] = []
     if invalid_rows:
         flags.append(f"invalid_rows={invalid_rows}")
     if non_numeric_prices:
@@ -219,16 +248,16 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
     if non_monotonic_dates:
         flags.append("non_monotonic_dates")
 
-    if zero_volume_severity and diagnostics["data_status"] == "ok":
-        diagnostics["data_status"] = "warning"
-    elif flags and diagnostics["data_status"] == "ok":
+    if (zero_volume_severity and diagnostics["data_status"] == "ok") or (
+        flags and diagnostics["data_status"] == "ok"
+    ):
         diagnostics["data_status"] = "warning"
 
     diagnostics["data_flags"] = ";".join(flags)
     return diagnostics
 
 
-def infer_currency(stooq_file: StooqFile) -> Optional[str]:
+def infer_currency(stooq_file: StooqFile) -> str | None:
     """Guess the trading currency from the Stooq region/category."""
     region_key = (stooq_file.region or "").lower()
     return REGION_CURRENCY_MAP.get(region_key)
@@ -245,12 +274,11 @@ def _is_lse_listing(symbol: str, market: str) -> bool:
 def resolve_currency(
     instrument: TradeableInstrument,
     stooq_file: StooqFile,
-    inferred_currency: Optional[str],
+    inferred_currency: str | None,
     *,
     lse_policy: str = "broker",
-) -> Tuple[str, str, str, str]:
+) -> tuple[str, str, str, str]:
     """Determine effective currency and status for reporting."""
-
     expected = (instrument.currency or "").upper()
     inferred = (inferred_currency or "").upper()
     market = (instrument.market or "").upper()
@@ -279,7 +307,10 @@ def resolve_currency(
                 resolved = ""
                 status = "error:lse_currency_override"
             else:
-                LOGGER.warning("Unknown LSE currency policy '%s'; defaulting to broker.", lse_policy)
+                LOGGER.warning(
+                    "Unknown LSE currency policy '%s'; defaulting to broker.",
+                    lse_policy,
+                )
                 resolved = expected
                 status = "override"
         else:
@@ -314,18 +345,15 @@ def log_summary_counts(currency_counts: Counter, data_status_counts: Counter) ->
 
 def collect_available_extensions(entries: Sequence[StooqFile]) -> set[str]:
     """Return the set of ticker extensions present in the Stooq index."""
-    extensions: set[str] = set()
-    for entry in entries:
-        if "." in entry.ticker:
-            extensions.add(entry.ticker[entry.ticker.find(".") :].upper())
-        else:
-            extensions.add("")
-    return extensions
+    return {
+        entry.ticker[entry.ticker.find(".") :].upper() if "." in entry.ticker else ""
+        for entry in entries
+    }
 
 
 def determine_unmatched_reason(
     instrument: TradeableInstrument,
-    stooq_by_base: Dict[str, List[StooqFile]],
+    stooq_by_base: dict[str, list[StooqFile]],
     available_extensions: set[str],
 ) -> str:
     """Explain why a tradeable instrument could not be matched."""
@@ -362,27 +390,26 @@ def determine_unmatched_reason(
 
 def _run_in_parallel(func, args_list, max_workers):
     """Run a function in parallel with a list of arguments."""
-    results = []
     if max_workers <= 1:
-        for args in args_list:
-            results.append(func(*args))
-    else:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(func, *args) for args in args_list]
-            for future in as_completed(futures):
-                results.append(future.result())
-    return results
+        return [func(*args) for args in args_list]
 
-def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(func, *args) for args in args_list]
+        return [future.result() for future in as_completed(futures)]
+
+
+def _collect_relative_paths(base_dir: Path, max_workers: int) -> list[str]:
     """Collect relative TXT file paths within the Stooq tree using parallel os.walk scanning."""
 
-    def _scan_directory(start_dir: Path) -> List[str]:
-        local_paths: List[str] = []
+    def _scan_directory(start_dir: Path) -> list[str]:
+        local_paths: list[str] = []
         try:
             for root, dirs, files in os.walk(start_dir, followlinks=False):
                 dirs[:] = [d for d in dirs if not d.startswith(".")]
                 for file_name in files:
-                    if file_name.startswith(".") or not file_name.lower().endswith(".txt"):
+                    if file_name.startswith(".") or not file_name.lower().endswith(
+                        ".txt",
+                    ):
                         continue
                     full_path = Path(root) / file_name
                     try:
@@ -396,21 +423,26 @@ def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
             LOGGER.warning("Unable to scan %s: %s", start_dir, exc)
         return local_paths
 
-    rel_paths: List[str] = []
-    top_level_dirs: List[Path] = []
     try:
-        for entry in base_dir.iterdir():
-            if entry.name.startswith("."):
-                continue
-            if entry.is_dir():
-                top_level_dirs.append(entry)
-            elif entry.is_file() and entry.suffix.lower() == ".txt":
-                rel_paths.append(entry.relative_to(base_dir).as_posix())
+        top_level_entries = [
+            entry for entry in base_dir.iterdir() if not entry.name.startswith(".")
+        ]
     except OSError as exc:
         LOGGER.warning("Unable to iterate %s: %s", base_dir, exc)
-        return rel_paths
+        return []
 
-    results = _run_in_parallel(_scan_directory, [(d,) for d in top_level_dirs], max_workers)
+    rel_paths = [
+        entry.relative_to(base_dir).as_posix()
+        for entry in top_level_entries
+        if entry.is_file() and entry.suffix.lower() == ".txt"
+    ]
+    top_level_dirs = [entry for entry in top_level_entries if entry.is_dir()]
+
+    results = _run_in_parallel(
+        _scan_directory,
+        [(d,) for d in top_level_dirs],
+        max_workers,
+    )
     for result in results:
         rel_paths.extend(result)
 
@@ -418,26 +450,26 @@ def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
     return rel_paths
 
 
-def derive_region_and_category(rel_path: Path) -> Tuple[str, str]:
+def derive_region_and_category(rel_path: Path) -> tuple[str, str]:
     """Infer region and category from the relative path within the Stooq tree."""
     parts = list(rel_path.parts)
     region = ""
     category = ""
     if "daily" in parts:
         idx = parts.index("daily")
-        if idx + 1 < len(parts):
-            region = parts[idx + 1]
-        if idx + 2 < len(parts):
-            category = "/".join(parts[idx + 2 : -1])
+        if idx + DAILY_INDEX_OFFSET < len(parts):
+            region = parts[idx + DAILY_INDEX_OFFSET]
+        if idx + DAILY_CATEGORY_OFFSET < len(parts):
+            category = "/".join(parts[idx + DAILY_CATEGORY_OFFSET : -1])
     else:
         if parts:
             region = parts[0]
-        if len(parts) > 2:
+        if len(parts) > MIN_PARTS_FOR_CATEGORY:
             category = "/".join(parts[1:-1])
     return region, category
 
 
-def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> List[StooqFile]:
+def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> list[StooqFile]:
     """Create an index describing all unpacked Stooq price files."""
     if not data_dir.exists():
         raise FileNotFoundError(f"Data directory not found: {data_dir}")
@@ -445,20 +477,16 @@ def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> List[StooqFile
     relative_paths = _collect_relative_paths(data_dir, max_workers)
     relative_paths.sort()
 
-    entries: List[StooqFile] = []
-    for rel_path_str in relative_paths:
-        rel_path = Path(rel_path_str)
-        region, category = derive_region_and_category(rel_path)
-        ticker = rel_path.stem.upper()
-        entries.append(
-            StooqFile(
-                ticker=ticker,
-                stem=rel_path.stem.upper(),
-                rel_path=rel_path_str,
-                region=region,
-                category=category,
-            )
+    entries = [
+        StooqFile(
+            ticker=(rel_path := Path(rel_path_str)).stem.upper(),
+            stem=rel_path.stem.upper(),
+            rel_path=rel_path_str,
+            region=(region_category := derive_region_and_category(rel_path))[0],
+            category=region_category[1],
         )
+        for rel_path_str in relative_paths
+    ]
     LOGGER.info("Indexed %s Stooq files", len(entries))
     return entries
 
@@ -466,19 +494,24 @@ def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> List[StooqFile
 def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
     """Persist the Stooq index to CSV."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    records = []
-    for entry in entries:
-        record = asdict(entry)
-        record["relative_path"] = record.pop("rel_path")
-        records.append(record)
+    records = [
+        {
+            "ticker": entry.ticker,
+            "stem": entry.stem,
+            "relative_path": entry.rel_path,
+            "region": entry.region,
+            "category": entry.category,
+        }
+        for entry in entries
+    ]
     columns = ["ticker", "stem", "relative_path", "region", "category"]
     pd.DataFrame.from_records(records, columns=columns).to_csv(output_path, index=False)
     LOGGER.info("Stooq index written to %s", output_path)
 
 
-def read_stooq_index(csv_path: Path) -> List[StooqFile]:
+def read_stooq_index(csv_path: Path) -> list[StooqFile]:
     """Load the Stooq index from an existing CSV."""
-    df = pd.read_csv(csv_path, dtype=str).fillna("")
+    index_frame = pd.read_csv(csv_path, dtype=str).fillna("")
     entries = [
         StooqFile(
             ticker=row["ticker"].upper(),
@@ -487,39 +520,49 @@ def read_stooq_index(csv_path: Path) -> List[StooqFile]:
             region=row.get("region", ""),
             category=row.get("category", ""),
         )
-        for row in df.to_dict(orient="records")
+        for row in index_frame.to_dict(orient="records")
     ]
     LOGGER.info("Loaded %s Stooq index entries from %s", len(entries), csv_path)
     return entries
 
 
-def load_tradeable_instruments(tradeable_dir: Path) -> List[TradeableInstrument]:
+def _load_tradeable_frame(
+    csv_path: Path,
+    expected_columns: Sequence[str],
+) -> pd.DataFrame | None:
+    """Load and normalize a single tradeable instrument CSV."""
+    instrument_frame = pd.read_csv(
+        csv_path,
+        dtype=str,
+        keep_default_na=False,
+        na_filter=False,
+        encoding="utf-8",
+    )
+    instrument_frame.columns = [col.lower() for col in instrument_frame.columns]
+    for column in expected_columns:
+        if column not in instrument_frame.columns:
+            instrument_frame[column] = ""
+    for column in expected_columns:
+        instrument_frame[column] = instrument_frame[column].astype(str).str.strip()
+    instrument_frame = instrument_frame[instrument_frame["symbol"] != ""].copy()
+    if instrument_frame.empty:
+        return None
+    instrument_frame["source_file"] = csv_path.name
+    return instrument_frame[[*expected_columns, "source_file"]]
+
+
+def load_tradeable_instruments(tradeable_dir: Path) -> list[TradeableInstrument]:
     """Load and normalize tradeable instrument CSV files."""
-    instruments: List[TradeableInstrument] = []
+    instruments: list[TradeableInstrument] = []
     csv_paths = sorted(tradeable_dir.glob("*.csv"))
-    frames = []
     expected_cols = ["symbol", "isin", "market", "name", "currency"]
-    for csv_path in csv_paths:
-        df = pd.read_csv(
-            csv_path,
-            dtype=str,
-            keep_default_na=False,
-            na_filter=False,
-            encoding="utf-8",
-        )
-        df.columns = [col.lower() for col in df.columns]
-        for col in expected_cols:
-            if col not in df.columns:
-                df[col] = ""
-        for col in expected_cols:
-            df[col] = df[col].astype(str).str.strip()
-        df = df[df["symbol"] != ""].copy()
-        if df.empty:
-            continue
-        df["source_file"] = csv_path.name
-        frames.append(df[expected_cols + ["source_file"]])
-    if frames:
-        combined = pd.concat(frames, ignore_index=True)
+    instrument_frames = [
+        frame
+        for csv_path in csv_paths
+        if (frame := _load_tradeable_frame(csv_path, expected_cols)) is not None
+    ]
+    if instrument_frames:
+        combined_frame = pd.concat(instrument_frames, ignore_index=True)
         instruments = [
             TradeableInstrument(
                 symbol=row["symbol"],
@@ -529,7 +572,7 @@ def load_tradeable_instruments(tradeable_dir: Path) -> List[TradeableInstrument]
                 currency=row.get("currency", ""),
                 source_file=row.get("source_file", ""),
             )
-            for row in combined.to_dict(orient="records")
+            for row in combined_frame.to_dict(orient="records")
         ]
     LOGGER.info("Loaded %s tradeable instruments", len(instruments))
     return instruments
@@ -537,11 +580,11 @@ def load_tradeable_instruments(tradeable_dir: Path) -> List[TradeableInstrument]
 
 def build_stooq_lookup(
     entries: Sequence[StooqFile],
-) -> Tuple[Dict[str, StooqFile], Dict[str, StooqFile], Dict[str, List[StooqFile]]]:
+) -> tuple[dict[str, StooqFile], dict[str, StooqFile], dict[str, list[StooqFile]]]:
     """Create lookup dictionaries for Stooq tickers, stems, and base symbols."""
-    by_ticker: Dict[str, StooqFile] = {}
-    by_stem: Dict[str, StooqFile] = {}
-    by_base: Dict[str, List[StooqFile]] = {}
+    by_ticker: dict[str, StooqFile] = {}
+    by_stem: dict[str, StooqFile] = {}
+    by_base: dict[str, list[StooqFile]] = {}
     for entry in entries:
         ticker = entry.ticker.upper()
         by_ticker.setdefault(ticker, entry)
@@ -557,22 +600,18 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
         return []
 
     original = symbol.strip()
-    candidates: List[str] = []
+    candidates: list[str] = []
 
     normalized = original.replace(" ", "").upper()
     base, suffix = split_symbol(normalized)
 
     extensions = suffix_to_extensions(suffix, market)
     if suffix:
-        for ext in extensions:
-            if ext:
-                candidates.append(f"{base}{ext}".upper())
+        candidates.extend([f"{base}{ext}".upper() for ext in extensions if ext])
         candidates.append(normalized.upper())
     else:
         candidates.append(base.upper())
-        for ext in extensions:
-            if ext:
-                candidates.append(f"{base}{ext}".upper())
+        candidates.extend([f"{base}{ext}".upper() for ext in extensions if ext])
         if "." in normalized:
             candidates.append(normalized.upper())
 
@@ -585,8 +624,7 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
     base_upper = base.upper()
     for ext in desired_exts:
         key = (base_upper, ext.upper())
-        for alias in SYMBOL_ALIAS_MAP.get(key, []):
-            candidates.append(alias.upper())
+        candidates.extend([alias.upper() for alias in SYMBOL_ALIAS_MAP.get(key, [])])
         for prefix in LEGACY_PREFIXES:
             if ext:
                 candidates.append(f"{prefix}{base_upper}{ext.upper()}")
@@ -600,7 +638,7 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
             yield cand
 
 
-def split_symbol(symbol: str) -> Tuple[str, str]:
+def split_symbol(symbol: str) -> tuple[str, str]:
     """Split a broker symbol of the form 'ABC:LN' into base and suffix."""
     if ":" in symbol:
         base, suffix = symbol.split(":", 1)
@@ -686,11 +724,11 @@ def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
 
 def _match_instrument(
     instrument: TradeableInstrument,
-    by_ticker: Dict[str, StooqFile],
-    by_stem: Dict[str, StooqFile],
-    by_base: Dict[str, List[StooqFile]],
-) -> Tuple[Optional[TradeableMatch], Optional[TradeableInstrument]]:
-    tried: List[str] = []
+    by_ticker: dict[str, StooqFile],
+    by_stem: dict[str, StooqFile],
+    by_base: dict[str, list[StooqFile]],
+) -> tuple[TradeableMatch | None, TradeableInstrument | None]:
+    tried: list[str] = []
     norm_symbol = (instrument.symbol or "").replace(" ", "").upper()
     _, instrument_suffix = split_symbol(norm_symbol)
     instrument_desired_exts = {
@@ -703,7 +741,9 @@ def _match_instrument(
     }
     for candidate in candidate_tickers(instrument.symbol, instrument.market):
         tried.append(candidate)
-        candidate_ext = candidate[candidate.find(".") :].upper() if "." in candidate else ""
+        candidate_ext = (
+            candidate[candidate.find(".") :].upper() if "." in candidate else ""
+        )
         desired_exts_set = set(instrument_desired_exts)
         if not desired_exts_set:
             desired_exts_set.update(fallback_desired_exts)
@@ -751,7 +791,7 @@ def _match_instrument(
                 )
         base_entries = by_base.get(stem_candidate)
         if base_entries:
-            desired_exts: List[str] = []
+            desired_exts: list[str] = []
             desired_exts_set: set[str] = set()
 
             for ext in suffix_to_extensions(instrument_suffix, instrument.market):
@@ -781,11 +821,13 @@ def _match_instrument(
                 if "." in entry.ticker
             }
 
-            if desired_exts_set and not any(ext in available_exts for ext in desired_exts_set):
+            if desired_exts_set and not any(
+                ext in available_exts for ext in desired_exts_set
+            ):
                 continue
 
             preferred_exts = [ext for ext in desired_exts if ext]
-            chosen: Optional[StooqFile] = None
+            chosen: StooqFile | None = None
             if preferred_exts:
                 for ext in preferred_exts:
                     for entry in base_entries:
@@ -817,15 +859,15 @@ def _match_instrument(
 
 def match_tradeables(
     instruments: Sequence[TradeableInstrument],
-    by_ticker: Dict[str, StooqFile],
-    by_stem: Dict[str, StooqFile],
-    by_base: Dict[str, List[StooqFile]],
+    by_ticker: dict[str, StooqFile],
+    by_stem: dict[str, StooqFile],
+    by_base: dict[str, list[StooqFile]],
     *,
     max_workers: int = 1,
-) -> Tuple[List[TradeableMatch], List[TradeableInstrument]]:
+) -> tuple[list[TradeableMatch], list[TradeableInstrument]]:
     """Match tradeable instruments to Stooq files."""
-    matches: List[TradeableMatch] = []
-    unmatched: List[TradeableInstrument] = []
+    matches: list[TradeableMatch] = []
+    unmatched: list[TradeableInstrument] = []
 
     results = _run_in_parallel(
         _match_instrument,
@@ -847,14 +889,21 @@ def _prepare_match_report_data(
     matches: Sequence[TradeableMatch],
     data_dir: Path,
     lse_currency_policy: str,
-) -> Tuple[List[Dict[str, str]], Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
+) -> tuple[
+    list[dict[str, str]],
+    dict[str, dict[str, str]],
+    Counter,
+    Counter,
+    list[str],
+    list[tuple[str, str, str]],
+]:
     """Prepare data for the match report."""
-    diagnostics_cache: Dict[str, Dict[str, str]] = {}
+    diagnostics_cache: dict[str, dict[str, str]] = {}
     currency_counts: Counter = Counter()
     data_status_counts: Counter = Counter()
-    empty_tickers: List[str] = []
-    flagged_samples: List[Tuple[str, str, str]] = []
-    rows: List[Dict[str, str]] = []
+    empty_tickers: list[str] = []
+    flagged_samples: list[tuple[str, str, str]] = []
+    rows: list[dict[str, str]] = []
 
     for match in matches:
         diagnostics = summarize_price_file(data_dir, match.stooq_file)
@@ -873,7 +922,7 @@ def _prepare_match_report_data(
         data_flags = diagnostics.get("data_flags", "")
         if data_flags:
             flagged_samples.append(
-                (match.instrument.symbol, match.stooq_file.ticker, data_flags)
+                (match.instrument.symbol, match.stooq_file.ticker, data_flags),
             )
         rows.append(
             {
@@ -896,9 +945,17 @@ def _prepare_match_report_data(
                 "currency_status": currency_status,
                 "data_status": data_status,
                 "data_flags": data_flags,
-            }
+            },
         )
-    return rows, diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
+    return (
+        rows,
+        diagnostics_cache,
+        currency_counts,
+        data_status_counts,
+        empty_tickers,
+        flagged_samples,
+    )
+
 
 def write_match_report(
     matches: Sequence[TradeableMatch],
@@ -906,11 +963,22 @@ def write_match_report(
     data_dir: Path,
     *,
     lse_currency_policy: str,
-) -> Tuple[Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
+) -> tuple[
+    dict[str, dict[str, str]],
+    Counter,
+    Counter,
+    list[str],
+    list[tuple[str, str, str]],
+]:
     """Persist the match report showing which tradeables map to which Stooq files."""
-    rows, diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples = _prepare_match_report_data(
-        matches, data_dir, lse_currency_policy
-    )
+    (
+        rows,
+        diagnostics_cache,
+        currency_counts,
+        data_status_counts,
+        empty_tickers,
+        flagged_samples,
+    ) = _prepare_match_report_data(matches, data_dir, lse_currency_policy)
     columns = [
         "symbol",
         "isin",
@@ -934,22 +1002,35 @@ def write_match_report(
     ]
     _write_report(rows, output_path, columns)
     LOGGER.info("Match report written to %s", output_path)
-    return diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
+    return (
+        diagnostics_cache,
+        currency_counts,
+        data_status_counts,
+        empty_tickers,
+        flagged_samples,
+    )
 
 
-def _write_report(data: Sequence[object], output_path: Path, columns: List[str]) -> None:
+def _write_report(
+    data: Sequence[object],
+    output_path: Path,
+    columns: list[str],
+) -> None:
     """Write a list of dataclasses to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if data and not isinstance(data[0], dict):
         records = [asdict(item) for item in data]
     else:
         records = data
-    df = pd.DataFrame.from_records(records, columns=columns)
-    df.to_csv(output_path, index=False)
+    report_frame = pd.DataFrame.from_records(records, columns=columns)
+    report_frame.to_csv(output_path, index=False)
 
 
-def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path: Path) -> None:
-    """Persist the unmatched instrument list for manual follow-up."""    
+def write_unmatched_report(
+    unmatched: Sequence[TradeableInstrument],
+    output_path: Path,
+) -> None:
+    """Persist the unmatched instrument list for manual follow-up."""
     columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
     _write_report(unmatched, output_path, columns)
     LOGGER.info("Unmatched report written to %s", output_path)
@@ -957,17 +1038,26 @@ def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path
 
 def annotate_unmatched_instruments(
     unmatched: Sequence[TradeableInstrument],
-    stooq_by_base: Dict[str, List[StooqFile]],
+    stooq_by_base: dict[str, list[StooqFile]],
     available_extensions: set[str],
-) -> List[TradeableInstrument]:
+) -> list[TradeableInstrument]:
     """Attach diagnostic reasons to unmatched instruments."""
-    annotated: List[TradeableInstrument] = []
-    for instrument in unmatched:
-        instrument.reason = determine_unmatched_reason(
-            instrument, stooq_by_base, available_extensions
+    return [
+        TradeableInstrument(
+            symbol=instrument.symbol,
+            isin=instrument.isin,
+            market=instrument.market,
+            name=instrument.name,
+            currency=instrument.currency,
+            source_file=instrument.source_file,
+            reason=determine_unmatched_reason(
+                instrument,
+                stooq_by_base,
+                available_extensions,
+            ),
         )
-        annotated.append(instrument)
-    return annotated
+        for instrument in unmatched
+    ]
 
 
 def export_tradeable_prices(
@@ -977,16 +1067,16 @@ def export_tradeable_prices(
     *,
     overwrite: bool = False,
     max_workers: int = 1,
-    diagnostics: Optional[Dict[str, Dict[str, str]]] = None,
+    diagnostics: dict[str, dict[str, str]] | None = None,
     include_empty: bool = False,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Convert matched Stooq price files into CSVs stored in the destination directory.
 
     Returns a tuple of (exported_count, skipped_count).
     """
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    unique_matches: Dict[str, TradeableMatch] = {}
+    unique_matches: dict[str, TradeableMatch] = {}
     for match in matches:
         ticker_upper = match.stooq_file.ticker.upper()
         unique_matches.setdefault(ticker_upper, match)
@@ -1001,12 +1091,9 @@ def export_tradeable_prices(
         if diag is None:
             diag = summarize_price_file(data_dir, match.stooq_file)
         status = diag.get("data_status", "")
-        if (
-            not include_empty
-            and (
-                status in {"empty", "missing", "missing_file"}
-                or (status.startswith("error:") if status else False)
-            )
+        if not include_empty and (
+            status in {"empty", "missing", "missing_file"}
+            or (status.startswith("error:") if status else False)
         ):
             LOGGER.debug(
                 "Skipping export for %s due to data_status=%s",
@@ -1027,7 +1114,7 @@ def export_tradeable_prices(
         if target_path.exists() and not overwrite:
             return False
         try:
-            df = pd.read_csv(
+            price_frame = pd.read_csv(
                 source_path,
                 header=None,
                 names=STOOQ_COLUMNS,
@@ -1037,7 +1124,7 @@ def export_tradeable_prices(
                 keep_default_na=False,
                 na_filter=False,
             )
-            if df.empty and not include_empty:
+            if price_frame.empty and not include_empty:
                 if target_path.exists() and overwrite:
                     try:
                         target_path.unlink()
@@ -1048,13 +1135,22 @@ def export_tradeable_prices(
                             exc,
                         )
                 return False
-            df.to_csv(target_path, index=False)
+            price_frame.to_csv(target_path, index=False)
             return True
         except OSError as exc:
-            LOGGER.warning("Failed to export %s -> %s: %s", source_path, target_path, exc)
+            LOGGER.warning(
+                "Failed to export %s -> %s: %s",
+                source_path,
+                target_path,
+                exc,
+            )
             return False
 
-    results = _run_in_parallel(_export_single, [(m,) for m in unique_matches.values()], max_workers)
+    results = _run_in_parallel(
+        _export_single,
+        [(m,) for m in unique_matches.values()],
+        max_workers,
+    )
     exported = sum(1 for r in results if r)
 
     LOGGER.info("Exported %s price files to %s", exported, dest_dir)
@@ -1064,6 +1160,7 @@ def export_tradeable_prices(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Prepare tradeable Stooq datasets.")
     parser.add_argument(
         "--data-dir",
@@ -1145,6 +1242,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def configure_logging(level: str) -> None:
+    """Configure module-wide logging based on a string log level value."""
     logging.basicConfig(
         level=getattr(logging, level, logging.INFO),
         format="%(asctime)s %(levelname)s %(message)s",
@@ -1162,6 +1260,7 @@ def _handle_stooq_index(args, index_workers):
             write_stooq_index(stooq_index, args.metadata_output)
     return stooq_index
 
+
 def _load_and_match_tradeables(stooq_index, args, max_workers):
     with log_duration("tradeable_load"):
         tradeables = load_tradeable_instruments(args.tradeable_dir)
@@ -1176,8 +1275,13 @@ def _load_and_match_tradeables(stooq_index, args, max_workers):
             stooq_by_base,
             max_workers=max_workers,
         )
-    unmatched = annotate_unmatched_instruments(unmatched, stooq_by_base, available_extensions)
+    unmatched = annotate_unmatched_instruments(
+        unmatched,
+        stooq_by_base,
+        available_extensions,
+    )
     return matches, unmatched
+
 
 def _generate_reports(matches, unmatched, args, data_dir):
     with log_duration("tradeable_match_report"):
@@ -1215,6 +1319,7 @@ def _generate_reports(matches, unmatched, args, data_dir):
         write_unmatched_report(unmatched, args.unmatched_report)
     return diagnostics_cache
 
+
 def _export_prices(matches, args, diagnostics_cache, max_workers):
     with log_duration("tradeable_export"):
         export_tradeable_prices(
@@ -1227,16 +1332,24 @@ def _export_prices(matches, args, diagnostics_cache, max_workers):
             include_empty=args.include_empty_prices,
         )
 
+
 def main() -> None:
+    """Run the end-to-end tradeable data preparation workflow."""
     args = parse_args()
     configure_logging(args.log_level)
 
     data_dir = args.data_dir
     cpu_count = os.cpu_count() or 1
     auto_workers = max(1, (cpu_count - 1) or 1)
-    max_workers = args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
+    max_workers = (
+        args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
+    )
     max_workers = max(1, max_workers)
-    index_workers = args.index_workers if args.index_workers and args.index_workers > 0 else max_workers
+    index_workers = (
+        args.index_workers
+        if args.index_workers and args.index_workers > 0
+        else max_workers
+    )
     index_workers = max(1, index_workers)
     LOGGER.info(
         "Worker configuration: match/export=%s, index=%s (cpu=%s)",

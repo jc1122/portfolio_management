@@ -9,11 +9,10 @@ refactor of ``prepare_tradeable_data.py``.
 
 from __future__ import annotations
 
-from collections import Counter
-from pathlib import Path
 import subprocess
 import sys
-from typing import Dict, List, Tuple
+from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -27,28 +26,29 @@ TRADEABLE_FIXTURES = FIXTURES_ROOT / "tradeable_instruments"
 METADATA_FIXTURES = FIXTURES_ROOT / "metadata"
 
 
-@pytest.fixture(scope="module")
-def stooq_index() -> List[ptd.StooqFile]:
+@pytest.fixture(scope="session")
+def stooq_index() -> list[ptd.StooqFile]:
     """Index the curated Stooq fixtures once per test module."""
-
     return ptd.build_stooq_index(STOOQ_FIXTURES, max_workers=8)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def stooq_lookup(
-    stooq_index: List[ptd.StooqFile],
+    stooq_index: list[ptd.StooqFile],
 ) -> tuple[
-    Dict[str, ptd.StooqFile], Dict[str, ptd.StooqFile], Dict[str, List[ptd.StooqFile]]
+    dict[str, ptd.StooqFile],
+    dict[str, ptd.StooqFile],
+    dict[str, list[ptd.StooqFile]],
 ]:
     return ptd.build_stooq_lookup(stooq_index)
 
 
-@pytest.fixture(scope="module")
-def tradeable_instruments() -> List[ptd.TradeableInstrument]:
+@pytest.fixture(scope="session")
+def tradeable_instruments() -> list[ptd.TradeableInstrument]:
     return ptd.load_tradeable_instruments(TRADEABLE_FIXTURES)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def expected_match_report() -> pd.DataFrame:
     return pd.read_csv(METADATA_FIXTURES / "selected_matches.csv")
 
@@ -89,14 +89,21 @@ def _make_instrument(
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
+def session_tmp_path(tmp_path_factory):
+    """Create a session-scoped temporary directory."""
+    return tmp_path_factory.mktemp("session_data")
+
+
+@pytest.fixture(scope="session")
 def pipeline_result(
-    tmp_path_factory: pytest.TempPathFactory,
+    session_tmp_path,
     stooq_lookup,
-    stooq_index: List[ptd.StooqFile],
-    tradeable_instruments: List[ptd.TradeableInstrument],
-) -> Dict[str, object]:
-    report_dir = tmp_path_factory.mktemp("match_report")
+    stooq_index: list[ptd.StooqFile],
+    tradeable_instruments: list[ptd.TradeableInstrument],
+) -> dict[str, object]:
+    report_dir = session_tmp_path / "match_report"
+    report_dir.mkdir()
     report_path = report_dir / "tradeable_matches.csv"
 
     matches, unmatched = ptd.match_tradeables(
@@ -106,13 +113,49 @@ def pipeline_result(
     )
     assert not unmatched, "Fixture subset should have complete matches"
 
-    diagnostics, currency_counts, data_status_counts, empty_tickers, flagged_records = (
-        ptd.write_match_report(
-            matches,
-            report_path,
-            STOOQ_FIXTURES,
-            lse_currency_policy="broker",
-        )
+    (
+        diagnostics,
+        currency_counts,
+        data_status_counts,
+        empty_tickers,
+        flagged_records,
+    ) = ptd.write_match_report(
+        matches,
+        report_path,
+        STOOQ_FIXTURES,
+        lse_currency_policy="broker",
+    )
+    report_df = pd.read_csv(report_path)
+
+    return {
+        "matches": matches,
+        "diagnostics": diagnostics,
+        "currency_counts": currency_counts,
+        "data_status_counts": data_status_counts,
+        "empty_tickers": empty_tickers,
+        "flagged_records": flagged_records,
+        "report_df": report_df,
+        "report_path": report_path,
+    }
+
+    matches, unmatched = ptd.match_tradeables(
+        tradeable_instruments,
+        *stooq_lookup,
+        max_workers=8,
+    )
+    assert not unmatched, "Fixture subset should have complete matches"
+
+    (
+        diagnostics,
+        currency_counts,
+        data_status_counts,
+        empty_tickers,
+        flagged_records,
+    ) = ptd.write_match_report(
+        matches,
+        report_path,
+        STOOQ_FIXTURES,
+        lse_currency_policy="broker",
     )
     report_df = pd.read_csv(report_path)
 
@@ -129,7 +172,7 @@ def pipeline_result(
 
 
 def test_build_stooq_index_expected_entries(
-    stooq_index: List[ptd.StooqFile],
+    stooq_index: list[ptd.StooqFile],
     expected_match_report: pd.DataFrame,
 ) -> None:
     expected_paths = set(expected_match_report["stooq_path"].unique())
@@ -140,7 +183,7 @@ def test_build_stooq_index_expected_entries(
 
 
 def test_match_report_matches_fixture(
-    pipeline_result: Dict[str, object],
+    pipeline_result: dict[str, object],
     expected_match_report: pd.DataFrame,
 ) -> None:
     actual = pipeline_result["report_df"].copy()
@@ -153,7 +196,7 @@ def test_match_report_matches_fixture(
 
 
 def test_match_report_summaries(
-    pipeline_result: Dict[str, object],
+    pipeline_result: dict[str, object],
     expected_match_report: pd.DataFrame,
 ) -> None:
     currency_counts: Counter = pipeline_result["currency_counts"]
@@ -178,7 +221,7 @@ def test_summarize_price_file_cases(
     ticker: str,
     expected_status: str,
     flag_substring: str,
-    stooq_index: List[ptd.StooqFile],
+    stooq_index: list[ptd.StooqFile],
 ) -> None:
     lookup = {entry.ticker.upper(): entry for entry in stooq_index}
     stooq_file = lookup[ticker.upper()]
@@ -193,17 +236,19 @@ def test_summarize_price_file_cases(
 
 
 def _select_matches(
-    matches: List[ptd.TradeableMatch], tickers: List[str]
-) -> List[ptd.TradeableMatch]:
+    matches: list[ptd.TradeableMatch],
+    tickers: list[str],
+) -> list[ptd.TradeableMatch]:
     lookup = {match.stooq_file.ticker.upper(): match for match in matches}
     return [lookup[ticker.upper()] for ticker in tickers]
 
 
 def test_export_tradeable_prices_skip_empty(
-    tmp_path: Path, pipeline_result: Dict[str, object]
+    tmp_path: Path,
+    pipeline_result: dict[str, object],
 ) -> None:
-    matches: List[ptd.TradeableMatch] = pipeline_result["matches"]
-    diagnostics: Dict[str, Dict[str, str]] = pipeline_result["diagnostics"]
+    matches: list[ptd.TradeableMatch] = pipeline_result["matches"]
+    diagnostics: dict[str, dict[str, str]] = pipeline_result["diagnostics"]
     subset = _select_matches(matches, ["WPS.UK", "HSON.US", "IEMB.UK"])
 
     exported, skipped = ptd.export_tradeable_prices(
@@ -223,9 +268,10 @@ def test_export_tradeable_prices_skip_empty(
 
 
 def test_export_tradeable_prices_include_empty(
-    tmp_path: Path, pipeline_result: Dict[str, object]
+    tmp_path: Path,
+    pipeline_result: dict[str, object],
 ) -> None:
-    matches: List[ptd.TradeableMatch] = pipeline_result["matches"]
+    matches: list[ptd.TradeableMatch] = pipeline_result["matches"]
     subset = _select_matches(matches, ["WPS.UK", "HSON.US", "IEMB.UK"])
 
     exported, skipped = ptd.export_tradeable_prices(
@@ -245,7 +291,6 @@ def test_export_tradeable_prices_include_empty(
 
 def test_cli_end_to_end_matches_golden(tmp_path: Path) -> None:
     """Run the CLI over fixture bundles and compare outputs to golden files."""
-
     metadata_dir = tmp_path / "metadata"
     prices_dir = tmp_path / "prices"
     metadata_dir.mkdir(parents=True, exist_ok=True)
@@ -301,7 +346,7 @@ def test_cli_end_to_end_matches_golden(tmp_path: Path) -> None:
     expected_exports = {
         f"{ticker.lower()}.csv"
         for ticker, status in expected_df[["matched_ticker", "data_status"]].itertuples(
-            index=False
+            index=False,
         )
         if status not in {"empty", "missing", "missing_file"}
         and not str(status).startswith("error:")
@@ -379,7 +424,9 @@ def test_determine_unmatched_reason_variants() -> None:
     ],
 )
 def test_resolve_currency_lse_policies(
-    policy: str, expected_resolved: str, expected_status: str
+    policy: str,
+    expected_resolved: str,
+    expected_status: str,
 ) -> None:
     instrument = _make_instrument(
         "IEMB:LN",
@@ -442,8 +489,8 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
             [
                 "SAMPLE.US,0,20200102,000000,10,11,9,10,100,0",
                 "SAMPLE.US,0,20200103,000000,11,12,10,11,150,0",
-            ]
-        )
+            ],
+        ),
     )
 
     stooq_file = _make_stooq_file(
@@ -453,7 +500,12 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
         category="etfs",
     )
     instrument_a = _make_instrument("SAMPLE:US", market="NYSE", currency="USD")
-    instrument_b = _make_instrument("SAMPLE", market="NYSE", currency="USD", name="Sample Dup")
+    instrument_b = _make_instrument(
+        "SAMPLE",
+        market="NYSE",
+        currency="USD",
+        name="Sample Dup",
+    )
     matches = [
         ptd.TradeableMatch(
             instrument=instrument_a,
@@ -470,7 +522,7 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
     ]
 
     diagnostics = {
-        stooq_file.ticker.upper(): ptd.summarize_price_file(data_dir, stooq_file)
+        stooq_file.ticker.upper(): ptd.summarize_price_file(data_dir, stooq_file),
     }
 
     export_dir = tmp_path / "exports"
@@ -517,7 +569,8 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
 
 
 def test_match_tradeables_parallel_consistency(
-    stooq_lookup, tradeable_instruments: List[ptd.TradeableInstrument]
+    stooq_lookup,
+    tradeable_instruments: list[ptd.TradeableInstrument],
 ) -> None:
     matches_single, unmatched_single = ptd.match_tradeables(
         tradeable_instruments,
@@ -530,7 +583,7 @@ def test_match_tradeables_parallel_consistency(
         max_workers=8,
     )
 
-    def _signature(match: ptd.TradeableMatch) -> Tuple[str, str, str]:
+    def _signature(match: ptd.TradeableMatch) -> tuple[str, str, str]:
         return (
             match.instrument.symbol,
             match.matched_ticker,

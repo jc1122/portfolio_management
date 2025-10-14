@@ -1,0 +1,11 @@
+[general]
+ignore=WIP
+
+[title-max-length]
+line-length=72
+
+[body-min-length]
+min-length=0
+
+[contrib]
+contrib=contrib-title-conventional-commits

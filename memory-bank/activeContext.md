@@ -1,9 +1,11 @@
 # Active Context
 
 ## Current Focus
+
 - Standing up the data ingestion and sanitization workflow, including tooling to align Stooq histories with the brokers' tradeable universe.
 
 ## Recent Changes
+
 - Captured project scope, architectural patterns, and technology stack in the Memory Bank based on the detailed brief and literature survey.
 - Recorded portfolio construction goals (core diversification, factor tilts, risk overlays) and future sentiment-integration ambitions.
 - Implemented an optimized `prepare_tradeable_data.py` script that indexes unpacked Stooq files, matches them against BOŚ/mBank universes, and exports price panels with multicore support and cached metadata.
@@ -20,6 +22,7 @@
 - Wired a GitHub Actions workflow to install pandas and run the expanded `prepare_tradeable_data.py` pytest suite on pushes and pull requests targeting `main`.
 
 ## Next Steps
+
 - Execute the `prepare_tradeable_data.py` refactor on branch `scripts/prepare_tradeable_data.py-refactor`, leaning on the expanded regression suite to maintain behaviour while improving structure/performance.
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
 - Finalize the data acquisition and sanitation modules by determining whether any additional remediation is required beyond the current warning-only zero-volume tagging, and whether duplicate-date/sparse-history checks need more automation.
@@ -29,6 +32,7 @@
 - Identify candidate GitHub repositories/code snippets to accelerate later sentiment/news modules.
 
 ## Decisions & Considerations
+
 - Rebalance cadence set to monthly/quarterly with ±20% opportunistic bands to limit turnover and commissions.
 - Portfolio guardrails enforce diversification (max 25% per ETF, min 10% bonds/cash, cap 90% equities post-overlays).
 - Preference for leveraging established libraries (`PyPortfolioOpt`, `riskparityportfolio`, `empyrical`) to minimize bespoke optimization code.
@@ -37,6 +41,7 @@
 - Zero-volume anomalies remain in the dataset with severity warnings only; remediation will occur manually once better volume data or broker guidance is available.
 
 ## Insights
+
 - Combining diversified core allocations with trend and volatility overlays can improve risk-adjusted returns without sacrificing long-term compounding.
 - Sentiment-driven signals tend to decay quickly; the planned architecture must support regime-aware controls and cooldowns before integration.
 - Maintaining rigorous documentation and run logs remains essential to combat agent memory resets and behavioral drift.

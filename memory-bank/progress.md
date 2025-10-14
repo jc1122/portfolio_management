@@ -1,6 +1,7 @@
 # Progress Log
 
 ## Current Status
+
 - Core documentation is in place and the Stooq data preparation pipeline (index + tradeable matching + export) is operational with cached metadata, multicore performance, richer diagnostics for price coverage/currency alignment, zero-volume severity tagging, and a pandas-backed validator for price diagnostics.
 - Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers.
 - The Stooq indexer now uses a thread-pooled `os.walk` traversal (default workers = CPU cores minus one) for maintainability; first benchmarks show identical outputs but roughly 1.8× slower scans versus the legacy queue/lock walker on a 500-file sample.
@@ -9,6 +10,7 @@
 - Continuous integration runs the expanded pytest suite via GitHub Actions on every push and pull request to `main`.
 
 ## Completed
+
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
 - Documented risk constraints, rebalancing policies, and future sentiment-integration objectives.
 - Built `scripts/prepare_tradeable_data.py` to scan unpacked Stooq archives, normalize broker tradeable lists, match symbols, and export curated price series; optimized the script with parallel directory traversal and caching (~40s first run, ~2s incremental).
@@ -22,6 +24,7 @@
 - Removed the legacy CSV fallbacks (summarizer, tradeable loaders, report writers, price exporter) in favour of a single pandas-backed implementation; validated behaviour parity on a 1,000-file sample while documenting the moderate runtime increase.
 
 ## Outstanding Work
+
 - Complete the impending `prepare_tradeable_data.py` refactor on branch `scripts/prepare_tradeable_data.py-refactor`, using the new regression suite to validate incremental changes.
 - Assemble the tradable asset list and broker fee schedule to inform backtest assumptions.
 - Review `override` currency cases and decide whether FX conversion is required before backtesting; triage the empty Stooq histories now skipped during export.
@@ -31,6 +34,7 @@
 - Research and catalog open-source sentiment/news pipelines for future integration.
 
 ## Risks & Issues
+
 - Stooq coverage and history length may limit certain assets; alternative data sources might be needed.
 - Transaction cost assumptions and slippage modeling must be validated against real broker fees.
 - Potential complexity creep when integrating sentiment overlays; requires disciplined scope management.
@@ -38,4 +42,5 @@
 - Offline-only operation currently blocks automated dataset refresh; coordinate manual data transfer or wait for approval before attempting downloads.
 
 ## Notes
+
 - Update documentation after each development milestone, especially when integrating new libraries or changing risk controls.

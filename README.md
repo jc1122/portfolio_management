@@ -3,6 +3,7 @@
 Offline-first Python command-line toolkit for constructing and backtesting long-horizon retirement portfolios for Polish investors trading via BOŚ Dom Maklerski and mBank's MDM. The project emphasizes diversified asset allocation, factor tilts, and disciplined risk overlays, with future plans to incorporate news- and sentiment-driven signals.
 
 ## Key Features (Planned)
+
 - Modular pipeline: data acquisition (e.g., Stooq), sanitation, asset selection, strategy engines, backtesting, and reporting.
 - Multiple allocation methods: equal weight, risk parity, and mean-variance optimization via established libraries (`PyPortfolioOpt`, `riskparityportfolio`).
 - Monthly/quarterly rebalancing with commission-aware opportunistic bands and risk guardrails.
@@ -10,23 +11,31 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 - Extensible architecture prepared for sentiment/event overlays using NLP and LLM-driven factors.
 
 ## Repository Structure
+
 - `memory-bank/`: Persistent project documentation (project brief, product context, system patterns, tech context, active context, progress log).
 - `scripts/prepare_tradeable_data.py`: CLI utility that indexes unpacked Stooq price files, matches them against BOŚ/mBank tradeable universes, and exports curated price series.
 - `AGENTS.md`: Operating instructions ensuring each session starts by reviewing the Memory Bank.
 
 ## Getting Started
+
 1. Ensure Python 3.10+ is available.
-2. Create and activate a virtual environment.
-3. Install dependencies:
+
+1. Create and activate a virtual environment.
+
+1. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
+
    > **Note:** `prepare_tradeable_data.py` now requires pandas; there is no CSV fallback. Confirm the dependency installs cleanly in every execution environment before running the script.
-4. Populate cached historical data from Stooq or other free sources.
-5. Run the CLI (to be added) to construct and evaluate portfolios.
+
+1. Populate cached historical data from Stooq or other free sources.
+
+1. Run the CLI (to be added) to construct and evaluate portfolios.
 
 ## Data Preparation Workflow
+
 Once Stooq ZIP archives have been unpacked into `data/stooq/`, generate the tradeable dataset with:
 
 ```bash
@@ -40,7 +49,7 @@ python scripts/prepare_tradeable_data.py \
     --overwrite-prices --force-reindex
 ```
 
-The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for <3 s incremental updates.
+The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for \<3 s incremental updates.
 
 Optional flags: `--include-empty-prices` forces exports for tickers without usable data (normally skipped) and `--lse-currency-policy` lets you choose whether London listings keep the broker currency (`broker`, default), adopt Stooq’s inferred currency (`stooq`), or raise an error when the currencies diverge (`strict`).
 
@@ -53,6 +62,7 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 > The script now mandates pandas for all data access (indexing, tradeable ingestion, report writing, price exports). A 1,000-file benchmark shows identical outputs with roughly a 12 % runtime increase versus the previous hybrid implementation.
 
 ## Status
+
 - Documentation and repository scaffolding complete.
 - Stooq data preparation script now enriches match outputs with per-instrument price coverage, currency diagnostics, and zero-volume severity tagging while preventing cross-venue fallbacks; flagged listings remain available but carry warnings in `data/metadata/tradeable_data_flags.csv`.
 - Latest data export matched 5,560 instruments (4,146 price files after dropping two empty histories) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
@@ -62,4 +72,5 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 - Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
 
 ## Contributing
+
 Pull requests are welcome once contribution guidelines and tests are established. Keep the Memory Bank current after every meaningful change to preserve context across sessions.
