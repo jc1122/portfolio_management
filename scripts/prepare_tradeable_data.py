@@ -145,35 +145,31 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
         return diagnostics
 
     try:
-        raw_df = pd.read_csv(
-            file_path,
-            header=None,
-            names=STOOQ_COLUMNS,
-            usecols=STOOQ_PANDAS_COLUMNS,
-            comment="<",
-            dtype=str,
-            engine="c",
-            encoding="utf-8",
-            keep_default_na=False,
-            na_filter=False,
-        )
-    except ValueError:
-        raw_df = pd.read_csv(
-            file_path,
-            header=None,
-            names=STOOQ_COLUMNS,
-            usecols=STOOQ_PANDAS_COLUMNS,
-            comment="<",
-            dtype=str,
-            engine="python",
-            encoding="utf-8",
-            keep_default_na=False,
-            na_filter=False,
-        )
-    except pd.errors.EmptyDataError:
-        diagnostics["data_status"] = "empty"
-        return diagnostics
-    except pd.errors.ParserError as exc:
+        try:
+            raw_df = pd.read_csv(
+                file_path,
+                header=None,
+                names=STOOQ_COLUMNS,
+                comment="<",
+                dtype=str,
+                engine="c",
+                encoding="utf-8",
+                keep_default_na=False,
+                na_filter=False,
+            )
+        except (ValueError, pd.errors.ParserError):
+            raw_df = pd.read_csv(
+                file_path,
+                header=None,
+                names=STOOQ_COLUMNS,
+                comment="<",
+                dtype=str,
+                engine="python",
+                encoding="utf-8",
+                keep_default_na=False,
+                na_filter=False,
+            )
+    except (pd.errors.EmptyDataError, UnicodeDecodeError) as exc:
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
         return diagnostics
     except OSError as exc:
@@ -196,8 +192,8 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
 
     initial_rows = len(raw_df)
     date_series = pd.to_datetime(raw_df["date"], format="%Y%m%d", errors="coerce")
+    invalid_rows = int(date_series.isna().sum())
     valid_mask = date_series.notna()
-    invalid_rows = int((~valid_mask).sum())
     data_df = raw_df.loc[valid_mask].copy()
     valid_dates = date_series.loc[valid_mask]
 
