@@ -16,8 +16,11 @@
 - Refactored broker instrument ingestion and match/unmatched report writers to use pandas for vectorized CSV handling, keeping legacy fallbacks for environments without pandas.
 - Simplified the Stooq directory indexer to use `os.walk` with a thread pool (defaulting to CPU cores minus one) instead of custom queue/lock plumbing, improving maintainability at the cost of a ~1.8× slower scan on a 500-file sample.
 - Removed all legacy CSV fallbacks from `prepare_tradeable_data.py`, making pandas a hard dependency while keeping diagnostics/currency logic intact; benchmarked the pandas-only path on a 1,000-file sample (~12 % slower but identical outputs).
+- Expanded the fixture-backed regression tests for `prepare_tradeable_data.py` to exercise the CLI workflow, unmatched reasoning, LSE currency policies, export deduplication/overwrite logic, concurrency determinism, and unmatched-report outputs.
+- Wired a GitHub Actions workflow to install pandas and run the expanded `prepare_tradeable_data.py` pytest suite on pushes and pull requests targeting `main`.
 
 ## Next Steps
+- Execute the `prepare_tradeable_data.py` refactor on branch `scripts/prepare_tradeable_data.py-refactor`, leaning on the expanded regression suite to maintain behaviour while improving structure/performance.
 - Curate a definitive asset universe (tickers compatible with BOŚ/MDM and Stooq symbols) and gather broker commission data, reconciling unmatched listings from the latest run.
 - Finalize the data acquisition and sanitation modules by determining whether any additional remediation is required beyond the current warning-only zero-volume tagging, and whether duplicate-date/sparse-history checks need more automation.
 - Decide whether FX conversion is required for LSE share classes beyond the new policy switch and evaluate alternatives for the two empty Stooq histories now skipped in exports.

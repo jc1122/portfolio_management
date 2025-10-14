@@ -5,6 +5,8 @@
 - Broker CSV ingestion and tradeable match/unmatched report generation now rely on pandas, eliminating bespoke row-by-row writers.
 - The Stooq indexer now uses a thread-pooled `os.walk` traversal (default workers = CPU cores minus one) for maintainability; first benchmarks show identical outputs but roughly 1.8× slower scans versus the legacy queue/lock walker on a 500-file sample.
 - `prepare_tradeable_data.py` now mandates pandas for all I/O and diagnostics (legacy CSV fallbacks removed) and was benchmarked on a 1,000-file subset, producing identical reports with ~12 % slower runtime relative to the previous hybrid implementation.
+- Fixture-backed tests for `prepare_tradeable_data.py` now include a CLI smoke test, unmatched-reason diagnostics, currency-policy permutations, export deduplication/overwrite checks, and concurrency determinism safeguards using the 500-instrument sample set.
+- Continuous integration runs the expanded pytest suite via GitHub Actions on every push and pull request to `main`.
 
 ## Completed
 - Initialized Memory Bank structure and populated it with the detailed investment methodology and implementation plan extracted from previous discussions.
@@ -20,6 +22,7 @@
 - Removed the legacy CSV fallbacks (summarizer, tradeable loaders, report writers, price exporter) in favour of a single pandas-backed implementation; validated behaviour parity on a 1,000-file sample while documenting the moderate runtime increase.
 
 ## Outstanding Work
+- Complete the impending `prepare_tradeable_data.py` refactor on branch `scripts/prepare_tradeable_data.py-refactor`, using the new regression suite to validate incremental changes.
 - Assemble the tradable asset list and broker fee schedule to inform backtest assumptions.
 - Review `override` currency cases and decide whether FX conversion is required before backtesting; triage the empty Stooq histories now skipped during export.
 - Reconcile remaining unmatched broker instruments (especially those needing `.TO`, `.DE`, `.FR/.PA`, `.CH`) or document proxy decisions; enrich metadata with currency/asset-class tags and monitor the high/critical zero-volume cohorts while remaining offline.

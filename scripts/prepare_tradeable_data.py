@@ -45,41 +45,13 @@ except ImportError as exc:  # pragma: no cover - pandas is required for this mod
 LOGGER = logging.getLogger(__name__)
 
 
-REGION_CURRENCY_MAP = {
-    "us": "USD",
-    "world": "USD",
-    "uk": "GBP",
-    "pl": "PLN",
-    "hk": "HKD",
-    "jp": "JPY",
-    "hu": "HUF",
-}
-
-LEGACY_PREFIXES = ("L", "Q")
-SYMBOL_ALIAS_MAP: Dict[Tuple[str, str], List[str]] = {
-    ("FB", ".US"): ["META.US"],
-    ("BRKS", ".US"): ["AZTA.US"],
-    ("PKI", ".US"): ["RVTY.US"],
-    ("FISV", ".US"): ["FI.US"],
-    ("FBHS", ".US"): ["FBIN.US"],
-    ("NRZ", ".US"): ["RITM.US"],
-    ("DWAV", ".US"): ["QBTS.US"],
-}
-
-STOOQ_COLUMNS = [
-    "ticker",
-    "per",
-    "date",
-    "time",
-    "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-    "openint",
-]
-
-STOOQ_PANDAS_COLUMNS = ["date", "close", "volume"]
+from src.portfolio_management.config import (
+    REGION_CURRENCY_MAP,
+    LEGACY_PREFIXES,
+    SYMBOL_ALIAS_MAP,
+    STOOQ_COLUMNS,
+    STOOQ_PANDAS_COLUMNS,
+)
 
 
 @contextmanager
@@ -129,6 +101,21 @@ class TradeableMatch:
     strategy: str
 
 
+def _read_stooq_csv(file_path: Path, engine: str) -> pd.DataFrame:
+    """Read a Stooq CSV file with the specified engine."""
+    return pd.read_csv(
+        file_path,
+        header=None,
+        names=STOOQ_COLUMNS,
+        comment="<",
+        dtype=str,
+        engine=engine,
+        encoding="utf-8",
+        keep_default_na=False,
+        na_filter=False,
+    )
+
+
 def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str]:
     """Extract diagnostics and validation flags from a Stooq price file."""
     file_path = base_dir / stooq_file.rel_path
@@ -146,29 +133,9 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> Dict[str, str
 
     try:
         try:
-            raw_df = pd.read_csv(
-                file_path,
-                header=None,
-                names=STOOQ_COLUMNS,
-                comment="<",
-                dtype=str,
-                engine="c",
-                encoding="utf-8",
-                keep_default_na=False,
-                na_filter=False,
-            )
+            raw_df = _read_stooq_csv(file_path, "c")
         except (ValueError, pd.errors.ParserError):
-            raw_df = pd.read_csv(
-                file_path,
-                header=None,
-                names=STOOQ_COLUMNS,
-                comment="<",
-                dtype=str,
-                engine="python",
-                encoding="utf-8",
-                keep_default_na=False,
-                na_filter=False,
-            )
+            raw_df = _read_stooq_csv(file_path, "python")
     except (pd.errors.EmptyDataError, UnicodeDecodeError) as exc:
         diagnostics["data_status"] = f"error:{exc.__class__.__name__}"
         return diagnostics
@@ -393,6 +360,19 @@ def determine_unmatched_reason(
     return "manual_review"
 
 
+def _run_in_parallel(func, args_list, max_workers):
+    """Run a function in parallel with a list of arguments."""
+    results = []
+    if max_workers <= 1:
+        for args in args_list:
+            results.append(func(*args))
+    else:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(func, *args) for args in args_list]
+            for future in as_completed(futures):
+                results.append(future.result())
+    return results
+
 def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
     """Collect relative TXT file paths within the Stooq tree using parallel os.walk scanning."""
 
@@ -430,15 +410,9 @@ def _collect_relative_paths(base_dir: Path, max_workers: int) -> List[str]:
         LOGGER.warning("Unable to iterate %s: %s", base_dir, exc)
         return rel_paths
 
-    worker_count = max(1, max_workers)
-    if worker_count <= 1 or not top_level_dirs:
-        for directory in top_level_dirs:
-            rel_paths.extend(_scan_directory(directory))
-    else:
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            futures = {executor.submit(_scan_directory, directory): directory for directory in top_level_dirs}
-            for future in as_completed(futures):
-                rel_paths.extend(future.result())
+    results = _run_in_parallel(_scan_directory, [(d,) for d in top_level_dirs], max_workers)
+    for result in results:
+        rel_paths.extend(result)
 
     rel_paths.sort()
     return rel_paths
@@ -853,71 +827,35 @@ def match_tradeables(
     matches: List[TradeableMatch] = []
     unmatched: List[TradeableInstrument] = []
 
-    if max_workers <= 1:
-        for instrument in instruments:
-            match, missing = _match_instrument(instrument, by_ticker, by_stem, by_base)
-            if match:
-                matches.append(match)
-            elif missing:
-                unmatched.append(missing)
-    else:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [
-                executor.submit(_match_instrument, instrument, by_ticker, by_stem, by_base)
-                for instrument in instruments
-            ]
-            for future in as_completed(futures):
-                match, missing = future.result()
-                if match:
-                    matches.append(match)
-                elif missing:
-                    unmatched.append(missing)
+    results = _run_in_parallel(
+        _match_instrument,
+        [(instrument, by_ticker, by_stem, by_base) for instrument in instruments],
+        max_workers,
+    )
+
+    for match, missing in results:
+        if match:
+            matches.append(match)
+        elif missing:
+            unmatched.append(missing)
 
     LOGGER.info("Matched %s instruments, %s unmatched", len(matches), len(unmatched))
     return matches, unmatched
 
 
-def write_match_report(
+def _prepare_match_report_data(
     matches: Sequence[TradeableMatch],
-    output_path: Path,
     data_dir: Path,
-    *,
     lse_currency_policy: str,
-) -> Tuple[Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
-    """Persist the match report showing which tradeables map to which Stooq files.
-
-    Returns a tuple containing a diagnostics cache, currency status counts, data status
-    counts, a list of tickers with empty datasets, and a sample of records with data flags.
-    """
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+) -> Tuple[List[Dict[str, str]], Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
+    """Prepare data for the match report."""
     diagnostics_cache: Dict[str, Dict[str, str]] = {}
     currency_counts: Counter = Counter()
     data_status_counts: Counter = Counter()
     empty_tickers: List[str] = []
     flagged_samples: List[Tuple[str, str, str]] = []
-
-    columns = [
-        "symbol",
-        "isin",
-        "market",
-        "name",
-        "currency",
-        "matched_ticker",
-        "stooq_path",
-        "region",
-        "category",
-        "strategy",
-        "source_file",
-        "price_start",
-        "price_end",
-        "price_rows",
-        "inferred_currency",
-        "resolved_currency",
-        "currency_status",
-        "data_status",
-        "data_flags",
-    ]
     rows: List[Dict[str, str]] = []
+
     for match in matches:
         diagnostics = summarize_price_file(data_dir, match.stooq_file)
         diagnostics_cache[match.stooq_file.ticker.upper()] = diagnostics
@@ -960,30 +898,57 @@ def write_match_report(
                 "data_flags": data_flags,
             }
         )
-    df = pd.DataFrame(rows, columns=columns)
-    df.to_csv(output_path, index=False)
+    return rows, diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
+
+def write_match_report(
+    matches: Sequence[TradeableMatch],
+    output_path: Path,
+    data_dir: Path,
+    *,
+    lse_currency_policy: str,
+) -> Tuple[Dict[str, Dict[str, str]], Counter, Counter, List[str], List[Tuple[str, str, str]]]:
+    """Persist the match report showing which tradeables map to which Stooq files."""
+    rows, diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples = _prepare_match_report_data(
+        matches, data_dir, lse_currency_policy
+    )
+    columns = [
+        "symbol",
+        "isin",
+        "market",
+        "name",
+        "currency",
+        "matched_ticker",
+        "stooq_path",
+        "region",
+        "category",
+        "strategy",
+        "source_file",
+        "price_start",
+        "price_end",
+        "price_rows",
+        "inferred_currency",
+        "resolved_currency",
+        "currency_status",
+        "data_status",
+        "data_flags",
+    ]
+    _write_report(rows, output_path, columns)
     LOGGER.info("Match report written to %s", output_path)
     return diagnostics_cache, currency_counts, data_status_counts, empty_tickers, flagged_samples
 
 
-def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path: Path) -> None:
-    """Persist the unmatched instrument list for manual follow-up."""
+def _write_report(data: Sequence[object], output_path: Path, columns: List[str]) -> None:
+    """Write a list of dataclasses to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    rows = [
-        {
-            "symbol": instrument.symbol,
-            "isin": instrument.isin,
-            "market": instrument.market,
-            "name": instrument.name,
-            "currency": instrument.currency,
-            "source_file": instrument.source_file,
-            "reason": instrument.reason,
-        }
-        for instrument in unmatched
-    ]
-    columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
-    df = pd.DataFrame(rows, columns=columns)
+    records = [asdict(item) for item in data]
+    df = pd.DataFrame.from_records(records, columns=columns)
     df.to_csv(output_path, index=False)
+
+
+def write_unmatched_report(unmatched: Sequence[TradeableInstrument], output_path: Path) -> None:
+    """Persist the unmatched instrument list for manual follow-up."""    
+    columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
+    _write_report(unmatched, output_path, columns)
     LOGGER.info("Unmatched report written to %s", output_path)
 
 
@@ -1086,18 +1051,8 @@ def export_tradeable_prices(
             LOGGER.warning("Failed to export %s -> %s: %s", source_path, target_path, exc)
             return False
 
-    exported = 0
-    tasks = list(unique_matches.values())
-    if max_workers <= 1:
-        for match in tasks:
-            if _export_single(match):
-                exported += 1
-    else:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(_export_single, match) for match in tasks]
-            for future in as_completed(futures):
-                if future.result():
-                    exported += 1
+    results = _run_in_parallel(_export_single, [(m,) for m in unique_matches.values()], max_workers)
+    exported = sum(1 for r in results if r)
 
     LOGGER.info("Exported %s price files to %s", exported, dest_dir)
     if skipped:
@@ -1193,34 +1148,18 @@ def configure_logging(level: str) -> None:
     )
 
 
-def main() -> None:
-    args = parse_args()
-    configure_logging(args.log_level)
-
-    data_dir = args.data_dir
-    metadata_path = args.metadata_output
-    cpu_count = os.cpu_count() or 1
-    auto_workers = max(1, (cpu_count - 1) or 1)
-    max_workers = args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
-    max_workers = max(1, max_workers)
-    index_workers = args.index_workers if args.index_workers and args.index_workers > 0 else max_workers
-    index_workers = max(1, index_workers)
-    LOGGER.info(
-        "Worker configuration: match/export=%s, index=%s (cpu=%s)",
-        max_workers,
-        index_workers,
-        cpu_count,
-    )
-
-    if metadata_path.exists() and not args.force_reindex:
+def _handle_stooq_index(args, index_workers):
+    if args.metadata_output.exists() and not args.force_reindex:
         with log_duration("stooq_index_load"):
-            stooq_index = read_stooq_index(metadata_path)
+            stooq_index = read_stooq_index(args.metadata_output)
     else:
         with log_duration("stooq_index_build"):
-            stooq_index = build_stooq_index(data_dir, max_workers=index_workers)
+            stooq_index = build_stooq_index(args.data_dir, max_workers=index_workers)
         with log_duration("stooq_index_write"):
-            write_stooq_index(stooq_index, metadata_path)
+            write_stooq_index(stooq_index, args.metadata_output)
+    return stooq_index
 
+def _load_and_match_tradeables(stooq_index, args, max_workers):
     with log_duration("tradeable_load"):
         tradeables = load_tradeable_instruments(args.tradeable_dir)
 
@@ -1235,6 +1174,9 @@ def main() -> None:
             max_workers=max_workers,
         )
     unmatched = annotate_unmatched_instruments(unmatched, stooq_by_base, available_extensions)
+    return matches, unmatched
+
+def _generate_reports(matches, unmatched, args, data_dir):
     with log_duration("tradeable_match_report"):
         (
             diagnostics_cache,
@@ -1268,17 +1210,42 @@ def main() -> None:
         )
     with log_duration("tradeable_unmatched_report"):
         write_unmatched_report(unmatched, args.unmatched_report)
+    return diagnostics_cache
 
+def _export_prices(matches, args, diagnostics_cache, max_workers):
     with log_duration("tradeable_export"):
         export_tradeable_prices(
             matches,
-            data_dir,
+            args.data_dir,
             args.prices_output,
             overwrite=args.overwrite_prices,
             max_workers=max_workers,
             diagnostics=diagnostics_cache,
             include_empty=args.include_empty_prices,
         )
+
+def main() -> None:
+    args = parse_args()
+    configure_logging(args.log_level)
+
+    data_dir = args.data_dir
+    cpu_count = os.cpu_count() or 1
+    auto_workers = max(1, (cpu_count - 1) or 1)
+    max_workers = args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
+    max_workers = max(1, max_workers)
+    index_workers = args.index_workers if args.index_workers and args.index_workers > 0 else max_workers
+    index_workers = max(1, index_workers)
+    LOGGER.info(
+        "Worker configuration: match/export=%s, index=%s (cpu=%s)",
+        max_workers,
+        index_workers,
+        cpu_count,
+    )
+
+    stooq_index = _handle_stooq_index(args, index_workers)
+    matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
+    diagnostics_cache = _generate_reports(matches, unmatched, args, data_dir)
+    _export_prices(matches, args, diagnostics_cache, max_workers)
 
 
 if __name__ == "__main__":
