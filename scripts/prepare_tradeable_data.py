@@ -940,7 +940,10 @@ def write_match_report(
 def _write_report(data: Sequence[object], output_path: Path, columns: List[str]) -> None:
     """Write a list of dataclasses to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    records = [asdict(item) for item in data]
+    if data and not isinstance(data[0], dict):
+        records = [asdict(item) for item in data]
+    else:
+        records = data
     df = pd.DataFrame.from_records(records, columns=columns)
     df.to_csv(output_path, index=False)
 
