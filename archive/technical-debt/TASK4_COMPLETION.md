@@ -6,12 +6,15 @@
 **Regressions:** Zero
 
 ## Objective
+
 Improve boundaries and clarity in the `summarize_price_file` pipeline in `src/portfolio_management/analysis.py`, with focus on better separation of concerns and reduced cognitive complexity.
 
 ## Changes Made
 
 ### 1. Extracted `_initialize_diagnostics` Helper
+
 **Before:** Dictionary initialization inline with unclear defaults
+
 ```python
 diagnostics: dict[str, str] = {
     "price_start": "",
@@ -23,6 +26,7 @@ diagnostics: dict[str, str] = {
 ```
 
 **After:** Extracted into dedicated method
+
 ```python
 def _initialize_diagnostics() -> dict[str, str]:
     """Create a diagnostics dictionary with default values."""
@@ -36,13 +40,16 @@ def _initialize_diagnostics() -> dict[str, str]:
 ```
 
 **Benefits:**
+
 - Single source of truth for defaults
 - Can be reused if needed
 - Makes initialization intent explicit
 - Easier to test/document constants
 
 ### 2. Extracted `_determine_data_status` Helper
+
 **Before:** Complex conditional logic inline in `summarize_price_file`
+
 ```python
 diagnostics["data_status"] = "ok" if row_count > 1 else "sparse"
 
@@ -55,6 +62,7 @@ if (zero_volume_severity and diagnostics["data_status"] == "ok") or (
 ```
 
 **After:** Single, clear method encapsulating the logic
+
 ```python
 def _determine_data_status(
     row_count: int,
@@ -70,6 +78,7 @@ def _determine_data_status(
 ```
 
 **Benefits:**
+
 - Status determination logic centralized
 - Eliminates repeated status checks
 - Clear decision flow (sparse → warning → ok)
@@ -77,13 +86,16 @@ def _determine_data_status(
 - Testable in isolation
 
 ### 3. Refactored `summarize_price_file` Main Function
+
 **Before:** 50 lines with mixed concerns and unclear pipeline
+
 - Initialization buried in declaration
 - Status determined in multiple places
 - Hard to follow data transformation sequence
 - Unclear separation between validation and diagnostics
 
 **After:** 37 lines with clear 5-step pipeline (commented)
+
 ```python
 def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str]:
     """Extract diagnostics and validation flags from a Stooq price file.
@@ -135,6 +147,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
 ```
 
 **Benefits:**
+
 - Clear pipeline stages with comments
 - Each stage's responsibility obvious
 - Status determination delegated to focused method
@@ -145,6 +158,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
 ## Quality Metrics
 
 ### Function Boundaries Improvement
+
 | Aspect | Before | After | Improvement |
 |--------|--------|-------|-------------|
 | Methods in analysis module | 8 | 10 | +2 focused helpers |
@@ -154,6 +168,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
 | Conditional nesting | 2 levels | 1 level | Clearer |
 
 ### Code Readability
+
 - **Pipeline clarity:** Explicit 5-stage structure with comments
 - **Helper focus:** Each helper has single responsibility
 - **Status determination:** Complex logic extracted to dedicated method
@@ -163,6 +178,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
 ## Testing
 
 ### Full Test Suite
+
 ```
 35 tests passed in 82.36s
 - 17 original regression tests (maintained)
@@ -171,6 +187,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
 ```
 
 ### Analysis-Specific Tests Verified
+
 - `test_summarize_price_file_cases[WPS.UK-empty-]` ✅
 - `test_summarize_price_file_cases[AGED.UK-warning-zero_volume_severity=moderate]` ✅
 - `test_summarize_price_file_cases[IEMB.UK-ok-]` ✅
@@ -181,40 +198,48 @@ All tests confirm behavior preservation while improving code structure.
 ## Design Improvements
 
 ### Separation of Concerns
+
 - **Initialization:** Dedicated method for default values
 - **Status determination:** Extracted from mixed conditional logic
 - **Pipeline orchestration:** Main function calls focused helpers
 - **Data transformation:** Each stage clearly marked with comments
 
 ### Maintainability
+
 - New developers can understand pipeline at a glance
 - Status rules are obvious and in one place
 - Adding new diagnostic steps is straightforward
 - Constants and methods are self-documenting
 
 ### Future Extensions
+
 Easy to add features like:
+
 - Different status determination strategies
 - Pluggable diagnostic generators
 - Alternative pipeline implementations
 - Diagnostic caching
 
 ## Files Modified
+
 - `src/portfolio_management/analysis.py`
 
 ## Summary
+
 Successfully improved `summarize_price_file` and analysis helpers through:
+
 1. Extracting default diagnostics initialization
-2. Centralizing complex status determination logic
-3. Clarifying 5-stage pipeline with explicit comments
-4. Reducing function length by 26%
-5. Improving testability and maintainability
+1. Centralizing complex status determination logic
+1. Clarifying 5-stage pipeline with explicit comments
+1. Reducing function length by 26%
+1. Improving testability and maintainability
 
 All changes maintain backward compatibility and full test coverage while significantly improving code clarity and separation of concerns.
 
 ## Statistics
 
 **Overall Task 4 Impact:**
+
 - New helper methods: 2
 - Lines reduced: ~13 (26% of summarize_price_file)
 - Cyclomatic complexity reduced: 1-2 levels of nesting eliminated
@@ -222,6 +247,7 @@ All changes maintain backward compatibility and full test coverage while signifi
 - Regression tests: 0
 
 ## Next Steps
+
 - ✅ All technical debt tasks complete (Tasks 1-4)
 - Commit all changes for review
 - Prepare pull request summary

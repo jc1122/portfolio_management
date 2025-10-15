@@ -4,6 +4,7 @@
 **Test status:** 17 tests passing (coverage steady at 72%).
 
 **Highlights**
+
 - Documented the CLI script, adding docstrings for the module, CLI surface, and key dataclasses to clarify responsibilities.
 - Replaced legacy `typing` aliases with built-in annotations, trimmed unused imports, and removed dead code to keep the runtime surface lean.
 - Lifted magic numbers (zero-volume thresholds, path offsets) into named constants so business rules are explicit.

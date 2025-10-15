@@ -9,20 +9,23 @@
 ### 2.1 Reviewed and Improved `_run_in_parallel`
 
 **Key Issues Identified:**
+
 1. ❌ Results were out of order (used `as_completed`)
-2. ❌ No error handling for failed tasks
-3. ❌ No diagnostics or logging
-4. ✅ Thread pool was appropriate (all I/O-bound usage)
+1. ❌ No error handling for failed tasks
+1. ❌ No diagnostics or logging
+1. ✅ Thread pool was appropriate (all I/O-bound usage)
 
 **Improvements Implemented:**
 
 #### Result Ordering (High Priority)
+
 - ✅ Added `preserve_order` parameter (default: True)
 - ✅ Uses index mapping to maintain input order
 - ✅ Optional unordered mode for performance-critical use cases
 - **Impact:** Results now reliable and reproducible
 
 #### Error Handling (High Priority)
+
 - ✅ Wrapped task execution in try-except
 - ✅ Includes task index in error messages for context
 - ✅ Re-raises as RuntimeError with task ID
@@ -30,12 +33,14 @@
 - **Impact:** Failures are now traceable and clear
 
 #### Diagnostics (Medium Priority)
+
 - ✅ Added `log_tasks` parameter (default: False)
 - ✅ Logs task start/completion at DEBUG level
 - ✅ Logs completion count progress
 - **Impact:** Optional visibility into parallel execution
 
 #### Code Quality
+
 - ✅ Comprehensive docstring with all parameters
 - ✅ Type hints for new parameters
 - ✅ Backward compatible API (new parameters are keyword-only)
@@ -46,16 +51,19 @@
 **Three distinct usage patterns identified:**
 
 1. **Directory Scanning** (`stooq.py`)
+
    - I/O-bound: `os.walk` directory traversal
    - Threading appropriate ✅
    - Order-independent but reproducibility matters
 
-2. **File Export** (`io.py`)
+1. **File Export** (`io.py`)
+
    - I/O-bound: Reading and writing CSV files
    - Threading appropriate ✅
    - Order-independent (sums boolean results)
 
-3. **Instrument Matching** (`matching.py`)
+1. **Instrument Matching** (`matching.py`)
+
    - Mixed: Object comparisons (CPU) + data processing
    - Threading appropriate ✅
    - Order-independent post-processing
@@ -65,29 +73,35 @@
 **Created 18 new tests in `tests/test_utils.py`:**
 
 ✅ **Basic Functionality (6 tests)**
+
 - Sequential execution (1, 0, -1 workers)
 - Parallel execution (2, 4 workers)
 - Empty and single task edge cases
 
 ✅ **Result Ordering (2 tests)**
+
 - Preserve order = True (maintains input order)
 - Preserve order = False (may return unordered)
 
 ✅ **Error Handling (3 tests)**
+
 - Sequential error handling
 - Parallel error handling
 - Task index included in error context
 
 ✅ **Diagnostics (2 tests)**
+
 - Task logging enabled (produces debug logs)
 - Task logging disabled (no debug logs)
 
 ✅ **Stress Tests (3 tests)**
+
 - 100 parallel tasks
 - Different worker count scaling
 - Timing variance handling (slow tasks)
 
 ✅ **Advanced Tests (2 tests)**
+
 - Multiple argument functions
 - Default parameter behavior
 
@@ -103,6 +117,7 @@
 ## Implementation Details
 
 ### Enhanced Signature
+
 ```python
 def _run_in_parallel(
     func: Callable[..., T],
@@ -117,11 +132,13 @@ def _run_in_parallel(
 ### New Features
 
 **1. Result Ordering**
+
 - Maintains order by tracking indices
 - Optional unordered mode for pure performance
 - Handles timing variance correctly
 
 **2. Better Error Handling**
+
 ```python
 try:
     results[idx] = future.result()
@@ -131,6 +148,7 @@ except Exception as exc:
 ```
 
 **3. Optional Task Logging**
+
 ```
 DEBUG: Executing task 1/100
 DEBUG: Completed task 1/100
@@ -146,6 +164,7 @@ DEBUG: Completed task 1/100
 ## Backward Compatibility
 
 ✅ **Fully backward compatible**
+
 - Default parameters preserve old behavior
 - New parameters are keyword-only (no accidental changes)
 - All existing code continues to work unchanged
@@ -163,11 +182,12 @@ DEBUG: Completed task 1/100
 ## Files Modified
 
 1. `src/portfolio_management/utils.py` - Enhanced implementation
-2. `tests/test_utils.py` - New (comprehensive test suite)
+1. `tests/test_utils.py` - New (comprehensive test suite)
 
 ## Usage Examples
 
 ### Standard Usage (Preserves Order)
+
 ```python
 results = _run_in_parallel(
     my_task,
@@ -177,6 +197,7 @@ results = _run_in_parallel(
 ```
 
 ### High-Performance Mode (Unordered)
+
 ```python
 results = _run_in_parallel(
     my_task,
@@ -187,6 +208,7 @@ results = _run_in_parallel(
 ```
 
 ### With Diagnostics
+
 ```python
 results = _run_in_parallel(
     my_task,
@@ -199,11 +221,13 @@ results = _run_in_parallel(
 ## Remaining Technical Debt
 
 ### Task 3: Matching Logic Simplification
+
 - Simplify `_match_instrument` branching logic
 - Improve readability without losing coverage
 - Estimated time: 60-90 minutes
 
 ### Task 4: Analysis Helpers
+
 - Tighten boundaries in `summarize_price_file` pipeline
 - Vectorize remaining hotspots if needed
 - Estimated time: 45-60 minutes
@@ -211,6 +235,7 @@ results = _run_in_parallel(
 ## Next Steps
 
 Ready to proceed with:
+
 - **Task 3:** Matching Logic Simplification (or continue current momentum)
 - Or commit changes and prepare for review
 

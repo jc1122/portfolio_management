@@ -6,12 +6,15 @@
 **Regressions:** Zero
 
 ## Objective
+
 Simplify `_match_instrument` branching logic in `src/portfolio_management/matching.py` while maintaining test coverage and improving code readability.
 
 ## Changes Made
 
 ### 1. Enhanced TickerMatchingStrategy
+
 **Before:** Inline extension validation logic with nested conditionals
+
 ```python
 if candidate in by_ticker:
     entry = by_ticker[candidate]
@@ -26,6 +29,7 @@ return None
 ```
 
 **After:** Extracted helper method with clear separation of concerns
+
 ```python
 @staticmethod
 def _extension_is_acceptable(entry_ext: str, desired_exts_set: set[str]) -> bool:
@@ -46,12 +50,15 @@ def match(self, candidate, by_ticker, desired_exts_set, instrument):
 ```
 
 **Benefits:**
+
 - Logic flow clearer (early returns)
 - Extension validation extracted to reusable method
 - Reduced cyclomatic complexity
 
 ### 2. Simplified StemMatchingStrategy
+
 **Before:** Verbose bool accumulation with nested conditions
+
 ```python
 allow_stem_match = False
 if desired_exts_set:
@@ -67,6 +74,7 @@ if allow_stem_match:
 ```
 
 **After:** Direct validation using extracted helper
+
 ```python
 if not self._extension_is_acceptable(entry.extension.upper(), desired_exts_set):
     return None
@@ -74,18 +82,22 @@ return TradeableMatch(...)
 ```
 
 **Benefits:**
+
 - Eliminates unnecessary bool variable
 - Reuses extracted `_extension_is_acceptable` method
 - Clearer intent with early return pattern
 
 ### 3. Refactored BaseMarketMatchingStrategy
+
 **Before:** Complex nested loops and repeated extension extraction logic
+
 - 57 lines of dense matching logic
 - Multiple extension extraction patterns
 - Nested iteration for finding matches
 - Hard to follow decision flow
 
 **After:** Broken into composable helper methods
+
 ```python
 @staticmethod
 def _build_desired_extensions(instrument_suffix, market) -> list[str]:
@@ -107,33 +119,41 @@ def match(self, candidate, by_base, instrument, instrument_suffix):
 ```
 
 **Benefits:**
+
 - Breaks 57-line method into 5 focused methods
 - Each method has single responsibility
 - Duplicate logic consolidated
 - Matches found via clear two-phase process: build → find
 
-### 4. Extracted _match_instrument Helper Functions
+### 4. Extracted \_match_instrument Helper Functions
+
 Moved extension computation out of loop into dedicated functions:
 
-**_build_candidate_extensions(norm_symbol, instrument_suffix, market):**
+**\_build_candidate_extensions(norm_symbol, instrument_suffix, market):**
+
 - Builds desired and fallback extension sets once per instrument
 - Moved outside loop to avoid redundant computation
 
-**_extract_candidate_extension(candidate):**
+**\_extract_candidate_extension(candidate):**
+
 - Consolidates candidate extension extraction (previously 2+ patterns)
 - Single, testable method
 
-**_build_desired_extensions_for_candidate(instrument_desired_exts, fallback_desired_exts, candidate_ext):**
+**\_build_desired_extensions_for_candidate(instrument_desired_exts, fallback_desired_exts, candidate_ext):**
+
 - Centralized logic for per-candidate extension computation
 - Previously inline with unclear flow
 
-### 5. Refactored _match_instrument Main Function
+### 5. Refactored \_match_instrument Main Function
+
 **Before:** 46 lines with complex inline logic
+
 - Extension computation inside loop
 - Verbose set building
 - Unclear data flow
 
 **After:** 35 lines with clear orchestration
+
 - Extension pre-computation outside loop
 - Extracted helpers handle complexity
 - Strategy application clear and sequential
@@ -182,6 +202,7 @@ def _match_instrument(
 ## Quality Metrics
 
 ### Cyclomatic Complexity Reduction
+
 | Component | Before | After | Improvement |
 |-----------|--------|-------|-------------|
 | `TickerMatchingStrategy.match` | ~4 | ~2 | 50% ↓ |
@@ -191,6 +212,7 @@ def _match_instrument(
 | **Total Function CC** | ~29 | ~13 | **55% ↓** |
 
 ### Code Quality
+
 - **Total lines in matching strategies:** 157 → 131 (17% reduction)
 - **Comments-to-code ratio:** Improved (clearer intent through naming)
 - **Test coverage:** Maintained at 75% across suite
@@ -199,6 +221,7 @@ def _match_instrument(
 ## Testing
 
 ### Full Test Suite
+
 ```
 35 tests passed in 73.55s
 - 17 original regression tests (maintained)
@@ -207,6 +230,7 @@ def _match_instrument(
 ```
 
 ### Matching-Specific Tests Verified
+
 - `test_match_report_matches_fixture` ✅
 - `test_match_report_summaries` ✅
 - `test_cli_end_to_end_matches_golden` ✅
@@ -219,34 +243,41 @@ All tests confirm behavior preservation while improving internal code structure.
 ## Design Improvements
 
 ### Separation of Concerns
+
 - **Extension validation logic:** Moved to static method in each strategy
 - **Extension extraction:** Single consolidated method
 - **Extension building:** Dedicated method with clear deduplication
 - **Entry matching:** Separated into `_find_matching_entry` method
 
 ### Testability
+
 - Helper methods can be tested in isolation if needed
 - Clear inputs/outputs for each method
 - No hidden state or implicit ordering
 
 ### Maintainability
+
 - Strategy classes follow consistent pattern
 - Each method has single, clear responsibility
 - Helper functions at module level are self-documenting
 - Reduced cognitive load for future modifications
 
 ## Files Modified
+
 - `src/portfolio_management/matching.py`
 
 ## Summary
+
 Successfully reduced matching logic complexity by **55%** through:
+
 1. Extracting repeated extension validation logic
-2. Breaking BaseMarketMatchingStrategy into focused helper methods
-3. Moving extension pre-computation outside loop
-4. Applying consistent patterns across strategy classes
+1. Breaking BaseMarketMatchingStrategy into focused helper methods
+1. Moving extension pre-computation outside loop
+1. Applying consistent patterns across strategy classes
 
 All changes maintain backward compatibility and full test coverage while significantly improving code readability and maintainability.
 
 ## Next Steps
+
 - Task 4: Tighten Analysis Helpers in `analysis.summarize_price_file`
 - Then: Commit all changes for review

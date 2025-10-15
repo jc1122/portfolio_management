@@ -29,9 +29,13 @@ memory-bank/                         # Persistent documentation
   ├── techContext.md
   ├── activeContext.md
   └── progress.md
-tests/                               # Test suite (17 tests, 75% coverage)
+tests/                               # Test suite (35 tests, 75% coverage)
+archive/                             # Historical documentation
+  ├── technical-debt/                # Technical debt resolution docs
+  └── sessions/                      # Old session notes
 AGENTS.md                            # Session boot instructions
-REFACTORING_SUMMARY.md               # Refactoring history
+CODE_REVIEW.md                       # Latest code review
+TECHNICAL_DEBT_RESOLUTION_SUMMARY.md # Technical debt completion summary
 ```
 
 ## Getting Started
@@ -84,16 +88,24 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 **Phase 1 Complete: Data Preparation Pipeline** ✅
 
 - Modular architecture with 6 focused modules extracted from monolithic script
-- 17 passing tests with 75% coverage, CI/CD pipeline configured
+- 35 passing tests with 75% coverage, CI/CD pipeline configured
 - Pandas-based processing with comprehensive validation and diagnostics
 - Zero-volume severity tagging and currency reconciliation
 - Match/unmatched reports with data quality flags
-- Performance optimized (pytest \<3s, pre-commit ~50s)
+- Performance optimized (pytest \<70s, pre-commit ~50s)
 - Latest run: 5,560 matched instruments, 4,146 exported price files, 1,262 unmatched assets documented
+
+**Phase 2 Complete: Technical Debt Resolution** ✅
+
+- 78% reduction in mypy type errors (40+ → 9)
+- 55% complexity reduction in matching logic
+- Robust concurrency implementation with 18 new tests
+- 26% analysis pipeline length reduction
+- Zero regressions, zero breaking changes
+- See: CODE_REVIEW.md, TECHNICAL_DEBT_RESOLUTION_SUMMARY.md
 
 **Current Work:**
 
-- Addressing technical debt in matching and concurrency implementations
 - Data curation (broker fees, FX policy, unmatched resolution)
 
 **Next Phases:**
