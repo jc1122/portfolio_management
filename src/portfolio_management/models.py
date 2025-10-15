@@ -1,3 +1,13 @@
+"""Domain models and dataclasses for the portfolio management toolkit.
+
+This module defines the core data structures used throughout the system:
+
+- StooqFile: Metadata about Stooq price files in the index
+- TradeableInstrument: A financial instrument from a broker's universe
+- TradeableMatch: A successful match between an instrument and a Stooq file
+- ExportConfig: Configuration for exporting price data
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,16 @@
+"""Shared utilities for parallel execution and performance monitoring.
+
+This module provides helper functions for:
+
+- Parallel and sequential task execution with result ordering
+- Error handling and diagnostics in concurrent operations
+- Performance monitoring and timing utilities
+
+Key functions:
+    - _run_in_parallel: Execute tasks in parallel with optional ordering
+    - log_duration: Context manager for timing operations
+"""
+
 from __future__ import annotations
 
 import logging
@@ -74,7 +87,9 @@ def _run_in_parallel(
                     completed_count += 1
                     if log_tasks:
                         LOGGER.debug(
-                            "Completed task %d/%d", completed_count, len(args_list)
+                            "Completed task %d/%d",
+                            completed_count,
+                            len(args_list),
                         )
                 except Exception as exc:
                     LOGGER.error("Task %d failed: %s", idx, exc, exc_info=True)
@@ -90,7 +105,9 @@ def _run_in_parallel(
                     completed_count += 1
                     if log_tasks:
                         LOGGER.debug(
-                            "Completed task %d/%d", completed_count, len(args_list)
+                            "Completed task %d/%d",
+                            completed_count,
+                            len(args_list),
                         )
                 except Exception as exc:
                     LOGGER.error("Task %d failed: %s", idx, exc, exc_info=True)

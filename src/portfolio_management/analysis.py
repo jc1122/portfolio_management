@@ -229,7 +229,9 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
         else None
     )
     flags = _generate_flags(
-        invalid_rows=invalid_rows, zero_volume_severity=zero_volume_severity, **metrics
+        invalid_rows=invalid_rows,
+        zero_volume_severity=zero_volume_severity,
+        **metrics,
     )
 
     # Step 5: Build results
@@ -237,7 +239,9 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
     diagnostics["price_end"] = last_date.date().isoformat()
     diagnostics["price_rows"] = str(row_count)
     diagnostics["data_status"] = _determine_data_status(
-        row_count, zero_volume_severity, bool(flags)
+        row_count,
+        zero_volume_severity,
+        bool(flags),
     )
     diagnostics["data_flags"] = ";".join(flags)
 

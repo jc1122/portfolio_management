@@ -13,7 +13,7 @@ REGION_CURRENCY_MAP = {
 }
 
 LEGACY_PREFIXES = ("L", "Q")
-SYMBOL_ALIAS_MAP: Dict[Tuple[str, str], List[str]] = {
+SYMBOL_ALIAS_MAP: dict[tuple[str, str], list[str]] = {
     ("FB", ".US"): ["META.US"],
     ("BRKS", ".US"): ["AZTA.US"],
     ("PKI", ".US"): ["RVTY.US"],

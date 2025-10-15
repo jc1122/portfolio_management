@@ -1,3 +1,20 @@
+"""Data I/O operations for Stooq and tradeable instrument files.
+
+This module provides functions for reading and writing CSV files related to:
+
+- Stooq price file indices (building and loading cached metadata)
+- Tradeable instrument lists from broker universes
+- Match reports showing instrument-to-Stooq mappings
+- Diagnostics and currency resolution results
+- Price file exports filtered for quality and availability
+
+Key functions:
+    - read_stooq_index: Load cached Stooq index
+    - write_match_report: Generate matched instruments report with diagnostics
+    - export_tradeable_prices: Export filtered price files to destination
+    - load_tradeable_instruments: Load and normalize broker instrument lists
+"""
+
 from __future__ import annotations
 
 import logging

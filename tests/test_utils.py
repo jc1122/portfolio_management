@@ -172,6 +172,97 @@ class TestRunInParallel:
         results = _run_in_parallel(simple_task, args, max_workers=2)
         assert sorted(results) == [2, 4, 6]
 
+    def test_concurrent_error_handling_first_task(self) -> None:
+        """Test error handling when first task fails in parallel."""
+
+        def failing_first(x: int) -> int:
+            if x == 1:
+                raise ValueError("First task failed")
+            return x * 2
+
+        args = [(1,), (2,), (3,)]
+        with pytest.raises(RuntimeError, match="Task 0 failed"):
+            _run_in_parallel(failing_first, args, max_workers=2)
+
+    def test_concurrent_error_handling_last_task(self) -> None:
+        """Test error handling when last task fails in parallel."""
+
+        def failing_last(x: int) -> int:
+            if x == 3:
+                raise ValueError("Last task failed")
+            return x * 2
+
+        args = [(1,), (2,), (3,)]
+        with pytest.raises(RuntimeError, match="Task 2 failed"):
+            _run_in_parallel(failing_last, args, max_workers=2)
+
+    def test_concurrent_error_handling_middle_task(self) -> None:
+        """Test error handling when middle task fails in parallel."""
+
+        def failing_middle(x: int) -> int:
+            if x == 2:
+                raise ValueError("Middle task failed")
+            return x * 2
+
+        args = [(1,), (2,), (3,), (4,), (5,)]
+        with pytest.raises(RuntimeError, match="Task.*failed"):
+            _run_in_parallel(failing_middle, args, max_workers=2)
+
+    def test_error_with_exception_type_preserved(self) -> None:
+        """Test that error information is preserved."""
+
+        def task_with_type_error(x: int) -> int:
+            if x < 0:
+                raise TypeError(f"Type error: {x}")
+            return x * 2
+
+        args = [(1,), (-1,), (3,)]
+        with pytest.raises(RuntimeError) as exc_info:
+            _run_in_parallel(task_with_type_error, args, max_workers=1)
+        # Error should be wrapped but information preserved
+        assert "Task 1 failed" in str(exc_info.value)
+
+    def test_sequential_multiple_errors_stops_at_first(self) -> None:
+        """Test that sequential execution stops at first error."""
+        call_count = 0
+
+        def counting_failing_task(x: int) -> int:
+            nonlocal call_count
+            call_count += 1
+            if x < 0:
+                raise ValueError(f"Cannot process negative: {x}")
+            return x * 2
+
+        args = [(1,), (-2,), (3,)]
+        with pytest.raises(RuntimeError):
+            _run_in_parallel(counting_failing_task, args, max_workers=1)
+        # Should have called function twice (1, then -2)
+        assert call_count == 2
+
+    def test_parallel_error_with_preserve_order_false(self) -> None:
+        """Test error handling with preserve_order=False."""
+        args = [(1,), (-5,), (3,), (4,)]
+        with pytest.raises(RuntimeError, match="Task.*failed"):
+            _run_in_parallel(failing_task, args, max_workers=2, preserve_order=False)
+
+    def test_logging_with_error_sequential(self, caplog: Any) -> None:
+        """Test logging when error occurs in sequential mode."""
+        args = [(1,), (-1,), (3,)]
+        with caplog.at_level(logging.DEBUG, logger="src.portfolio_management.utils"):
+            with pytest.raises(RuntimeError):
+                _run_in_parallel(failing_task, args, max_workers=1, log_tasks=True)
+        # Should log error
+        assert "failed" in caplog.text.lower() or "error" in caplog.text.lower()
+
+    def test_logging_with_error_parallel(self, caplog: Any) -> None:
+        """Test logging when error occurs in parallel mode."""
+        args = [(1,), (-1,), (3,)]
+        with caplog.at_level(logging.DEBUG, logger="src.portfolio_management.utils"):
+            with pytest.raises(RuntimeError):
+                _run_in_parallel(failing_task, args, max_workers=2, log_tasks=True)
+        # Should have logged error
+        assert "failed" in caplog.text.lower() or "error" in caplog.text.lower()
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

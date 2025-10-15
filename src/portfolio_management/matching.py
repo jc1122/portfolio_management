@@ -309,7 +309,8 @@ class BaseMarketMatchingStrategy:
 
         # Build extensions and get available extensions in base_entries
         desired_exts = self._build_desired_extensions(
-            instrument_suffix, instrument.market
+            instrument_suffix,
+            instrument.market,
         )
         desired_exts_set = set(desired_exts)
 
@@ -389,7 +390,9 @@ def _match_instrument(
     _, instrument_suffix = split_symbol(norm_symbol)
 
     instrument_desired_exts, fallback_desired_exts = _build_candidate_extensions(
-        norm_symbol, instrument_suffix, instrument.market
+        norm_symbol,
+        instrument_suffix,
+        instrument.market,
     )
 
     ticker_strategy = TickerMatchingStrategy()
@@ -400,22 +403,33 @@ def _match_instrument(
         tried.append(candidate)
         candidate_ext = _extract_candidate_extension(candidate)
         desired_exts_set = _build_desired_extensions_for_candidate(
-            instrument_desired_exts, fallback_desired_exts, candidate_ext
+            instrument_desired_exts,
+            fallback_desired_exts,
+            candidate_ext,
         )
 
         # Try each strategy in order
         if match := ticker_strategy.match(
-            candidate, by_ticker, desired_exts_set, instrument
+            candidate,
+            by_ticker,
+            desired_exts_set,
+            instrument,
         ):
             return match, None
 
         if match := stem_strategy.match(
-            candidate, by_stem, desired_exts_set, instrument
+            candidate,
+            by_stem,
+            desired_exts_set,
+            instrument,
         ):
             return match, None
 
         if match := base_market_strategy.match(
-            candidate, by_base, instrument, instrument_suffix
+            candidate,
+            by_base,
+            instrument,
+            instrument_suffix,
         ):
             return match, None
 

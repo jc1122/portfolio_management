@@ -1,3 +1,18 @@
+"""Stooq data index building and metadata extraction.
+
+This module handles:
+
+- Parallel directory scanning of Stooq unpacked data trees
+- Extraction of region and category metadata from file paths
+- Building a comprehensive index of all available Stooq price files
+- Efficient path relative computation for cached metadata
+
+Key functions:
+    - build_stooq_index: Create an index describing all Stooq price files
+    - derive_region_and_category: Infer metadata from relative path
+    - _collect_relative_paths: Parallel directory scanning with filtering
+"""
+
 from __future__ import annotations
 
 import logging
