@@ -12,9 +12,27 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 
 ## Repository Structure
 
-- `memory-bank/`: Persistent project documentation (project brief, product context, system patterns, tech context, active context, progress log).
-- `scripts/prepare_tradeable_data.py`: CLI utility that indexes unpacked Stooq price files, matches them against BOŚ/mBank tradeable universes, and exports curated price series.
-- `AGENTS.md`: Operating instructions ensuring each session starts by reviewing the Memory Bank.
+```
+scripts/prepare_tradeable_data.py    # CLI orchestrator for data preparation
+src/portfolio_management/            # Core library modules
+  ├── models.py                      # Shared dataclasses
+  ├── io.py                          # File I/O operations
+  ├── analysis.py                    # Validation & diagnostics
+  ├── matching.py                    # Ticker matching heuristics
+  ├── stooq.py                       # Index building
+  ├── utils.py                       # Shared utilities
+  └── config.py                      # Configuration
+memory-bank/                         # Persistent documentation
+  ├── projectbrief.md
+  ├── productContext.md
+  ├── systemPatterns.md
+  ├── techContext.md
+  ├── activeContext.md
+  └── progress.md
+tests/                               # Test suite (17 tests, 75% coverage)
+AGENTS.md                            # Session boot instructions
+REFACTORING_SUMMARY.md               # Refactoring history
+```
 
 ## Getting Started
 
@@ -49,9 +67,9 @@ python scripts/prepare_tradeable_data.py \
     --overwrite-prices --force-reindex
 ```
 
-The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for \<3 s incremental updates.
+The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for \<3 s incremental updates.
 
-Optional flags: `--include-empty-prices` forces exports for tickers without usable data (normally skipped) and `--lse-currency-policy` lets you choose whether London listings keep the broker currency (`broker`, default), adopt Stooq’s inferred currency (`stooq`), or raise an error when the currencies diverge (`strict`).
+Optional flags: `--include-empty-prices` forces exports for tickers without usable data (normally skipped) and `--lse-currency-policy` lets you choose whether London listings keep the broker currency (`broker`, default), adopt Stooq's inferred currency (`stooq`), or raise an error when the currencies diverge (`strict`).
 
 Worker pools default to `CPU cores - 1` for both matching/export and index scans; supply `--max-workers` or `--index-workers` to override.
 
@@ -59,17 +77,32 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 >
 > The match report includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately.
 >
-> The script now mandates pandas for all data access (indexing, tradeable ingestion, report writing, price exports). A 1,000-file benchmark shows identical outputs with roughly a 12 % runtime increase versus the previous hybrid implementation.
+> The script now mandates pandas for all data access (indexing, tradeable ingestion, report writing, price exports). A 1,000-file benchmark shows identical outputs with roughly a 12 % runtime increase versus the previous hybrid implementation.
 
 ## Status
 
-- Documentation and repository scaffolding complete.
-- Stooq data preparation script now enriches match outputs with per-instrument price coverage, currency diagnostics, and zero-volume severity tagging while preventing cross-venue fallbacks; flagged listings remain available but carry warnings in `data/metadata/tradeable_data_flags.csv`.
-- Latest data export matched 5,560 instruments (4,146 price files after dropping two empty histories) and clearly tags 1,262 unmatched assets by missing Stooq regions (`.TO`, `.DE`, `.FR/.PA`, `.CH`) or alias requirements.
-- Matching CLI now leans entirely on pandas to ingest broker CSVs and assemble reports, eliminating the former CSV fallbacks.
-- Directory indexing uses a thread-pooled `os.walk` implementation (maintainability win versus the bespoke queue/lock walker) with identical outputs but slightly higher runtime (~1.8× slower on a 500-file sample).
-- Data preparation workflow is now pandas-only (legacy fallback removed) and validated against a 1,000-file subset; behaviour matches prior outputs with a small (~12 %) runtime penalty.
-- Next steps involve implementing the modular CLI, portfolio construction engines, and backtesting/reporting pipeline.
+**Phase 1 Complete: Data Preparation Pipeline** ✅
+
+- Modular architecture with 6 focused modules extracted from monolithic script
+- 17 passing tests with 75% coverage, CI/CD pipeline configured
+- Pandas-based processing with comprehensive validation and diagnostics
+- Zero-volume severity tagging and currency reconciliation
+- Match/unmatched reports with data quality flags
+- Performance optimized (pytest \<3s, pre-commit ~50s)
+- Latest run: 5,560 matched instruments, 4,146 exported price files, 1,262 unmatched assets documented
+
+**Current Work:**
+
+- Addressing technical debt in matching and concurrency implementations
+- Data curation (broker fees, FX policy, unmatched resolution)
+
+**Next Phases:**
+
+- Portfolio construction layer (strategy adapters, rebalancing logic)
+- Backtesting framework (simulation, transaction costs, analytics)
+- Advanced features (sentiment overlays, Black-Litterman, regime controls)
+
+See `REFACTORING_SUMMARY.md` for detailed history and `memory-bank/progress.md` for complete roadmap.
 
 ## Contributing
 

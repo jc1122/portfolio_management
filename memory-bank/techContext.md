@@ -12,6 +12,22 @@
 - Virtual environment/Poetry for dependency isolation; Git for version control.
 - Recommend integrating basic logging (Python `logging`) and plotting backend compatible with headless runs (e.g., Agg).
 
+## Repository Structure Constraints
+
+**CRITICAL**: This repository contains **71,379+ files**, with **70,420+ data files** in the `data/` directory (primarily CSV price files from Stooq). The `data/` directory is gitignored but present in the working directory.
+
+**Configuration Requirements**:
+
+- All scanning/search tools MUST be configured to exclude the `data/` directory to prevent performance issues
+- Tools that scan the filesystem (pytest, pre-commit, linters, etc.) can hang or take minutes if not properly configured
+- The `data/` directory structure: `data/stooq/`, `data/processed/tradeable_prices/`, and test fixtures under `tests/fixtures/`
+
+**Current Tool Configurations**:
+
+- `pyproject.toml` → pytest: `testpaths = ["tests"]` and `norecursedirs = ["data", ...]` to prevent test collection from scanning data files
+- `.gitignore` → already excludes `data/` directory
+- Future tools (IDEs, search tools, etc.) must be configured similarly to avoid the data directory
+
 ## Dependencies
 
 - Data: Stooq daily OHLCV (via direct CSV download or `pandas_datareader.DataReader`). Optional expansion to other free APIs if licensing permits.

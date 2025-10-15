@@ -251,14 +251,14 @@ def test_export_tradeable_prices_skip_empty(
     diagnostics: dict[str, dict[str, str]] = pipeline_result["diagnostics"]
     subset = _select_matches(matches, ["WPS.UK", "HSON.US", "IEMB.UK"])
 
-    exported, skipped = ptd.export_tradeable_prices(
-        subset,
-        STOOQ_FIXTURES,
-        tmp_path,
+    config = ptd.ExportConfig(
+        data_dir=STOOQ_FIXTURES,
+        dest_dir=tmp_path,
         overwrite=True,
         diagnostics=diagnostics,
         include_empty=False,
     )
+    exported, skipped = ptd.export_tradeable_prices(subset, config)
 
     exported_files = sorted(p.name for p in tmp_path.glob("*.csv"))
 
@@ -274,13 +274,13 @@ def test_export_tradeable_prices_include_empty(
     matches: list[ptd.TradeableMatch] = pipeline_result["matches"]
     subset = _select_matches(matches, ["WPS.UK", "HSON.US", "IEMB.UK"])
 
-    exported, skipped = ptd.export_tradeable_prices(
-        subset,
-        STOOQ_FIXTURES,
-        tmp_path,
+    config = ptd.ExportConfig(
+        data_dir=STOOQ_FIXTURES,
+        dest_dir=tmp_path,
         overwrite=True,
         include_empty=True,
     )
+    exported, skipped = ptd.export_tradeable_prices(subset, config)
 
     exported_files = sorted(p.name for p in tmp_path.glob("*.csv"))
 
@@ -526,14 +526,14 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
     }
 
     export_dir = tmp_path / "exports"
-    exported, skipped = ptd.export_tradeable_prices(
-        matches,
-        data_dir,
-        export_dir,
+    config = ptd.ExportConfig(
+        data_dir=data_dir,
+        dest_dir=export_dir,
         overwrite=False,
         max_workers=4,
         diagnostics=diagnostics,
     )
+    exported, skipped = ptd.export_tradeable_prices(matches, config)
     assert exported == 1
     assert skipped == 0
 
@@ -542,25 +542,25 @@ def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> 
 
     # Preserve existing file when overwrite is disabled.
     target_path.write_text("sentinel")
-    exported_again, skipped_again = ptd.export_tradeable_prices(
-        matches,
-        data_dir,
-        export_dir,
+    config_again = ptd.ExportConfig(
+        data_dir=data_dir,
+        dest_dir=export_dir,
         overwrite=False,
         diagnostics=diagnostics,
     )
+    exported_again, skipped_again = ptd.export_tradeable_prices(matches, config_again)
     assert exported_again == 0
     assert skipped_again == 0
     assert target_path.read_text() == "sentinel"
 
     # Allow replacement when overwrite=True.
-    exported_final, skipped_final = ptd.export_tradeable_prices(
-        matches,
-        data_dir,
-        export_dir,
+    config_final = ptd.ExportConfig(
+        data_dir=data_dir,
+        dest_dir=export_dir,
         overwrite=True,
         diagnostics=diagnostics,
     )
+    exported_final, skipped_final = ptd.export_tradeable_prices(matches, config_final)
     assert exported_final == 1
     assert skipped_final == 0
     content = target_path.read_text()

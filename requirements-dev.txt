@@ -3,6 +3,8 @@ isort
 ruff
 pre-commit
 mypy
+pandas-stubs
+types-PyYAML
 pytest
 pytest-xdist
 mdformat

@@ -34,13 +34,15 @@
 To ensure code quality and consistency, the project uses a pre-commit pipeline with the following tools. All checks must pass before a commit is accepted.
 
 - **`pre-commit`**: The framework for managing and running the pre-commit hooks.
-- **`black`**: An opinionated code formatter that ensures uniform style across the codebase.
-- **`isort`**: Automatically sorts and groups Python imports.
-- **`ruff`**: An extremely fast Python linter that checks for a wide range of errors and style issues.
-- **`mypy`**: A static type checker to help prevent type-related errors.
-- **`pytest`**: The testing framework used to run the automated test suite.
+- **`black`**: An opinionated code formatter that ensures uniform style across the codebase (files: `^(scripts/|src/|tests/)`).
+- **`isort`**: Automatically sorts and groups Python imports (files: `^(scripts/|src/|tests/)`).
+- **`ruff`**: An extremely fast Python linter that checks for a wide range of errors and style issues (files: `^(scripts/|src/|tests/)`).
+- **`mypy`**: A static type checker to help prevent type-related errors (files: `^(scripts/|src/|tests/)`).
+- **`pytest`**: The testing framework used to run the automated test suite (~30 seconds with `-n auto`).
 - **`mdformat`**: A tool to format and ensure consistency in Markdown files.
 - **`gitlint`**: A tool to enforce a consistent and clean commit message style.
+
+**Performance Note**: Pre-commit completes in ~50 seconds total with all hooks including pytest. The pytest hook configuration uses `pass_filenames: false` and `types: [python]` to run the full test suite only when Python files change, preventing redundant test runs for non-code changes.
 
 ## Follow-ups
 
