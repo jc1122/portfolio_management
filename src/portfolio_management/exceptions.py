@@ -3,6 +3,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 class PortfolioManagementError(Exception):
     """Base exception for portfolio management errors."""
@@ -20,6 +25,17 @@ class DataQualityError(PortfolioManagementError):
     """Raised when data quality is insufficient for processing."""
 
 
+class DependencyNotInstalledError(PortfolioManagementError):
+    """Raised when an optional runtime dependency is missing."""
+
+    def __init__(self, package: str, *, context: str) -> None:
+        self.package = package
+        self.context = context
+        super().__init__(
+            f"{package} is required {context}. Please install {package} before continuing."
+        )
+
+
 class AssetSelectionError(PortfolioManagementError):
     """Raised when asset selection fails."""
 
@@ -34,6 +50,17 @@ class ReturnCalculationError(PortfolioManagementError):
 
 class UniverseLoadError(PortfolioManagementError):
     """Raised when universe loading fails."""
+
+
+class DataDirectoryNotFoundError(DataValidationError):
+    """Raised when the expected Stooq data directory is missing."""
+
+    def __init__(self, data_dir: Path) -> None:
+        self.data_dir = data_dir
+        super().__init__(
+            f"Data directory not found: {data_dir}. "
+            "Run prepare_tradeable_data.py to generate the required data directory."
+        )
 
 
 class InsufficientDataError(DataQualityError):

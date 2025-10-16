@@ -1,21 +1,34 @@
+"""Diagnostics and currency helpers for Stooq price data.
+
+This module centralizes the data-quality analysis utilities that power the
+tradeable preparation pipeline. It exposes helpers for summarizing price files,
+inferring listing currencies, and maintaining aggregated diagnostics that the
+CLI scripts re-export for downstream workflows.
+"""
+
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+from .exceptions import DependencyNotInstalledError
 
 try:
     import pandas as pd
 except ImportError as exc:  # pragma: no cover - pandas is required for this module
-    raise ImportError(
-        "pandas is required to run analysis.py. "
-        "Please install pandas before using this module.",
+    raise DependencyNotInstalledError(
+        "pandas",
+        context="to run analysis routines",
     ) from exc
 
-from collections import Counter
-from collections.abc import Sequence
-
 from .config import REGION_CURRENCY_MAP, STOOQ_COLUMNS
-from .models import StooqFile, TradeableInstrument
+
+if TYPE_CHECKING:
+    from collections import Counter
+    from collections.abc import Sequence
+    from pathlib import Path
+
+    from .models import StooqFile, TradeableInstrument
 
 LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +146,7 @@ def _determine_zero_volume_severity(zero_volume_ratio: float) -> str | None:
     return "low"
 
 
-def _generate_flags(
+def _generate_flags(  # noqa: PLR0913
     *,
     invalid_rows: int,
     non_numeric_prices: int,
@@ -181,6 +194,7 @@ def _initialize_diagnostics() -> dict[str, str]:
 def _determine_data_status(
     row_count: int,
     zero_volume_severity: str | None,
+    *,
     has_flags: bool,
 ) -> str:
     """Determine the data status based on row count, volume severity, and flags."""
@@ -241,7 +255,7 @@ def summarize_price_file(base_dir: Path, stooq_file: StooqFile) -> dict[str, str
     diagnostics["data_status"] = _determine_data_status(
         row_count,
         zero_volume_severity,
-        bool(flags),
+        has_flags=bool(flags),
     )
     diagnostics["data_flags"] = ";".join(flags)
 

@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: E402, F401
 """CLI script for asset selection.
 
 This script provides a command-line interface for filtering and selecting assets
@@ -25,11 +25,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.exceptions import PortfolioManagementError  # noqa: E402
-from src.portfolio_management.selection import (  # noqa: E402
-    AssetSelector,
-    FilterCriteria,
-)
+from src.portfolio_management.exceptions import PortfolioManagementError
+from src.portfolio_management.selection import AssetSelector, FilterCriteria
 
 
 def get_args() -> argparse.Namespace:

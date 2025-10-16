@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: E402, F401
 """Command-line interface for the return preparation pipeline."""
 
 from __future__ import annotations
@@ -19,12 +19,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.exceptions import PortfolioManagementError  # noqa: E402
-from src.portfolio_management.returns import (  # noqa: E402
-    ReturnCalculator,
-    ReturnConfig,
-)
-from src.portfolio_management.selection import SelectedAsset  # noqa: E402
+from src.portfolio_management.exceptions import PortfolioManagementError
+from src.portfolio_management.returns import ReturnCalculator, ReturnConfig
+from src.portfolio_management.selection import SelectedAsset
 
 
 def build_parser() -> argparse.ArgumentParser:

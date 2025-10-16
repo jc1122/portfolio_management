@@ -1,12 +1,23 @@
+"""Symbol matching utilities for broker tradeable instruments.
+
+The matching pipeline resolves broker-provided tickers to Stooq file metadata,
+handling legacy prefixes, symbol aliases, and parallel search strategies. These
+helpers expose both the parallel matcher and supporting heuristics used by the
+tradeable data preparation workflow.
+"""
+
 from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Iterable, Sequence
+from typing import TYPE_CHECKING
 
 from .config import LEGACY_PREFIXES, SYMBOL_ALIAS_MAP
 from .models import StooqFile, TradeableInstrument, TradeableMatch
 from .utils import _run_in_parallel
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
 
 LOGGER = logging.getLogger(__name__)
 
@@ -345,7 +356,7 @@ class BaseMarketMatchingStrategy:
 
 
 def _build_candidate_extensions(
-    norm_symbol: str,
+    _norm_symbol: str,
     instrument_suffix: str,
     market: str,
 ) -> tuple[set[str], set[str]]:

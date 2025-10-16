@@ -18,24 +18,29 @@ Key functions:
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+from .exceptions import DependencyNotInstalledError
 
 try:
     import pandas as pd
 except ImportError as exc:  # pragma: no cover - pandas is required for this module
-    raise ImportError(
-        "pandas is required to run io.py. "
-        "Please install pandas before using this module.",
+    raise DependencyNotInstalledError(
+        "pandas",
+        context="to run I/O workflows",
     ) from exc
 
 from collections import Counter
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 
 from .analysis import infer_currency, resolve_currency, summarize_price_file
 from .config import STOOQ_COLUMNS
 from .models import ExportConfig, StooqFile, TradeableInstrument, TradeableMatch
 from .utils import _run_in_parallel
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
@@ -278,6 +283,113 @@ def write_match_report(
     )
 
 
+@dataclass(frozen=True)
+class _ExportOutcome:
+    """Track whether a tradeable match resulted in an export or skip."""
+
+    exported: bool
+    skipped: bool
+
+
+def _deduplicate_matches(matches: Sequence[TradeableMatch]) -> list[TradeableMatch]:
+    """Keep the first occurrence of each Stooq ticker."""
+    unique: dict[str, TradeableMatch] = {}
+    for match in matches:
+        ticker = match.stooq_file.ticker.upper()
+        if ticker not in unique:
+            unique[ticker] = match
+    return list(unique.values())
+
+
+def _resolve_diagnostics(match: TradeableMatch, config: ExportConfig) -> dict[str, str]:
+    """Fetch cached diagnostics or compute them on demand."""
+    if config.diagnostics:
+        cached = config.diagnostics.get(match.stooq_file.ticker.upper())
+        if cached is not None:
+            return cached
+    return summarize_price_file(config.data_dir, match.stooq_file)
+
+
+def _requires_skip(status: str, *, include_empty: bool) -> bool:
+    """Determine whether the price file should be skipped entirely."""
+    return (not include_empty) and (
+        status in {"empty", "missing", "missing_file"}
+        or (status.startswith("error:") if status else False)
+    )
+
+
+def _remove_existing_export(target_path: Path, ticker: str, descriptor: str) -> None:
+    """Remove a previously exported file when overwriting is allowed."""
+    if not target_path.exists():
+        return
+    try:
+        target_path.unlink()
+    except OSError as exc:
+        LOGGER.warning(
+            "Unable to remove %s export for %s: %s",
+            descriptor,
+            ticker,
+            exc,
+        )
+
+
+def _load_price_frame(source_path: Path) -> pd.DataFrame:
+    """Read a Stooq price file into a DataFrame."""
+    return pd.read_csv(
+        source_path,
+        header=None,
+        names=STOOQ_COLUMNS,
+        comment="<",
+        dtype=str,
+        encoding="utf-8",
+        keep_default_na=False,
+        na_filter=False,
+    )
+
+
+def _export_match(
+    match: TradeableMatch,
+    config: ExportConfig,
+) -> _ExportOutcome:
+    """Export a single tradeable match to CSV."""
+    source_path = config.data_dir / match.stooq_file.rel_path
+    target_path = config.dest_dir / f"{match.stooq_file.ticker.lower()}.csv"
+    diagnostics = _resolve_diagnostics(match, config)
+    status = diagnostics.get("data_status", "")
+
+    if _requires_skip(status, include_empty=config.include_empty):
+        LOGGER.debug(
+            "Skipping export for %s due to data_status=%s",
+            match.stooq_file.ticker,
+            status,
+        )
+        if config.overwrite:
+            _remove_existing_export(target_path, match.stooq_file.ticker, "stale")
+        return _ExportOutcome(exported=False, skipped=True)
+
+    if target_path.exists() and not config.overwrite:
+        return _ExportOutcome(exported=False, skipped=False)
+
+    try:
+        price_frame = _load_price_frame(source_path)
+    except OSError as exc:
+        LOGGER.warning(
+            "Failed to export %s -> %s: %s",
+            source_path,
+            target_path,
+            exc,
+        )
+        return _ExportOutcome(exported=False, skipped=False)
+
+    if price_frame.empty and not config.include_empty:
+        if config.overwrite:
+            _remove_existing_export(target_path, match.stooq_file.ticker, "empty")
+        return _ExportOutcome(exported=False, skipped=False)
+
+    price_frame.to_csv(target_path, index=False)
+    return _ExportOutcome(exported=True, skipped=False)
+
+
 def export_tradeable_prices(
     matches: Sequence[TradeableMatch],
     config: ExportConfig,
@@ -287,87 +399,16 @@ def export_tradeable_prices(
     Returns a tuple of (exported_count, skipped_count).
     """
     config.dest_dir.mkdir(parents=True, exist_ok=True)
+    unique_matches = _deduplicate_matches(matches)
 
-    unique_matches: dict[str, TradeableMatch] = {}
-    for match in matches:
-        ticker_upper = match.stooq_file.ticker.upper()
-        unique_matches.setdefault(ticker_upper, match)
-
-    skipped = 0
-
-    def _export_single(match: TradeableMatch) -> bool:
-        nonlocal skipped
-        source_path = config.data_dir / match.stooq_file.rel_path
-        target_path = config.dest_dir / f"{match.stooq_file.ticker.lower()}.csv"
-        diag = (
-            config.diagnostics.get(match.stooq_file.ticker.upper())
-            if config.diagnostics
-            else None
-        )
-        if diag is None:
-            diag = summarize_price_file(config.data_dir, match.stooq_file)
-        status = diag.get("data_status", "")
-        if not config.include_empty and (
-            status in {"empty", "missing", "missing_file"}
-            or (status.startswith("error:") if status else False)
-        ):
-            LOGGER.debug(
-                "Skipping export for %s due to data_status=%s",
-                match.stooq_file.ticker,
-                status,
-            )
-            skipped += 1
-            if target_path.exists() and config.overwrite:
-                try:
-                    target_path.unlink()
-                except OSError as exc:
-                    LOGGER.warning(
-                        "Unable to remove stale export for %s: %s",
-                        match.stooq_file.ticker,
-                        exc,
-                    )
-            return False
-        if target_path.exists() and not config.overwrite:
-            return False
-        try:
-            price_frame = pd.read_csv(
-                source_path,
-                header=None,
-                names=STOOQ_COLUMNS,
-                comment="<",
-                dtype=str,
-                encoding="utf-8",
-                keep_default_na=False,
-                na_filter=False,
-            )
-            if price_frame.empty and not config.include_empty:
-                if target_path.exists() and config.overwrite:
-                    try:
-                        target_path.unlink()
-                    except OSError as exc:
-                        LOGGER.warning(
-                            "Unable to remove empty export for %s: %s",
-                            match.stooq_file.ticker,
-                            exc,
-                        )
-                return False
-            price_frame.to_csv(target_path, index=False)
-            return True
-        except OSError as exc:
-            LOGGER.warning(
-                "Failed to export %s -> %s: %s",
-                source_path,
-                target_path,
-                exc,
-            )
-            return False
-
-    results = _run_in_parallel(
-        _export_single,
-        [(m,) for m in unique_matches.values()],
+    outcomes = _run_in_parallel(
+        _export_match,
+        [(match, config) for match in unique_matches],
         config.max_workers,
     )
-    exported = sum(1 for r in results if r)
+
+    exported = sum(1 for outcome in outcomes if outcome.exported)
+    skipped = sum(1 for outcome in outcomes if outcome.skipped)
 
     LOGGER.info("Exported %s price files to %s", exported, config.dest_dir)
     if skipped:

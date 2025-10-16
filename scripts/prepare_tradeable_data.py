@@ -23,21 +23,25 @@ Example usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import logging
 import os
-import re
+import sys
 from pathlib import Path
 
-try:
-    import pandas as pd
-except ImportError as exc:  # pragma: no cover - pandas is required for this module
+if (
+    importlib.util.find_spec("pandas") is None
+):  # pragma: no cover - runtime dependency check
     raise ImportError(
         "pandas is required to run prepare_tradeable_data.py. "
         "Please install pandas before executing this script.",
-    ) from exc
+    )
 
 LOGGER = logging.getLogger(__name__)
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from src.portfolio_management.analysis import (
     collect_available_extensions,
@@ -68,6 +72,28 @@ from src.portfolio_management.models import (
 )
 from src.portfolio_management.stooq import build_stooq_index
 from src.portfolio_management.utils import log_duration
+
+__all__ = [
+    "collect_available_extensions",
+    "infer_currency",
+    "log_summary_counts",
+    "resolve_currency",
+    "summarize_price_file",
+    "export_tradeable_prices",
+    "load_tradeable_instruments",
+    "read_stooq_index",
+    "write_match_report",
+    "write_stooq_index",
+    "write_unmatched_report",
+    "annotate_unmatched_instruments",
+    "build_stooq_lookup",
+    "determine_unmatched_reason",
+    "match_tradeables",
+    "ExportConfig",
+    "StooqFile",
+    "TradeableInstrument",
+    "TradeableMatch",
+]
 
 
 def parse_args() -> argparse.Namespace:

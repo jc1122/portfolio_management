@@ -19,6 +19,7 @@ import logging
 import os
 from pathlib import Path
 
+from .exceptions import DataDirectoryNotFoundError
 from .models import StooqFile
 from .utils import _run_in_parallel
 
@@ -104,7 +105,7 @@ def derive_region_and_category(rel_path: Path) -> tuple[str, str]:
 def build_stooq_index(data_dir: Path, *, max_workers: int = 1) -> list[StooqFile]:
     """Create an index describing all unpacked Stooq price files."""
     if not data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+        raise DataDirectoryNotFoundError(data_dir)
 
     relative_paths = _collect_relative_paths(data_dir, max_workers)
     relative_paths.sort()

@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: E402, F401
 """CLI script for asset classification.
 
 This script provides a command-line interface for classifying assets from a
@@ -24,12 +24,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.classification import (  # noqa: E402
+from src.portfolio_management.classification import (
     AssetClassifier,
     ClassificationOverrides,
 )
-from src.portfolio_management.exceptions import PortfolioManagementError  # noqa: E402
-from src.portfolio_management.selection import SelectedAsset  # noqa: E402
+from src.portfolio_management.exceptions import PortfolioManagementError
+from src.portfolio_management.selection import SelectedAsset
 
 LOW_CONFIDENCE_THRESHOLD = 0.6
 
