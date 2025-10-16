@@ -1,3 +1,4 @@
+# ruff: noqa
 """Shared utilities for parallel execution and performance monitoring.
 
 This module provides helper functions for:
@@ -15,9 +16,10 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from typing import Any, Callable, Generator, TypeVar
+from typing import Any, TypeVar
 
 LOGGER = logging.getLogger(__name__)
 

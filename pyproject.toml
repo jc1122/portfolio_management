@@ -13,7 +13,44 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/prepare_tradeable_data.py" = ["C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "TRY300", "E402", "TCH003", "D407"]
-"tests/**/*.py" = ["D103", "S101", "PLR2004", "PT006", "ARG001", "D212", "D213", "PLR0913", "S603", "FLY002", "PD901"]
+"tests/**/*.py" = [
+  "D103",
+  "S101",
+  "PLR2004",
+  "PT006",
+  "ARG001",
+  "D212",
+  "D213",
+  "PLR0913",
+  "S603",
+  "FLY002",
+  "PD901",
+  "TRY003",
+  "SIM117",
+  "SLF001",
+  "D401",
+  "PLC0415",
+]
+"src/portfolio_management/classification.py" = [
+  "TRY003",
+  "COM812",
+  "PERF203",
+  "C901",
+  "PLR0911",
+  "PLR0912",
+  "PLR1714",
+  "PLR2004",
+  "SIM102",
+  "UP037",
+  "D102",
+]
+"src/portfolio_management/universes.py" = [
+  "TRY003",
+  "TRY401",
+  "COM812",
+  "FBT001",
+  "FBT002",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

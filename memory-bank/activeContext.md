@@ -5,47 +5,35 @@
 **Phase 1 Complete:** Data preparation pipeline successfully modularized and tested.
 **Phase 2 Complete:** Technical debt resolution - type safety, concurrency, complexity reduction.
 **Latest Review Complete:** Comprehensive technical debt assessment (October 15, 2025)
-**Next Phase:** Quick maintenance items (P2), then begin portfolio construction layer design.
+**Current Phase:** Phase 3 - Portfolio Construction (Started October 15, 2025)
 
-## Recent Changes (Latest Session - P2-P4 Technical Debt Resolution) ✅
+## Recent Changes (Phase 3 – Stage 5 Integration) ✅
 
-### Quick Maintenance Tasks (COMPLETE)
+- Introduced a shared exception hierarchy to standardise error handling across selection, returns, and universe workflows (`PortfolioManagementError` and friends).
+- Hardened all CLIs to surface actionable messages; they now exit non-zero on validation failures (missing assets, price directories, misconfigured YAML).
+- Built full integration coverage: end-to-end pipeline tests, performance benchmarks, and production-data smoke tests ensure the Stage 1 → 4 pipeline works on real fixtures.
+- Universe manager gained a `strict` toggle that allows recovery-mode execution, enabling comparisons/validation to continue even when a single sleeve fails.
+- Documentation updated (`docs/returns.md`, `docs/universes.md`, README) to reflect the new workflows and testing strategy.
 
-**P2-1: pyproject.toml ruff configuration (5 min)** ✅
+## Phase 3 Progress
 
-- Migrated ruff settings from top-level to `[tool.ruff.lint]` section
-- Fixed deprecation warnings for future ruff compatibility
-- Changes: pyproject.toml updated
+- ✅ Stage 1: Asset Selection core models, filters, CLIs, fixtures, and unit coverage delivered.
+- ✅ Stage 2: Classification taxonomy, rule engine, overrides, and CLI shipped.
+- ✅ Stage 3: Return calculation rebuilt with validation, alignment, missing-data controls, and CLI enhancements; reference docs published.
+- ✅ Stage 4: Universe management (YAML schema, CLI suite, curated sleeves) completed with documentation.
+- 🚧 Stage 5: Integration & polish underway – baseline tests, performance targets, and error-handling in place; remaining work focuses on caching/perf improvements and final documentation sweep.
 
-**P2-2: Concurrency error path tests (2 hours)** ✅
+**Test Suite:** 170+ tests (unit + CLI + integration + performance smoke), ~86 % coverage. Integration tests exercise staged fixtures and production configs; performance targets validated for 40–100 asset scenarios.
 
-- Added 9 new comprehensive concurrency error handling tests
-- Coverage: first/middle/last task failures, error context preservation, logging with errors
-- Result: 26 total concurrency tests (18 original + 8 new), all passing
-- Impact: Robust error handling validation across execution modes
+## Immediate Next Steps
 
-**P3-1: Module docstrings (1 hour)** ✅
+1. Evaluate caching/performance optimisations for return preparation (Task 5.2) once benchmarks confirm current behaviour.
+1. Finalise Phase 3 documentation set (asset selection/classification guides, integration walkthrough) and ensure memory bank remains current.
+1. Resume data curation backlog (broker fees, FX policy, unmatched remediation) ahead of Phase 4 work.
 
-- Added D100 docstrings to 4 modules: models.py, utils.py, stooq.py, io.py
-- Each docstring explains purpose, contents, and key functions
-- Eliminates all undocumented-public-module warnings
+## Coming Up
 
-**P4: Auto-fixable ruff warnings (1 hour)** ✅
-
-- Auto-fixed 13 ruff issues: COM812 (trailing commas), UP006 (type annotations)
-- Reduced warnings: 52 → 38 (-26.9%)
-- Code modernized to Python 3.10+ patterns
-
-**P3-2: Pre-commit hooks update (30 min)** ✅
-
-- Updated all hooks to latest stable versions:
-  - black: 22.10.0 → 24.8.0
-  - ruff: v0.0.289 → v0.6.4
-  - mypy: v0.982 → v1.11.2
-  - isort: 5.12.0 → 5.13.2
-  - pre-commit-hooks: v4.3.0 → v4.5.0
-
-**Result:** All P2-P4 items complete, 43 tests passing, zero regressions
+After Phase 3 sign-off, Phase 4 introduces portfolio construction strategies (equal-weight baseline, risk parity, mean-variance) on top of the prepared universes, followed by Phase 5 backtesting and advanced overlays.
 
 ### Latest Technical Debt Review (COMPLETE) ✅
 

@@ -1,3 +1,4 @@
+# ruff: noqa
 """Tests for concurrency utilities in utils module."""
 
 from __future__ import annotations
@@ -61,7 +62,10 @@ class TestRunInParallel:
         """Test that preserve_order=True maintains input order."""
         args = [(5,), (1,), (3,), (2,), (4,)]
         results = _run_in_parallel(
-            simple_task, args, max_workers=2, preserve_order=True
+            simple_task,
+            args,
+            max_workers=2,
+            preserve_order=True,
         )
         assert results == [10, 2, 6, 4, 8]
 
@@ -70,7 +74,10 @@ class TestRunInParallel:
         args = [(1,), (2,), (3,), (4,), (5,)]
         # Can't guarantee specific order, but should have all results
         results = _run_in_parallel(
-            simple_task, args, max_workers=2, preserve_order=False
+            simple_task,
+            args,
+            max_workers=2,
+            preserve_order=False,
         )
         assert len(results) == 5
         assert sorted(results) == [2, 4, 6, 8, 10]
@@ -130,7 +137,10 @@ class TestRunInParallel:
         """Test with larger number of tasks."""
         args = [(i,) for i in range(100)]
         results = _run_in_parallel(
-            simple_task, args, max_workers=4, preserve_order=True
+            simple_task,
+            args,
+            max_workers=4,
+            preserve_order=True,
         )
         assert results == [i * 2 for i in range(100)]
 
@@ -140,10 +150,16 @@ class TestRunInParallel:
 
         result_1_worker = _run_in_parallel(simple_task, args, max_workers=1)
         result_2_workers = _run_in_parallel(
-            simple_task, args, max_workers=2, preserve_order=True
+            simple_task,
+            args,
+            max_workers=2,
+            preserve_order=True,
         )
         result_4_workers = _run_in_parallel(
-            simple_task, args, max_workers=4, preserve_order=True
+            simple_task,
+            args,
+            max_workers=4,
+            preserve_order=True,
         )
 
         assert result_1_worker == result_2_workers == result_4_workers

@@ -1,7 +1,5 @@
 """Configuration for the portfolio management toolkit."""
 
-from typing import Dict, List, Tuple
-
 REGION_CURRENCY_MAP = {
     "us": "USD",
     "world": "USD",

@@ -1,0 +1,3 @@
+isin,symbol,asset_class,sub_class,geography,sector
+US0000000000,TEST.US,fixed_income,corporate,global,industrials
+GB0000000001,TEST.UK,equity,large_cap,united_kingdom,technology
