@@ -105,7 +105,13 @@ Phase 4 introduces portfolio construction strategies (equal-weight baseline, ris
 - Added comprehensive unit tests for the new exceptions in `tests/test_portfolio.py`.
 - Fixed all associated linting and type-checking issues, ensuring the codebase remains clean.
 
-**Next Up: Task 2 - Create portfolio module skeleton.**
+**Task 2: Portfolio Data Models (COMPLETE) ✅**
+
+- Created the initial `src/portfolio_management/portfolio.py` module.
+- Defined and implemented the core data models: `StrategyType`, `PortfolioConstraints`, `RebalanceConfig`, and `Portfolio`.
+- Added comprehensive unit tests for the new data models and their validation logic.
+
+**Next Up: Task 3 - Define Strategy Interface.**
 
 All P2-P4 technical debt items addressed:
 
