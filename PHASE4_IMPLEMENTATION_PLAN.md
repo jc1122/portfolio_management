@@ -314,7 +314,7 @@ class Portfolio:
 
 ______________________________________________________________________
 
-### Task 1.3: Define Strategy Interface (30 minutes) - 🚧 IN PROGRESS
+### Task 1.3: Define Strategy Interface (30 minutes) - ✅ COMPLETE
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 
@@ -369,7 +369,7 @@ class PortfolioStrategy(ABC):
 
 ______________________________________________________________________
 
-### Task 1.4: Implement Equal-Weight Strategy (1 hour)
+### Task 1.4: Implement Equal-Weight Strategy (1 hour) - 🚧 IN PROGRESS
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 

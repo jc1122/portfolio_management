@@ -15,8 +15,45 @@ from portfolio_management.exceptions import (
 from portfolio_management.portfolio import (
     Portfolio,
     PortfolioConstraints,
+    PortfolioStrategy,
     RebalanceConfig,
 )
+
+
+class TestPortfolioStrategy:
+    """Tests for the PortfolioStrategy abstract base class."""
+
+    def test_cannot_instantiate_abstract_class(self):
+        """Test that PortfolioStrategy cannot be instantiated directly."""
+        with pytest.raises(TypeError):
+            PortfolioStrategy()
+
+    def test_can_instantiate_concrete_class(self):
+        """Test that a concrete implementation can be instantiated."""
+
+        class ConcreteStrategy(PortfolioStrategy):
+            @property
+            def name(self) -> str:
+                return "concrete"
+
+            @property
+            def min_history_periods(self) -> int:
+                return 1
+
+            def construct(
+                self,
+                returns,  # noqa: ARG002
+                constraints,  # noqa: ARG002
+                asset_classes=None,  # noqa: ARG002
+            ):
+                return Portfolio(
+                    weights=pd.Series([1.0], index=["A"]),
+                    strategy="concrete",
+                )
+
+        strategy = ConcreteStrategy()
+        assert strategy.name == "concrete"
+        assert strategy.min_history_periods == 1
 
 
 def test_portfolio_construction_error_inheritance():

@@ -111,7 +111,12 @@ Phase 4 introduces portfolio construction strategies (equal-weight baseline, ris
 - Defined and implemented the core data models: `StrategyType`, `PortfolioConstraints`, `RebalanceConfig`, and `Portfolio`.
 - Added comprehensive unit tests for the new data models and their validation logic.
 
-**Next Up: Task 3 - Define Strategy Interface.**
+**Task 3: Strategy Interface (COMPLETE) ✅**
+
+- Defined the `PortfolioStrategy` abstract base class in `src/portfolio_management/portfolio.py`.
+- Added tests to ensure the abstract class cannot be instantiated.
+
+**Next Up: Task 4 - Implement Equal-Weight Strategy.**
 
 All P2-P4 technical debt items addressed:
 
