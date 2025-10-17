@@ -10,9 +10,10 @@
 
 ### Latest Update – 2025-10-17
 
-- Refreshed portfolio exceptions with typed context fields and optional messages; smoke tests now cover inheritance and attribute access.
-- Risk parity tests skip gracefully on Python 3.9 (zip strict flag unavailable) while equal-weight coverage remains active.
-- Next: Re-confirm Task 2 data model scaffolding before expanding strategy coverage.
+- Portfolio module now includes mean-variance optimisation (PyPortfolioOpt), refreshed constraint helpers, and a reusable constructor orchestrator.
+- New `construct_portfolio` CLI ships with returns/classification loading, constraint flags, compare mode, and dedicated regression tests.
+- Documentation (`docs/portfolio_construction.md`) and README updated; pytest/mypy/ruff clean for touched files with 210 tests passing.
+- Upcoming focus shifts to orchestration polish and preparation for backtesting integration.
 
 ## Recent Changes (Phase 3.5 – Comprehensive Cleanup) ✅
 

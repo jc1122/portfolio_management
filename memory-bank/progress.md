@@ -17,8 +17,9 @@
 
 ### 2025-10-17 Update
 
-- Refined the Task 1 exception classes with typed attributes and optional messaging; expanded smoke tests and skipped risk parity cases on Python 3.9.
-- Next action: Revisit Task 2 data model scaffolding before re-running portfolio strategy tests.
+- Completed Phase 4 Task 2–4 deliverables: data models revalidated, risk parity helper shared, mean-variance strategy implemented, and `PortfolioConstructor` registry added.
+- Added `scripts/construct_portfolio.py` with compare mode plus regression tests; introduced documentation (`docs/portfolio_construction.md`) and README updates.
+- All targeted gates (pytest 210 tests, mypy, ruff on touched files) now green; ready to proceed toward backtesting workstreams.
 
 ## Completed Milestones
 

@@ -18,7 +18,10 @@ Phase 4 implements the core portfolio construction engine that transforms select
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | 1 | Portfolio Exceptions | ✅ Completed – typed fields added, smoke tests updated |
-| 2 | Portfolio Data Models | 🚧 In Progress | Ready to resume once exceptions changes propagate |
+| 2 | Portfolio Data Models & Strategy Interface | ✅ Completed – constraints, rebalance config, ABC reconciled |
+| 3 | Strategy Implementations & Constructor | ✅ Completed – equal weight, risk parity, mean-variance, constructor registry |
+| 4 | Portfolio CLI & Tests | ✅ Completed – new script with regression tests |
+| 5 | Documentation & Validation | ✅ Completed – docs updated, CLI + module validated, gates green |
 
 ### Success Criteria
 

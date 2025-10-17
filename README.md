@@ -7,8 +7,8 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 - Offline-first data pipeline that ingests Stooq exports, validates quality, and produces tradeable match reports with diagnostics.
 - Production-ready asset selection, classification, return preparation, and universe management CLIs with defensive validation and rich logging.
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
-- 170+ automated tests (unit, CLI, integration, performance smoke) covering the end-to-end selection → classification → returns pipeline.
-- Extensible architecture designed for upcoming portfolio construction and backtesting engines (equal weight, risk parity, mean-variance) and future sentiment overlays.
+- 200+ automated tests (unit, CLI, integration, performance smoke) covering the full data-to-portfolio stack.
+- Portfolio construction module with equal-weight, risk-parity, and mean-variance strategies plus comparison tooling and CLI access; backtesting and overlays remain on the roadmap.
 
 ## Repository Structure
 
@@ -18,7 +18,8 @@ scripts/                             # CLI entry points
   ├── select_assets.py               # Stage 1 filters (quality/history/lists)
   ├── classify_assets.py             # Stage 2 taxonomy + overrides
   ├── calculate_returns.py           # Stage 3 return alignment CLI
-  └── manage_universes.py            # Stage 4/5 universe tooling
+  ├── manage_universes.py            # Stage 4/5 universe tooling
+  └── construct_portfolio.py         # Phase 4 portfolio construction CLI
 src/portfolio_management/
   ├── selection.py                   # FilterCriteria, SelectedAsset, AssetSelector
   ├── classification.py              # AssetClassifier, overrides, taxonomy enums
@@ -52,7 +53,15 @@ archive/                             # Historical plans, reviews, session logs
 
 1. Populate cached historical data from Stooq or other free sources.
 
-1. Run the CLI (to be added) to construct and evaluate portfolios.
+1. Construct portfolios with:
+
+   ```bash
+   python scripts/construct_portfolio.py \
+       --returns data/processed/universe_returns.csv \
+       --strategy equal_weight \
+       --max-weight 0.30 \
+       --output outputs/portfolio_equal_weight.csv
+   ```
 
 ## Data Preparation Workflow
 
@@ -157,6 +166,32 @@ This command prepares monthly simple returns, reindexed to the business-day
 calendar, and prints an annualised performance summary. If the filters remove
 every asset, the CLI exits with a non-zero status instead of silently emitting
 an empty file.
+
+## Portfolio Construction Workflow
+
+Use the new Phase 4 CLI to convert prepared return matrices into allocation weights. The tool supports single-strategy runs and multi-strategy comparisons.
+
+```bash
+python scripts/construct_portfolio.py \
+    --returns data/processed/universe_returns.csv \
+    --classifications data/processed/asset_classes.csv \
+    --strategy mean_variance_max_sharpe \
+    --max-weight 0.25 \
+    --max-equity 0.85 \
+    --min-bond 0.15 \
+    --output outputs/portfolio_mv.csv
+```
+
+To compare all registered strategies side by side:
+
+```bash
+python scripts/construct_portfolio.py \
+    --returns data/processed/universe_returns.csv \
+    --compare \
+    --output outputs/portfolio_comparison.csv
+```
+
+Outputs are saved as CSV files (ticker-weight table for single portfolios, matrix for comparisons). Full details are documented in [`docs/portfolio_construction.md`](docs/portfolio_construction.md).
 
 ### CLI Arguments
 

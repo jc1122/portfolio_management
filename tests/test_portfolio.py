@@ -1,6 +1,7 @@
-"""Tests for portfolio construction exceptions."""
+"""Tests for portfolio construction exceptions and strategies."""
 
 import sys
+import types
 
 import numpy as np
 import pandas as pd
@@ -10,8 +11,10 @@ from portfolio_management import exceptions as exc
 from portfolio_management import portfolio as portfolio_module
 
 EqualWeightStrategy = portfolio_module.EqualWeightStrategy
+MeanVarianceStrategy = portfolio_module.MeanVarianceStrategy
 Portfolio = portfolio_module.Portfolio
 PortfolioConstraints = portfolio_module.PortfolioConstraints
+PortfolioConstructor = portfolio_module.PortfolioConstructor
 PortfolioStrategy = portfolio_module.PortfolioStrategy
 RebalanceConfig = portfolio_module.RebalanceConfig
 RiskParityStrategy = getattr(portfolio_module, "RiskParityStrategy", None)
@@ -24,12 +27,15 @@ InsufficientDataError = exc.InsufficientDataError
 DependencyError = exc.DependencyError
 
 
+# Skip risk-parity specific tests if the strategy implementation is unavailable.
 @pytest.mark.skipif(
-    RiskParityStrategy is None or sys.version_info < (3, 10),
-    reason="Risk parity implementation requires portfolio module support and Python 3.10+ zip(strict=...).",
+    RiskParityStrategy is None,
+    reason="Risk parity strategy not available in portfolio module.",
 )
 class TestRiskParityStrategy:
     """Tests for risk parity strategy."""
+
+    pytest.importorskip("riskparityportfolio")
 
     @pytest.fixture
     def sample_returns(self):
@@ -75,6 +81,135 @@ class TestRiskParityStrategy:
 
         with pytest.raises(DependencyError):
             strategy.construct(returns, constraints)
+
+
+class TestMeanVarianceStrategy:
+    """Tests for mean-variance optimisation strategy."""
+
+    def _install_pypfopt_stub(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Install a lightweight PyPortfolioOpt stub for testing."""
+        module = types.ModuleType("pypfopt")
+
+        expected_returns_module = types.ModuleType("pypfopt.expected_returns")
+
+        def mean_historical_return(
+            returns: pd.DataFrame,
+            frequency: int = 252,
+        ) -> pd.Series:
+            del frequency  # not used in stub
+            return returns.mean()
+
+        expected_returns_module.mean_historical_return = mean_historical_return
+
+        risk_models_module = types.ModuleType("pypfopt.risk_models")
+
+        def sample_cov(returns: pd.DataFrame, frequency: int = 252) -> pd.DataFrame:
+            del frequency  # not used in stub
+            return returns.cov()
+
+        risk_models_module.sample_cov = sample_cov
+
+        class DummyEfficientFrontier:
+            def __init__(self, mu, cov, weight_bounds):
+                self.mu = mu
+                self.cov = cov
+                self.weight_bounds = weight_bounds
+                self._constraints = []
+                self._weights = {ticker: 1.0 / len(mu) for ticker in mu.index}
+
+            def add_constraint(self, constraint):
+                self._constraints.append(constraint)
+
+            def max_sharpe(self, risk_free_rate: float = 0.0) -> None:
+                del risk_free_rate
+
+            def min_volatility(self) -> None:
+                return
+
+            def efficient_risk(self, target_volatility: float) -> None:
+                del target_volatility
+
+            def clean_weights(self):
+                return self._weights
+
+            def portfolio_performance(
+                self,
+                *,
+                verbose: bool = False,
+                risk_free_rate: float = 0.0,
+            ):
+                del verbose, risk_free_rate
+                return 0.08, 0.12, 0.5
+
+        module.EfficientFrontier = DummyEfficientFrontier
+        module.expected_returns = expected_returns_module
+        module.risk_models = risk_models_module
+
+        monkeypatch.setitem(sys.modules, "pypfopt", module)
+        monkeypatch.setitem(
+            sys.modules,
+            "pypfopt.expected_returns",
+            expected_returns_module,
+        )
+        monkeypatch.setitem(sys.modules, "pypfopt.risk_models", risk_models_module)
+
+    def test_invalid_objective(self):
+        """Invalid optimisation objective raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid objective"):
+            MeanVarianceStrategy(objective="not_real")
+
+    def test_dependency_missing(self, monkeypatch):
+        """Missing PyPortfolioOpt raises DependencyError."""
+        original_import = __import__
+
+        def fake_import(name, *args, **kwargs):
+            if name.startswith("pypfopt"):
+                raise ModuleNotFoundError("No module named 'pypfopt'")
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr("builtins.__import__", fake_import)
+
+        strategy = MeanVarianceStrategy(min_periods=5)
+        constraints = PortfolioConstraints()
+        sample_returns = pd.DataFrame()
+
+        with pytest.raises(DependencyError):
+            strategy.construct(sample_returns, constraints)
+
+    def test_construct_with_stub(self, monkeypatch):
+        """Strategy constructs portfolio when PyPortfolioOpt stub is available."""
+        self._install_pypfopt_stub(monkeypatch)
+
+        rng = np.random.default_rng(42)
+        dates = pd.date_range("2020-01-01", periods=30, freq="D")
+        tickers = ["AAPL", "MSFT", "TLT"]
+        data = rng.normal(loc=0.001, scale=0.01, size=(30, 3))
+        returns = pd.DataFrame(data, index=dates, columns=tickers)
+
+        asset_classes = pd.Series(
+            ["equity", "equity", "bond"],
+            index=tickers,
+        )
+
+        constraints = PortfolioConstraints(
+            max_weight=0.6,
+            min_weight=0.0,
+            max_equity_exposure=0.8,
+            min_bond_exposure=0.2,
+        )
+
+        strategy = MeanVarianceStrategy(min_periods=10)
+        portfolio = strategy.construct(
+            returns,
+            constraints,
+            asset_classes=asset_classes,
+        )
+
+        assert isinstance(portfolio, Portfolio)
+        assert np.isclose(portfolio.weights.sum(), 1.0)
+        assert {"expected_return", "volatility", "sharpe_ratio"}.issubset(
+            portfolio.metadata or {},
+        )
 
 
 class TestEqualWeightStrategy:
@@ -185,6 +320,79 @@ class TestPortfolioStrategy:
         strategy = ConcreteStrategy()
         assert strategy.name == "concrete"
         assert strategy.min_history_periods == 1
+
+
+class TestPortfolioConstructor:
+    """Tests for the PortfolioConstructor orchestrator."""
+
+    def test_list_strategies_contains_defaults(self):
+        """Default constructor registers baseline strategies."""
+        constructor = PortfolioConstructor()
+        strategies = constructor.list_strategies()
+        assert "equal_weight" in strategies
+        assert "risk_parity" in strategies
+
+    def test_construct_equal_weight(self):
+        """Constructor delegates to equal-weight strategy."""
+        constructor = PortfolioConstructor()
+        dates = pd.date_range("2020-01-01", periods=5, freq="D")
+        tickers = ["AAPL", "MSFT"]
+        returns = pd.DataFrame(
+            np.random.default_rng(0).normal(size=(5, 2)),
+            index=dates,
+            columns=tickers,
+        )
+        constraints = PortfolioConstraints(max_weight=0.6, min_weight=0.0)
+        result = constructor.construct("equal_weight", returns, constraints=constraints)
+        assert isinstance(result, Portfolio)
+        assert np.isclose(result.weights.sum(), 1.0)
+
+    def test_invalid_strategy_name(self):
+        """Invalid strategy name raises InvalidStrategyError."""
+        constructor = PortfolioConstructor()
+        returns = pd.DataFrame({"AAPL": [0.01, 0.02]})
+        with pytest.raises(InvalidStrategyError):
+            constructor.construct("does_not_exist", returns)
+
+    def test_compare_strategies(self):
+        """Compare multiple strategies returns aligned DataFrame."""
+        constructor = PortfolioConstructor()
+
+        class DummyStrategy(PortfolioStrategy):
+            @property
+            def name(self) -> str:
+                return "dummy"
+
+            @property
+            def min_history_periods(self) -> int:
+                return 1
+
+            def construct(
+                self,
+                returns,  # noqa: ARG002
+                constraints,  # noqa: ARG002
+                asset_classes=None,  # noqa: ARG002
+            ):
+                return Portfolio(
+                    weights=pd.Series([1.0], index=["A"]),
+                    strategy="dummy",
+                )
+
+        constructor.register_strategy("dummy", DummyStrategy())
+        returns = pd.DataFrame(
+            {
+                "A": [0.01, 0.02],
+                "B": [0.015, 0.005],
+            },
+        )
+        constraints = PortfolioConstraints(max_weight=1.0, min_weight=0.0)
+        comparison = constructor.compare_strategies(
+            ["equal_weight", "dummy"],
+            returns,
+            constraints=constraints,
+        )
+        assert isinstance(comparison, pd.DataFrame)
+        assert {"equal_weight", "dummy"}.issubset(comparison.columns)
 
 
 def test_portfolio_construction_error_inheritance():
