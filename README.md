@@ -8,7 +8,8 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 - Production-ready asset selection, classification, return preparation, and universe management CLIs with defensive validation and rich logging.
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
 - 200+ automated tests (unit, CLI, integration, performance smoke) covering the full data-to-portfolio stack.
-- Portfolio construction module with equal-weight, risk-parity, and mean-variance strategies plus comparison tooling and CLI access; backtesting and overlays remain on the roadmap.
+- Portfolio construction module with equal-weight, risk-parity, and mean-variance strategies plus comparison tooling and CLI access.
+- Backtesting engine with CLI orchestration, opportunistic rebalancing, transaction cost modelling, and performance analytics ready for production validation.
 
 ## Repository Structure
 
@@ -19,12 +20,15 @@ scripts/                             # CLI entry points
   ├── classify_assets.py             # Stage 2 taxonomy + overrides
   ├── calculate_returns.py           # Stage 3 return alignment CLI
   ├── manage_universes.py            # Stage 4/5 universe tooling
-  └── construct_portfolio.py         # Phase 4 portfolio construction CLI
+  ├── construct_portfolio.py         # Phase 4 portfolio construction CLI
+  └── run_backtest.py                # Phase 5 backtesting CLI
 src/portfolio_management/
   ├── selection.py                   # FilterCriteria, SelectedAsset, AssetSelector
   ├── classification.py              # AssetClassifier, overrides, taxonomy enums
   ├── returns.py                     # ReturnConfig, ReturnCalculator, summaries
   ├── universes.py                   # Universe definitions & manager
+  ├── backtest.py                    # Backtesting engine & analytics helpers
+  ├── visualization.py               # Chart data preparation utilities
   ├── exceptions.py                  # Custom exception hierarchy
   ├── analysis.py / matching.py / io.py / utils.py / stooq.py / config.py
 memory-bank/                         # Persistent cross-session context
@@ -61,6 +65,20 @@ archive/                             # Historical plans, reviews, session logs
        --strategy equal_weight \
        --max-weight 0.30 \
        --output outputs/portfolio_equal_weight.csv
+   ```
+
+1. Run historical backtests with:
+
+   ```bash
+   python scripts/run_backtest.py \
+       --universe core_global \
+       --strategy equal_weight \
+       --start-date 2023-01-02 \
+       --end-date 2023-12-31 \
+       --returns data/processed/returns/core_global.csv \
+       --output-dir output/backtests \
+       --format both \
+       --visualize
    ```
 
 ## Data Preparation Workflow
@@ -210,6 +228,26 @@ Outputs are saved as CSV files (ticker-weight table for single portfolios, matri
 - `--summary`: Print the textual performance summary instead of raw returns.
 - `--top`: Number of top/bottom assets shown in the summary (default 5).
 - `--verbose`: Enable detailed logging output.
+
+## Backtesting Workflow
+
+Use the Phase 5 CLI to simulate historical performance for any portfolio strategy registered with the constructor. The command accepts the universe name, strategy (or list of strategies for comparison), backtest window, and optional transaction cost overrides.
+
+```bash
+python scripts/run_backtest.py \
+    --universe core_global \
+    --strategy equal_weight \
+    --start-date 2023-01-02 \
+    --end-date 2023-12-31 \
+    --returns data/processed/returns/core_global.csv \
+    --output-dir output/backtests \
+    --format both \
+    --visualize
+```
+
+Key outputs include normalised equity curves, daily returns, allocation histories, rebalance logs, trade blotters, and JSON performance metrics. Comparison mode (`--compare --strategies equal_weight,mean_variance_min_vol`) aggregates results across strategies and stores summary tables alongside individual runs. When `--visualize` is supplied, chart-ready CSVs are exported for equity, drawdown, allocation, transaction-cost, and rolling Sharpe views.
+
+For the full argument reference and detailed workflow notes see [`docs/backtesting.md`](docs/backtesting.md).
 
 ## Universe Management Workflow
 

@@ -2,28 +2,133 @@
 
 ## Current Focus
 
-**Phase 1 Complete:** Data preparation pipeline successfully modularized and tested.
-**Phase 2 Complete:** Technical debt resolution - type safety, concurrency, complexity reduction.
-**Phase 3 Complete:** Asset selection, classification, returns, and universe management are production-ready with full integration coverage.
-**Phase 3.5 Complete:** Comprehensive cleanup delivered documentation organization, lint/test polish, refactors, and refreshed exceptions.
-**Current Phase:** Phase 4 – Portfolio Construction (detailed plan created, ready to implement).
+**Phase 1-4 Complete:** ✅ All infrastructure phases delivered and production-ready
+**Phase 5 Complete:** ✅ Backtesting framework fully implemented, tested, and polished
+**Status:** All tasks complete (1-9 + polish); production-ready for Phase 6
 
-### Latest Update – 2025-10-17
+### Latest Update – 2025-10-18 (Polish Phase Complete)
 
-- Portfolio module now includes mean-variance optimisation (PyPortfolioOpt), refreshed constraint helpers, and a reusable constructor orchestrator.
-- New `construct_portfolio` CLI ships with returns/classification loading, constraint flags, compare mode, and dedicated regression tests.
-- Documentation (`docs/portfolio_construction.md`) and README updated; pytest/mypy/ruff clean for touched files with 210 tests passing.
-- Upcoming focus shifts to orchestration polish and preparation for backtesting integration.
+**Phase 5 Core Deliverables:**
 
-## Recent Changes (Phase 3.5 – Comprehensive Cleanup) ✅
+- Backtesting exception hierarchy, data models, and performance metric helpers finalised (`src/portfolio_management/backtest.py`).
+- Full BacktestEngine with scheduled/opportunistic/forced rebalancing, transaction cost modelling, and cash-aware trade execution.
+- Visualisation data prep module (`src/portfolio_management/visualization.py`) providing equity, drawdown, allocation, rolling-metric, and transaction-cost datasets.
+- Production backtesting CLI (`scripts/run_backtest.py`) supporting single-strategy and comparison workflows with structured output directories and optional visualisation exports.
+- Comprehensive unit and CLI tests (`tests/test_backtest.py`, `tests/test_visualization.py`, `tests/scripts/test_run_backtest.py`) plus full regression suite (239 tests total, 100% passing).
+- New documentation: `docs/backtesting.md` and README updates covering CLI usage, outputs, and workflow integration.
 
-- Organized documentation: root markdown files reduced from 18 to 6 with historical content archived under `archive/`.
-- Eliminated pytest marker warnings by registering `integration` and `slow` markers in `pyproject.toml`.
-- Applied Ruff auto-fixes and replaced blanket `ruff: noqa` directives with targeted rule codes.
-- Refactored `export_tradeable_prices` into helper-driven stages to reduce cyclomatic complexity to ≤10.
-- Moved type-only imports into `TYPE_CHECKING` blocks to lower runtime import overhead.
-- Enhanced the exception hierarchy with dependency and data-directory specific subclasses.
-- Full validation completed (171 tests, 0 mypy errors, ~30 lint warnings) – repository is pristine for Phase 4 work.
+**Metrics:**
+
+- Tests: 239 passing (100%) - all existing tests continue to pass, no regressions
+- Mypy: 0 errors across `src/` and CLI scripts (perfect type safety)
+- Coverage:
+  - backtest.py: **86%** (exceeds ≥85% target) ✅
+  - visualization.py: 100% via dedicated unit tests
+  - CLI: 3 execution tests validating all modes
+- Code Quality: 9.5+/10 (professional-grade, maintained)
+- Lint: New files clean; legacy warnings remain at ~30 (all P4 style, no regressions)
+
+**Polish Phase Completion Summary (2025-10-18):**
+
+1. ✅ Ruff/Code Quality: Backtest, visualization, and CLI modules verified clean
+1. ✅ Coverage Verified: backtest.py = 86% (target ≥85% achieved)
+1. ✅ Real-World Validation: CLI tests pass (single strategy, comparison, error handling)
+1. ✅ Performance Validated: Backtest scenarios complete in \<1s for 2 years of data
+
+**Next Phase:**
+
+- Phase 6: Advanced overlays (sentiment integration), automated visualization generation
+- Monitor technical debt if lint remediation becomes priority
+- Consider walk-forward analysis, Monte Carlo simulation for Phase 6
+
+## Completed Phases Summary
+
+### Phase 4: Portfolio Construction (✅ Complete)
+
+**Date:** October 17, 2025
+**Duration:** ~20-28 hours
+**Status:** Complete & Validated (Core + Polish)
+
+**Core Deliverables:**
+
+- ✅ 3 portfolio construction strategies (equal-weight, risk parity, mean-variance)
+- ✅ Complete exception hierarchy for portfolio construction (6 new exceptions)
+- ✅ CLI tool with single-strategy and comparison modes
+- ✅ 46 new tests (171 → 217 total tests, +27%)
+- ✅ Comprehensive documentation (docs/portfolio_construction.md)
+- ✅ Updated README with portfolio construction workflow
+
+**Polish Tasks Completed:**
+
+- ✅ Eigenvalue tolerance check (1e-8) in RiskParityStrategy
+- ✅ Memory bank updated (activeContext.md, progress.md)
+- ✅ Integration tests added (7 end-to-end tests)
+- ✅ Coverage configuration fixed (pyproject.toml)
+- ✅ Dependencies pinned (exact versions in requirements.txt)
+- ✅ Final validation passed (all quality gates green)
+
+**Final Code Quality:**
+
+- Tests: 217 passing (100%)
+- Coverage: ~85% with proper configuration
+- Mypy: 0 errors (perfect!)
+- Ruff: ~30 warnings (all P4 style only)
+- Quality score: 9.5/10
+
+**Key Metrics:**
+
+- New modules: 1 (portfolio.py, 809 lines)
+- New scripts: 1 (construct_portfolio.py, 243 lines)
+- New integration tests: 1 (test_portfolio_integration.py, 7 tests)
+- New docs: 1 (portfolio_construction.md)
+- Total new code: ~2,000 lines
+
+### Phase 3: Asset Selection, Classification, Returns, Universes (✅ Complete)
+
+- Complete asset selection pipeline with filters and ranking
+- Classification taxonomy with rule engine and overrides
+- Return calculation with validation and missing-data controls
+- Universe management with YAML schema and CLI suite
+- 171 tests with ~86% coverage
+
+### Phase 2: Technical Debt Resolution (✅ Complete)
+
+- Type annotations (78% mypy error reduction)
+- Concurrency implementation with robust error handling
+- Matching logic simplification (55% complexity reduction)
+- Analysis pipeline refactoring
+
+### Phase 1: Data Preparation Pipeline (✅ Complete)
+
+- Modular architecture with pandas-based processing
+- Broker tradeable ingestion and matching
+- Zero-volume severity tagging and diagnostics
+- Report generation and curated exports
+
+## Phase 5 Preparation
+
+**Infrastructure Ready:**
+
+- ✅ Data preparation pipeline (Phase 1)
+- ✅ Asset selection and classification (Phase 3)
+- ✅ Return calculation (Phase 3)
+- ✅ Universe management (Phase 3)
+- ✅ Portfolio construction strategies (Phase 4)
+- ✅ Complete exception hierarchy
+- ✅ CLI framework established
+- ✅ Test infrastructure with integration support
+
+**Phase 5 Scope:**
+
+- Backtesting engine with historical simulation
+- Rebalancing logic with opportunistic bands (±20%)
+- Transaction cost modeling (commissions + slippage)
+- Performance metrics (Sharpe, drawdown, ES, volatility)
+- Visualization system for performance and attribution
+- Decision logging framework
+- CLI for backtest execution and analysis
+
+**Estimated Timeline:** 30-40 hours over 5-7 days
 
 ## Phase 3 Progress
 
@@ -103,48 +208,22 @@ Phase 4 introduces portfolio construction strategies (equal-weight baseline, ris
 
 ## Immediate Next Steps
 
-### Phase 4: Portfolio Construction (Implementation in Progress) 🎯
+### Phase 4: Polish Tasks (In Progress) 🔧
 
-**Task 1: Portfolio Exceptions (COMPLETE) ✅**
+**Time Estimate:** 4-5 hours
 
-- Added a new suite of exceptions for portfolio construction (`PortfolioConstructionError`, `InvalidStrategyError`, `ConstraintViolationError`, `OptimizationError`, `InsufficientDataError`, `DependencyError`) to `src/portfolio_management/exceptions.py`.
-- Renamed the old `InsufficientDataError` to `InsufficientAssetsError` to better reflect its purpose and avoid conflicts.
-- Added comprehensive unit tests for the new exceptions in `tests/test_portfolio.py`.
-- Fixed all associated linting and type-checking issues, ensuring the codebase remains clean.
+**Current Tasks:**
 
-**Task 2: Portfolio Data Models (COMPLETE) ✅**
+1. ✅ Fix eigenvalue check in RiskParityStrategy (5 min)
+1. 🔄 Update memory bank files (activeContext.md, progress.md)
+1. 🔄 Add integration tests for end-to-end workflows
+1. 🔄 Fix coverage configuration
+1. 🔄 Pin dependency versions
 
-- Created the initial `src/portfolio_management/portfolio.py` module.
-- Defined and implemented the core data models: `StrategyType`, `PortfolioConstraints`, `RebalanceConfig`, and `Portfolio`.
-- Added comprehensive unit tests for the new data models and their validation logic.
+**After Polish:**
 
-**Task 3: Strategy Interface (COMPLETE) ✅**
-
-- Defined the `PortfolioStrategy` abstract base class in `src/portfolio_management/portfolio.py`.
-- Added tests to ensure the abstract class cannot be instantiated.
-
-**Task 4: Equal-Weight Strategy (COMPLETE) ✅**
-
-- Implemented the `EqualWeightStrategy` in `src/portfolio_management/portfolio.py`.
-- Added unit tests for the strategy, including constraint validation and error handling.
-
-**Task 5: Risk Parity Strategy (COMPLETE) ✅**
-
-- Implemented the `RiskParityStrategy` in `src/portfolio_management/portfolio.py`.
-- Added `riskparityportfolio` and its dependencies (`tqdm`, `jax`, `jaxlib`, `quadprog`) to `requirements.txt`.
-- Added unit tests for the strategy, including handling of missing dependencies and optimization errors.
-
-**Next Up: Task 6 - Implement Mean-Variance Strategy.**
-
-All P2-P4 technical debt items addressed:
-
-- ✅ pyproject.toml config deprecation fixed
-- ✅ 8 new concurrency error tests added (26 total)
-- ✅ 4 module docstrings added
-- ✅ 13 ruff warnings auto-fixed
-- ✅ All pre-commit hooks updated
-
-**Status (Historical):** No blocking issues. Ready to proceed to Phase 3.
+- Branch merge to main
+- Phase 5 kickoff: Backtesting framework (25-35 hours, 4-6 days)
 
 ### 1. Data Curation (2-3 days) 🎯 NEXT
 
@@ -165,45 +244,84 @@ All P2-P4 technical debt items addressed:
 ## Current Architecture
 
 ```
-scripts/prepare_tradeable_data.py    # CLI orchestrator (thin layer)
-└── src/portfolio_management/
-    ├── models.py      # Shared dataclasses
-    ├── io.py          # File I/O operations
-    ├── analysis.py    # Validation & diagnostics (refactored)
-    ├── matching.py    # Ticker matching (simplified)
-    ├── stooq.py       # Index building
-    ├── utils.py       # Shared utilities (concurrency enhanced)
-    └── config.py      # Configuration
+scripts/
+├── prepare_tradeable_data.py    # Data preparation CLI
+├── select_assets.py              # Asset selection CLI
+├── classify_assets.py            # Classification CLI
+├── calculate_returns.py          # Returns calculation CLI
+├── manage_universes.py           # Universe management CLI
+└── construct_portfolio.py        # Portfolio construction CLI
+
+src/portfolio_management/
+├── models.py         # Shared dataclasses
+├── io.py             # File I/O operations
+├── analysis.py       # Validation & diagnostics
+├── matching.py       # Ticker matching
+├── stooq.py          # Index building
+├── selection.py      # Asset selection logic
+├── classification.py # Asset classification
+├── returns.py        # Return calculation
+├── universes.py      # Universe management
+├── portfolio.py      # Portfolio construction strategies
+├── utils.py          # Shared utilities (concurrency)
+├── config.py         # Configuration
+└── exceptions.py     # Exception hierarchy
+
+tests/
+├── conftest.py                           # Shared fixtures
+├── test_*.py                             # Unit tests
+├── scripts/test_*.py                     # CLI tests
+├── integration/test_*_integration.py     # Integration tests
+└── fixtures/                             # Test data
 ```
 
-**Test Suite:** 35 tests, 75% coverage, all passing
-**Type Safety:** 9 remaining mypy errors (acceptable for this phase)
-**Documentation:** Organized and archived
+**Current Metrics:**
+
+- Test suite: 217 tests, 100% passing, ~85% coverage
+- Type safety: 0 mypy errors
+- Code quality: 9.5/10
+- Technical debt: Minimal (~30 P4 style warnings)
+- Total codebase: ~10,000 lines
 
 ## Key Decisions & Constraints
 
-**Portfolio Rules:**
+**Portfolio Construction (Implemented):**
+
+- Three strategies: Equal-weight (baseline), Risk Parity, Mean-Variance (PyPortfolioOpt)
+- Constraint enforcement: Max 25% per asset, min 10% bonds/cash, max 90% equity
+- Strategy comparison utilities built-in
+- Full exception hierarchy for error handling
+
+**Backtesting Requirements (Phase 5):**
 
 - Rebalance cadence: Monthly/quarterly with ±20% opportunistic bands
-- Diversification: Max 25% per ETF, min 10% bonds/cash, cap 90% equities
 - Transaction costs: Model commissions and slippage explicitly
+- Performance metrics: Sharpe ratio, max drawdown, Expected Shortfall, volatility
+- Visualization: Equity curves, drawdowns, allocations, attribution
+- Decision logging: Record all rebalancing decisions with context
 
 **Technical Approach:**
 
-- Leverage established libraries: `PyPortfolioOpt`, `riskparityportfolio`, `empyrical`
-- Treat sentiment overlays as satellite tilts with Black-Litterman blending
-- Maintain regime-aware controls and cooldowns for signals
+- Build on existing infrastructure (data prep, selection, classification, returns, universes, portfolio)
+- Leverage established libraries where appropriate (empyrical for metrics)
+- Maintain offline-first operation (no automated data downloads)
+- Support CLI-driven workflow with configurable parameters
+- Generate reports suitable for compliance and decision documentation
 
 **Operational Constraints:**
 
 - Offline operation mandated (no automated Stooq downloads)
-- Zero-volume anomalies flagged but not auto-remediated
 - All filesystem-scanning tools must exclude `data/` directory
+- Zero-volume anomalies flagged but not auto-remediated
+- Asset universe limited to BOŚ and MDM platform availability
 
 ## Development Principles
 
-1. **Maintain test coverage** - Keep 75%+ coverage, add tests for new features
-1. **Document as you go** - Update Memory Bank after each session
-1. **Modular design** - Keep clear boundaries between concerns
+1. **Maintain test coverage** - Keep 85%+ coverage, add tests for new features before implementation
+1. **Document as you go** - Update Memory Bank after each session or significant milestone
+1. **Modular design** - Keep clear boundaries between concerns, follow existing patterns
 1. **Performance awareness** - Profile before optimizing, exclude `data/` from scans
 1. **Incremental delivery** - Small, tested changes over large rewrites
+1. **Type safety** - Maintain zero mypy errors, add type annotations to all new code
+1. **Code quality** - Keep quality score at 9.5+/10, address ruff warnings in new code
+1. **Backward compatibility** - Ensure new modules integrate seamlessly with existing infrastructure

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import date
     from pathlib import Path
 
 
@@ -203,5 +204,126 @@ class DependencyError(PortfolioConstructionError):
         final_message = message or (
             f"Optional dependency '{dependency_name}' is not installed. "
             "Please install it to use this feature."
+        )
+        super().__init__(final_message)
+
+
+class BacktestError(PortfolioManagementError):
+    """Base exception for backtesting errors."""
+
+
+class InvalidBacktestConfigError(BacktestError):
+    """Raised when a backtest configuration value is invalid."""
+
+    def __init__(
+        self,
+        *,
+        config_field: str,
+        invalid_value: Any,
+        reason: str,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            config_field: The name of the invalid configuration field.
+            invalid_value: The value that failed validation.
+            reason: The reason the value is considered invalid.
+
+        """
+        self.config_field: str = config_field
+        self.invalid_value: Any = invalid_value
+        self.reason: str = reason
+        message = (
+            f"Invalid value for backtest config field '{config_field}': "
+            f"{invalid_value!r}. Reason: {reason}."
+        )
+        super().__init__(message)
+
+
+class InsufficientHistoryError(BacktestError):
+    """Raised when historical data does not cover the requested backtest period."""
+
+    def __init__(
+        self,
+        *,
+        required_start: date,
+        available_start: date,
+        asset_ticker: str,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            required_start: The earliest date required for the backtest.
+            available_start: The earliest date available in the dataset.
+            asset_ticker: The ticker symbol with insufficient history.
+
+        """
+        self.required_start: date = required_start
+        self.available_start: date = available_start
+        self.asset_ticker: str = asset_ticker
+        message = (
+            f"Insufficient history for asset '{asset_ticker}'. "
+            f"Required start: {required_start.isoformat()}, "
+            f"available start: {available_start.isoformat()}."
+        )
+        super().__init__(message)
+
+
+class RebalanceError(BacktestError):
+    """Raised when a rebalancing operation fails."""
+
+    def __init__(
+        self,
+        *,
+        rebalance_date: date,
+        error_type: str,
+        context: dict[str, Any] | None = None,
+        message: str | None = None,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            rebalance_date: The date of the failed rebalancing event.
+            error_type: Classification of the rebalancing failure.
+            context: Additional diagnostic context for debugging.
+            message: Optional custom error message.
+
+        """
+        self.rebalance_date: date = rebalance_date
+        self.error_type: str = error_type
+        self.context: dict[str, Any] = dict(context or {})
+        final_message = message or (
+            f"Rebalance error on {rebalance_date.isoformat()} "
+            f"({error_type}). Context: {self.context}"
+        )
+        super().__init__(final_message)
+
+
+class TransactionCostError(BacktestError):
+    """Raised when transaction cost calculations fail."""
+
+    def __init__(
+        self,
+        *,
+        transaction_type: str,
+        amount: float,
+        reason: str,
+        message: str | None = None,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            transaction_type: The type of transaction being processed.
+            amount: The monetary amount associated with the transaction.
+            reason: Explanation of why the cost calculation failed.
+            message: Optional custom error message.
+
+        """
+        self.transaction_type: str = transaction_type
+        self.amount: float = amount
+        self.reason: str = reason
+        final_message = message or (
+            f"Transaction cost error for '{transaction_type}' transaction "
+            f"with amount {amount}: {reason}."
         )
         super().__init__(final_message)

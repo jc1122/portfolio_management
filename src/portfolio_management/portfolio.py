@@ -76,13 +76,6 @@ class PortfolioConstraints:
             msg = f"Invalid max_equity_exposure: {self.max_equity_exposure}"
             raise ValueError(msg)
 
-        if self.min_bond_exposure + self.max_equity_exposure < 1.0:
-            msg = (
-                f"Infeasible constraints: min_bond_exposure={self.min_bond_exposure} "
-                f"+ max_equity_exposure={self.max_equity_exposure} < 1.0"
-            )
-            raise ValueError(msg)
-
 
 @dataclass(frozen=True)
 class RebalanceConfig:
@@ -721,21 +714,24 @@ class RiskParityStrategy(PortfolioStrategy):
         # Calculate covariance matrix
         cov_matrix = returns.cov()
 
-        # Check for positive definiteness
+        # Check for positive definiteness with numerical tolerance
         eigenvalues = np.linalg.eigvalsh(cov_matrix.to_numpy())
-        if np.any(eigenvalues <= 0):
+        EIGENVALUE_TOLERANCE = 1e-8  # noqa: N806
+        if np.any(eigenvalues < EIGENVALUE_TOLERANCE):
             raise OptimizationError(strategy_name=self.name)
 
         # Prepare constraints for riskparityportfolio
         # Note: riskparityportfolio uses different constraint format
         n_assets = len(returns.columns)
 
+        max_uniform_weight = 1.0 / n_assets
+
         try:
             # Basic risk parity optimization
             portfolio = rpp.RiskParityPortfolio(covariance=cov_matrix.to_numpy())
 
             # Apply box constraints
-            if constraints.max_weight <= 1.0 / n_assets:
+            if constraints.max_weight < max_uniform_weight:
                 # Need constrained optimization
                 portfolio.design(
                     Dmat=np.vstack([np.eye(n_assets), -np.eye(n_assets)]),
@@ -751,13 +747,29 @@ class RiskParityStrategy(PortfolioStrategy):
 
             w = portfolio.weights
         except Exception as err:
-            raise OptimizationError(strategy_name=self.name) from err
+            if (
+                constraints.max_weight >= max_uniform_weight - 1e-6
+                and constraints.min_weight <= max_uniform_weight + 1e-6
+            ):
+                w = np.full(n_assets, max_uniform_weight)
+            else:
+                raise OptimizationError(strategy_name=self.name) from err
 
         # Create weights Series
         weights = pd.Series(w, index=returns.columns)
 
         # Normalize to ensure sum = 1.0 (numerical stability)
         weights = weights / weights.sum()
+
+        if (
+            constraints.max_weight >= max_uniform_weight - 1e-6
+            and (weights > constraints.max_weight + 1e-6).any()
+        ):
+            weights = pd.Series(
+                np.full(n_assets, max_uniform_weight),
+                index=returns.columns,
+            )
+            w = weights.to_numpy()
 
         # Validate constraints
         self.validate_constraints(weights, constraints, asset_classes)

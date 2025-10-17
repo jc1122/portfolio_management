@@ -1,8 +1,9 @@
-pandas>=2.3,<3.0
-riskparityportfolio>=0.2.0
-PyPortfolioOpt>=1.5.0
-cvxpy>=1.3.0
-tqdm>=4.62.3
-jax
-jaxlib
-quadprog>=0.1.11
+pandas==2.3.0
+riskparityportfolio==0.2.0
+PyPortfolioOpt==1.5.5
+cvxpy==1.4.2
+tqdm==4.66.1
+jax==0.4.20
+jaxlib==0.4.20
+quadprog==0.1.11
+numpy==1.24.3

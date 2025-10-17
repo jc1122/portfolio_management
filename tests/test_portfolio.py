@@ -1,5 +1,6 @@
 """Tests for portfolio construction exceptions and strategies."""
 
+import importlib
 import sys
 import types
 
@@ -160,14 +161,21 @@ class TestMeanVarianceStrategy:
 
     def test_dependency_missing(self, monkeypatch):
         """Missing PyPortfolioOpt raises DependencyError."""
-        original_import = __import__
+        for module_name in [
+            "pypfopt",
+            "pypfopt.expected_returns",
+            "pypfopt.risk_models",
+        ]:
+            monkeypatch.delitem(sys.modules, module_name, raising=False)
+
+        original_import_module = importlib.import_module
 
         def fake_import(name, *args, **kwargs):
             if name.startswith("pypfopt"):
                 raise ModuleNotFoundError("No module named 'pypfopt'")
-            return original_import(name, *args, **kwargs)
+            return original_import_module(name, *args, **kwargs)
 
-        monkeypatch.setattr("builtins.__import__", fake_import)
+        monkeypatch.setattr(importlib, "import_module", fake_import)
 
         strategy = MeanVarianceStrategy(min_periods=5)
         constraints = PortfolioConstraints()
@@ -469,10 +477,14 @@ class TestPortfolioConstraints:
         with pytest.raises(ValueError, match="Invalid max_equity_exposure"):
             PortfolioConstraints(max_equity_exposure=-0.1)
 
-    def test_infeasible_constraints(self):
-        """Test infeasible constraints raise ValueError."""
-        with pytest.raises(ValueError, match="Infeasible constraints"):
-            PortfolioConstraints(min_bond_exposure=0.6, max_equity_exposure=0.3)
+    def test_constraints_allow_flexible_allocations(self):
+        """Constraints should allow room for non-equity/bond allocations."""
+        constraints = PortfolioConstraints(
+            min_bond_exposure=0.6,
+            max_equity_exposure=0.3,
+        )
+        assert constraints.min_bond_exposure == 0.6
+        assert constraints.max_equity_exposure == 0.3
 
 
 class TestRebalanceConfig:

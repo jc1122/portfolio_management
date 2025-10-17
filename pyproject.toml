@@ -54,8 +54,31 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-norecursedirs = ["data", "data/*", ".git", ".venv", "venv", "__pycache__", "*.egg-info"]
+norecursedirs = ["data", "archive", ".git", "__pycache__", "*.egg-info"]
 markers = [
-  "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+  "slow: marks tests as slow",
+]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+branch = true
+source = ["portfolio_management"]
+omit = [
+  "*/__pycache__/*",
+  "*/tests/*",
+  "*/test_*.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == \"__main__\":",
 ]
