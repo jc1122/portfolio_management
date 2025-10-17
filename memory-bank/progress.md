@@ -3,14 +3,17 @@
 ## Current Status
 
 **Branch:** `portfolio-construction`
-**Test Status:** 170+ tests passing (100%), ~86% coverage
+**Test Status:** 171 tests passing (100%), ~85% coverage
 **Type Safety:** 78% mypy error reduction (40+ → 9)
-**Code Quality:** 9.1/10 (Professional-grade)
-**Technical Debt:** VERY LOW (Remaining: ~9 mypy errors, focused in external libs)
-**P2-P4 Tasks:** ✅ COMPLETE
-**CI/CD:** GitHub Actions + pre-commit hooks (hooks now up-to-date)
+**Code Quality:** 9.5+/10 (Professional-grade)
+**Technical Debt:** MINIMAL (Remaining: ~30 P4 lint warnings)
+**Phase 3.5 Complete:** Comprehensive cleanup delivered, repository pristine
+**Phase 4 In Progress:** Implementation has begun, starting with the portfolio construction module.
 
-The data preparation pipeline has been successfully modularized into 6 focused modules with comprehensive testing and documentation. Phase 2 technical debt resolution and Phase 2.5 quick maintenance items are complete. Phase 3 now extends through Stage 5 integration: asset selection, classification, returns, and universe management are fully wired with defensive error handling, documentation, and end-to-end tests.
+**Task 1: Portfolio Exceptions (COMPLETE) ✅**
+
+- Added a new suite of exceptions for portfolio construction to `src/portfolio_management/exceptions.py`.
+- Added unit tests for the new exceptions in `tests/test_portfolio.py`.
 
 ## Completed Milestones
 
@@ -235,21 +238,46 @@ Comprehensive cleanup of technical debt and documentation organization to achiev
 
 ### Next Development Phases
 
-**Phase 3: Portfolio Construction** (Not Started)
+**Phase 4: Portfolio Construction** (Plan Created - Ready to Implement)
 
-- Strategy adapter interface
-- Core allocation strategies (equal-weight, risk-parity, mean-variance)
-- Rebalance logic (monthly/quarterly cadence, ±20% bands)
-- Portfolio guardrails (max 25% per ETF, min 10% bonds, cap 90% equities)
+**Plan Document:** `PHASE4_IMPLEMENTATION_PLAN.md` (28 pages, comprehensive)
+**Time Estimate:** 20-28 hours over 3-5 days
+**Status:** Detailed task breakdown complete, ready for coding agent execution
 
-**Phase 4: Backtesting Framework** (Not Started)
+**Deliverables:**
+
+- Strategy adapter interface with 3 implementations (equal-weight, risk parity, mean-variance)
+- Portfolio constraint system (max 25% per asset, min 10% bonds, max 90% equity)
+- Rebalancing configuration (monthly/quarterly cadence, ±20% bands)
+- CLI tool: `scripts/construct_portfolio.py`
+- 50-60 new tests (unit, CLI, integration)
+- Full documentation: `docs/portfolio_construction.md`
+
+**Implementation Sequence:**
+
+1. Core module: exceptions, models, strategy interface (4-5 hours)
+1. Strategy implementations: equal-weight, risk parity, mean-variance (5-8 hours)
+1. Portfolio constructor and orchestration (2 hours)
+1. CLI implementation (2-3 hours)
+1. Testing suite (5-7 hours)
+1. Documentation and polish (2-3 hours)
+
+**Success Metrics:**
+
+- 220-230 total tests (currently 171)
+- ≥80% coverage on new portfolio.py module
+- Zero mypy errors maintained
+- Ruff warnings ≤50 (all P4)
+- Backward compatible with Phase 3 outputs
+
+**Phase 5: Backtesting Framework** (Not Started)
 
 - Historical simulation engine
 - Transaction cost modeling (commissions, slippage)
 - Performance analytics (Sharpe, drawdown, turnover)
 - Reporting outputs
 
-**Phase 5: Advanced Features** (Future)
+**Phase 6: Advanced Features** (Future)
 
 - Sentiment/news overlays as satellite tilts
 - Black-Litterman view blending

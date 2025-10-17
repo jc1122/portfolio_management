@@ -6,7 +6,7 @@
 **Phase 2 Complete:** Technical debt resolution - type safety, concurrency, complexity reduction.
 **Phase 3 Complete:** Asset selection, classification, returns, and universe management are production-ready with full integration coverage.
 **Phase 3.5 Complete:** Comprehensive cleanup delivered documentation organization, lint/test polish, refactors, and refreshed exceptions.
-**Current Phase:** Ready for Phase 4 – Portfolio Construction kickoff.
+**Current Phase:** Phase 4 – Portfolio Construction (detailed plan created, ready to implement).
 
 ## Recent Changes (Phase 3.5 – Comprehensive Cleanup) ✅
 
@@ -36,7 +36,7 @@
 
 ## Coming Up
 
-After Phase 3 sign-off, Phase 4 introduces portfolio construction strategies (equal-weight baseline, risk parity, mean-variance) on top of the prepared universes, followed by Phase 5 backtesting and advanced overlays.
+Phase 4 introduces portfolio construction strategies (equal-weight baseline, risk parity, mean-variance) on top of the prepared universes, followed by Phase 5 backtesting and Phase 6 advanced overlays.
 
 ### Latest Technical Debt Review (COMPLETE) ✅
 
@@ -96,7 +96,16 @@ After Phase 3 sign-off, Phase 4 introduces portfolio construction strategies
 
 ## Immediate Next Steps
 
-### 0. ✅ Quick Maintenance Complete - Ready for Phase 3
+### Phase 4: Portfolio Construction (Implementation in Progress) 🎯
+
+**Task 1: Portfolio Exceptions (COMPLETE) ✅**
+
+- Added a new suite of exceptions for portfolio construction (`PortfolioConstructionError`, `InvalidStrategyError`, `ConstraintViolationError`, `OptimizationError`, `InsufficientDataError`, `DependencyError`) to `src/portfolio_management/exceptions.py`.
+- Renamed the old `InsufficientDataError` to `InsufficientAssetsError` to better reflect its purpose and avoid conflicts.
+- Added comprehensive unit tests for the new exceptions in `tests/test_portfolio.py`.
+- Fixed all associated linting and type-checking issues, ensuring the codebase remains clean.
+
+**Next Up: Task 2 - Create portfolio module skeleton.**
 
 All P2-P4 technical debt items addressed:
 
@@ -115,12 +124,14 @@ All P2-P4 technical debt items addressed:
 - Document unmatched instruments and remediation plan
 - Identify empty Stooq histories and alternative sources
 
-### 2. Portfolio Construction Design (3-5 days)
+### 2. Phase 4: Portfolio Construction (3-5 days) 🎯 READY TO START
 
 - Design strategy adapter interface
-- Plan core allocation methods (equal-weight, risk-parity, mean-variance)
-- Specify rebalance trigger logic and cadence
-- Define portfolio constraint system
+- Implement core allocation methods (equal-weight, risk-parity, mean-variance)
+- Build rebalance trigger logic and cadence
+- Implement portfolio constraint system
+- Create CLI for portfolio construction
+- Add comprehensive tests and documentation
 
 ## Current Architecture
 
