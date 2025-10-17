@@ -103,66 +103,105 @@ class InvalidStrategyError(PortfolioConstructionError):
 class ConstraintViolationError(PortfolioConstructionError):
     """Raised when a portfolio constraint is violated."""
 
-    def __init__(self, *, constraint_name: str, violated_value: float | None) -> None:
+    def __init__(
+        self,
+        *,
+        constraint_name: str,
+        violated_value: float | None,
+        message: str | None = None,
+    ) -> None:
         """Initialize the exception.
 
         Args:
             constraint_name: The name of the violated constraint.
             violated_value: The value that violated the constraint.
+            message: Optional custom error message.
 
         """
-        self.constraint_name = constraint_name
-        self.violated_value = violated_value
-        super().__init__(
-            f"Constraint '{constraint_name}' was violated with value: {violated_value}.",
+        self.constraint_name: str = constraint_name
+        self.violated_value: float | None = violated_value
+        final_message = message or (
+            f"Constraint '{constraint_name}' was violated with value: {violated_value}."
         )
+        super().__init__(final_message)
 
 
 class OptimizationError(PortfolioConstructionError):
     """Raised when the portfolio optimization process fails."""
 
-    def __init__(self, *, strategy_name: str) -> None:
+    def __init__(
+        self,
+        *,
+        strategy_name: str,
+        message: str | None = None,
+    ) -> None:
         """Initialize the exception.
 
         Args:
             strategy_name: The name of the strategy that failed optimization.
+            message: Optional custom error message.
 
         """
-        self.strategy_name = strategy_name
-        super().__init__(f"Optimization failed for strategy: '{strategy_name}'.")
+        self.strategy_name: str = strategy_name
+        final_message = message or (
+            f"Optimization failed for strategy: '{strategy_name}'."
+        )
+        super().__init__(final_message)
 
 
 class InsufficientDataError(PortfolioConstructionError):
     """Raised when historical data is insufficient for portfolio construction."""
 
-    def __init__(self, *, required_periods: int, available_periods: int) -> None:
+    def __init__(
+        self,
+        *,
+        required_periods: int | None = None,
+        available_periods: int | None = None,
+        message: str | None = None,
+        **context: object,
+    ) -> None:
         """Initialize the exception.
 
         Args:
             required_periods: The number of required data periods.
             available_periods: The number of available data periods.
+            message: Optional custom error message.
+            **context: Additional context, such as asset counts.
 
         """
-        self.required_periods = required_periods
-        self.available_periods = available_periods
-        super().__init__(
-            f"Insufficient data for portfolio construction. "
-            f"Required: {required_periods}, Available: {available_periods}.",
-        )
+        self.required_periods: int | None = required_periods
+        self.available_periods: int | None = available_periods
+        self.context: dict[str, object] = context
+        if message is None:
+            if required_periods is not None and available_periods is not None:
+                message = (
+                    "Insufficient data for portfolio construction. "
+                    f"Required: {required_periods}, Available: {available_periods}."
+                )
+            else:
+                message = "Insufficient data for portfolio construction."
+        super().__init__(message)
 
 
 class DependencyError(PortfolioConstructionError):
     """Raised when an optional dependency for a strategy is not installed."""
 
-    def __init__(self, *, dependency_name: str) -> None:
+    def __init__(
+        self,
+        *,
+        dependency_name: str,
+        message: str | None = None,
+    ) -> None:
         """Initialize the exception.
 
         Args:
             dependency_name: The name of the missing dependency.
+            message: Optional custom error message.
 
         """
-        self.dependency_name = dependency_name
-        super().__init__(
+        self.dependency_name: str = dependency_name
+        final_message = message or (
             f"Optional dependency '{dependency_name}' is not installed. "
-            f"Please install it to use this feature.",
+            "Please install it to use this feature."
         )
+        super().__init__(final_message)

@@ -13,6 +13,13 @@ ______________________________________________________________________
 
 Phase 4 implements the core portfolio construction engine that transforms selected universe assets into actionable portfolio weights. This phase builds on the completed Phase 3 infrastructure (asset selection, classification, returns, universes) to deliver three allocation strategies: equal-weight (baseline), risk parity, and mean-variance optimization.
 
+### Task Tracker (Updated 2025-10-17)
+
+| ID | Task | Status | Notes |
+|----|------|--------|-------|
+| 1 | Portfolio Exceptions | ✅ Completed – typed fields added, smoke tests updated |
+| 2 | Portfolio Data Models | 🚧 In Progress | Ready to resume once exceptions changes propagate |
+
 ### Success Criteria
 
 - ✅ Strategy adapter interface with 3 implementations (equal-weight, risk parity, mean-variance)
@@ -526,7 +533,7 @@ class EqualWeightStrategy(PortfolioStrategy):
 
 ______________________________________________________________________
 
-### Task 1.5: Implement Risk Parity Strategy (2-3 hours) - 🚧 IN PROGRESS
+### Task 1.5: Implement Risk Parity Strategy (2-3 hours) - ✅ COMPLETE
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 
@@ -721,7 +728,7 @@ class RiskParityStrategy(PortfolioStrategy):
 
 ______________________________________________________________________
 
-### Task 1.6: Implement Mean-Variance Strategy (2-3 hours)
+### Task 1.6: Implement Mean-Variance Strategy (2-3 hours) - 🚧 IN PROGRESS
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 

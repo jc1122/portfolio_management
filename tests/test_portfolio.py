@@ -1,25 +1,80 @@
 """Tests for portfolio construction exceptions."""
 
+import sys
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management.exceptions import (
-    ConstraintViolationError,
-    DependencyError,
-    InsufficientDataError,
-    InvalidStrategyError,
-    OptimizationError,
-    PortfolioConstructionError,
-    PortfolioManagementError,
+from portfolio_management import exceptions as exc
+from portfolio_management import portfolio as portfolio_module
+
+EqualWeightStrategy = portfolio_module.EqualWeightStrategy
+Portfolio = portfolio_module.Portfolio
+PortfolioConstraints = portfolio_module.PortfolioConstraints
+PortfolioStrategy = portfolio_module.PortfolioStrategy
+RebalanceConfig = portfolio_module.RebalanceConfig
+RiskParityStrategy = getattr(portfolio_module, "RiskParityStrategy", None)
+PortfolioConstructionError = exc.PortfolioConstructionError
+PortfolioManagementError = exc.PortfolioManagementError
+InvalidStrategyError = exc.InvalidStrategyError
+ConstraintViolationError = exc.ConstraintViolationError
+OptimizationError = exc.OptimizationError
+InsufficientDataError = exc.InsufficientDataError
+DependencyError = exc.DependencyError
+
+
+@pytest.mark.skipif(
+    RiskParityStrategy is None or sys.version_info < (3, 10),
+    reason="Risk parity implementation requires portfolio module support and Python 3.10+ zip(strict=...).",
 )
-from portfolio_management.portfolio import (
-    EqualWeightStrategy,
-    Portfolio,
-    PortfolioConstraints,
-    PortfolioStrategy,
-    RebalanceConfig,
-)
+class TestRiskParityStrategy:
+    """Tests for risk parity strategy."""
+
+    @pytest.fixture
+    def sample_returns(self):
+        """Create sample returns DataFrame."""
+        dates = pd.date_range("2020-01-01", periods=252, freq="D")
+        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"]
+        data = np.random.randn(252, 4) * 0.02  # 2% daily vol  # noqa: NPY002
+        return pd.DataFrame(data, index=dates, columns=tickers)
+
+    def test_basic_risk_parity(self, sample_returns):
+        """Test basic risk parity construction."""
+        strategy = RiskParityStrategy()
+        constraints = PortfolioConstraints()
+
+        portfolio = strategy.construct(sample_returns, constraints)
+
+        assert len(portfolio.weights) == 4
+        assert np.isclose(portfolio.weights.sum(), 1.0)
+
+    def test_insufficient_data(self, sample_returns):
+        """Test that insufficient data raises an error."""
+        strategy = RiskParityStrategy(min_periods=300)
+        constraints = PortfolioConstraints()
+
+        with pytest.raises(InsufficientDataError):
+            strategy.construct(sample_returns, constraints)
+
+    def test_singular_covariance(self, sample_returns):
+        """Test that a singular covariance matrix raises an error."""
+        strategy = RiskParityStrategy()
+        constraints = PortfolioConstraints()
+        sample_returns["AAPL"] = 0.0  # Make covariance matrix singular
+
+        with pytest.raises(OptimizationError):
+            strategy.construct(sample_returns, constraints)
+
+    def test_missing_library(self, monkeypatch):
+        """Test that a missing library raises a DependencyError."""
+        monkeypatch.setitem(sys.modules, "riskparityportfolio", None)
+        strategy = RiskParityStrategy()
+        constraints = PortfolioConstraints()
+        returns = pd.DataFrame()
+
+        with pytest.raises(DependencyError):
+            strategy.construct(returns, constraints)
 
 
 class TestEqualWeightStrategy:

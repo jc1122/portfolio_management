@@ -15,6 +15,11 @@
 - Added a new suite of exceptions for portfolio construction to `src/portfolio_management/exceptions.py`.
 - Added unit tests for the new exceptions in `tests/test_portfolio.py`.
 
+### 2025-10-17 Update
+
+- Refined the Task 1 exception classes with typed attributes and optional messaging; expanded smoke tests and skipped risk parity cases on Python 3.9.
+- Next action: Revisit Task 2 data model scaffolding before re-running portfolio strategy tests.
+
 ## Completed Milestones
 
 ### Phase 3.5: Comprehensive Cleanup (✓ Complete)

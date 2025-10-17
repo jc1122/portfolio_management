@@ -8,6 +8,12 @@
 **Phase 3.5 Complete:** Comprehensive cleanup delivered documentation organization, lint/test polish, refactors, and refreshed exceptions.
 **Current Phase:** Phase 4 – Portfolio Construction (detailed plan created, ready to implement).
 
+### Latest Update – 2025-10-17
+
+- Refreshed portfolio exceptions with typed context fields and optional messages; smoke tests now cover inheritance and attribute access.
+- Risk parity tests skip gracefully on Python 3.9 (zip strict flag unavailable) while equal-weight coverage remains active.
+- Next: Re-confirm Task 2 data model scaffolding before expanding strategy coverage.
+
 ## Recent Changes (Phase 3.5 – Comprehensive Cleanup) ✅
 
 - Organized documentation: root markdown files reduced from 18 to 6 with historical content archived under `archive/`.
@@ -121,7 +127,13 @@ Phase 4 introduces portfolio construction strategies (equal-weight baseline, ris
 - Implemented the `EqualWeightStrategy` in `src/portfolio_management/portfolio.py`.
 - Added unit tests for the strategy, including constraint validation and error handling.
 
-**Next Up: Task 5 - Implement Risk Parity Strategy.**
+**Task 5: Risk Parity Strategy (COMPLETE) ✅**
+
+- Implemented the `RiskParityStrategy` in `src/portfolio_management/portfolio.py`.
+- Added `riskparityportfolio` and its dependencies (`tqdm`, `jax`, `jaxlib`, `quadprog`) to `requirements.txt`.
+- Added unit tests for the strategy, including handling of missing dependencies and optimization errors.
+
+**Next Up: Task 6 - Implement Mean-Variance Strategy.**
 
 All P2-P4 technical debt items addressed:
 
