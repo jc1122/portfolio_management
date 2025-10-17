@@ -369,7 +369,7 @@ class PortfolioStrategy(ABC):
 
 ______________________________________________________________________
 
-### Task 1.4: Implement Equal-Weight Strategy (1 hour) - 🚧 IN PROGRESS
+### Task 1.4: Implement Equal-Weight Strategy (1 hour) - ✅ COMPLETE
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 
@@ -526,7 +526,7 @@ class EqualWeightStrategy(PortfolioStrategy):
 
 ______________________________________________________________________
 
-### Task 1.5: Implement Risk Parity Strategy (2-3 hours)
+### Task 1.5: Implement Risk Parity Strategy (2-3 hours) - 🚧 IN PROGRESS
 
 **File:** `src/portfolio_management/portfolio.py` (continue)
 

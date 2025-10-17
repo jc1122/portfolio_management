@@ -116,7 +116,12 @@ Phase 4 introduces portfolio construction strategies (equal-weight baseline, ris
 - Defined the `PortfolioStrategy` abstract base class in `src/portfolio_management/portfolio.py`.
 - Added tests to ensure the abstract class cannot be instantiated.
 
-**Next Up: Task 4 - Implement Equal-Weight Strategy.**
+**Task 4: Equal-Weight Strategy (COMPLETE) ✅**
+
+- Implemented the `EqualWeightStrategy` in `src/portfolio_management/portfolio.py`.
+- Added unit tests for the strategy, including constraint validation and error handling.
+
+**Next Up: Task 5 - Implement Risk Parity Strategy.**
 
 All P2-P4 technical debt items addressed:
 

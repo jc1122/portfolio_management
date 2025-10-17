@@ -1,5 +1,6 @@
 """Tests for portfolio construction exceptions."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -13,11 +14,86 @@ from portfolio_management.exceptions import (
     PortfolioManagementError,
 )
 from portfolio_management.portfolio import (
+    EqualWeightStrategy,
     Portfolio,
     PortfolioConstraints,
     PortfolioStrategy,
     RebalanceConfig,
 )
+
+
+class TestEqualWeightStrategy:
+    """Tests for equal-weight strategy."""
+
+    @pytest.fixture
+    def sample_returns(self):
+        """Create sample returns DataFrame."""
+        dates = pd.date_range("2020-01-01", periods=100, freq="D")
+        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"]
+        data = np.random.randn(100, 4) * 0.02  # 2% daily vol  # noqa: NPY002
+        return pd.DataFrame(data, index=dates, columns=tickers)
+
+    def test_basic_equal_weight(self, sample_returns):
+        """Test basic equal weighting."""
+        strategy = EqualWeightStrategy()
+        constraints = PortfolioConstraints()
+
+        portfolio = strategy.construct(sample_returns, constraints)
+
+        assert len(portfolio.weights) == 4
+        assert np.allclose(portfolio.weights, 0.25)
+        assert np.isclose(portfolio.weights.sum(), 1.0)
+
+    def test_insufficient_data(self):
+        """Test that insufficient data raises an error."""
+        strategy = EqualWeightStrategy()
+        constraints = PortfolioConstraints()
+        returns = pd.DataFrame()
+
+        with pytest.raises(InsufficientDataError):
+            strategy.construct(returns, constraints)
+
+    def test_max_weight_constraint_violation(self, sample_returns):
+        """Test that violating max_weight constraint raises an error."""
+        strategy = EqualWeightStrategy()
+        constraints = PortfolioConstraints(max_weight=0.2)
+
+        with pytest.raises(ConstraintViolationError):
+            strategy.construct(sample_returns, constraints)
+
+    def test_asset_class_constraints(self, sample_returns):
+        """Test asset class constraint validation."""
+        strategy = EqualWeightStrategy()
+        constraints = PortfolioConstraints(
+            max_equity_exposure=0.5,
+            min_bond_exposure=0.5,
+        )
+        asset_classes = pd.Series(
+            ["equity", "equity", "bond", "bond"],
+            index=["AAPL", "MSFT", "GOOGL", "AMZN"],
+        )
+
+        portfolio = strategy.construct(
+            sample_returns,
+            constraints,
+            asset_classes=asset_classes,
+        )
+        assert portfolio is not None
+
+    def test_asset_class_constraint_violation(self, sample_returns):
+        """Test that violating asset class constraints raises an error."""
+        strategy = EqualWeightStrategy()
+        constraints = PortfolioConstraints(
+            max_equity_exposure=0.4,
+            min_bond_exposure=0.6,
+        )
+        asset_classes = pd.Series(
+            ["equity", "equity", "equity", "bond"],
+            index=["AAPL", "MSFT", "GOOGL", "AMZN"],
+        )
+
+        with pytest.raises(ConstraintViolationError):
+            strategy.construct(sample_returns, constraints, asset_classes=asset_classes)
 
 
 class TestPortfolioStrategy:
