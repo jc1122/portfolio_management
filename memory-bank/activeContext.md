@@ -3,43 +3,46 @@
 ## Current Focus
 
 **Phase 1-4 Complete:** ✅ All infrastructure phases delivered and production-ready
-**Phase 5 Complete:** ✅ Backtesting framework fully implemented, tested, and polished
-**Status:** All tasks complete (1-9 + polish); production-ready for Phase 6
+**Phase 5 Status:** 🚀 **STARTING NOW** - Backtesting framework implementation
+**Current Task:** Implementing backtest exceptions (Task 1 of 9)
 
-### Latest Update – 2025-10-18 (Polish Phase Complete)
+### Latest Update – 2025-10-17 (Phase 5 Kickoff)
 
-**Phase 5 Core Deliverables:**
+**Phase 5 Plan Created:**
 
-- Backtesting exception hierarchy, data models, and performance metric helpers finalised (`src/portfolio_management/backtest.py`).
-- Full BacktestEngine with scheduled/opportunistic/forced rebalancing, transaction cost modelling, and cash-aware trade execution.
-- Visualisation data prep module (`src/portfolio_management/visualization.py`) providing equity, drawdown, allocation, rolling-metric, and transaction-cost datasets.
-- Production backtesting CLI (`scripts/run_backtest.py`) supporting single-strategy and comparison workflows with structured output directories and optional visualisation exports.
-- Comprehensive unit and CLI tests (`tests/test_backtest.py`, `tests/test_visualization.py`, `tests/scripts/test_run_backtest.py`) plus full regression suite (239 tests total, 100% passing).
-- New documentation: `docs/backtesting.md` and README updates covering CLI usage, outputs, and workflow integration.
+- Comprehensive implementation plan documented in `PHASE5_IMPLEMENTATION_PLAN.md`
+- 9 core tasks identified with 30-40 hour estimate over 5-7 days
+- Goal: Add 40-50 tests to reach 250-260 total, maintain 85%+ coverage and zero mypy errors
 
-**Metrics:**
+**Phase 5 Scope:**
 
-- Tests: 239 passing (100%) - all existing tests continue to pass, no regressions
-- Mypy: 0 errors across `src/` and CLI scripts (perfect type safety)
-- Coverage:
-  - backtest.py: **86%** (exceeds ≥85% target) ✅
-  - visualization.py: 100% via dedicated unit tests
-  - CLI: 3 execution tests validating all modes
-- Code Quality: 9.5+/10 (professional-grade, maintained)
-- Lint: New files clean; legacy warnings remain at ~30 (all P4 style, no regressions)
+- Backtesting exception hierarchy for error handling
+- Core data models: BacktestConfig, RebalanceEvent, PerformanceMetrics
+- TransactionCostModel for realistic commission and slippage calculation
+- BacktestEngine with historical simulation and rebalancing logic
+- Visualization data preparation module for chart-ready outputs
+- CLI tool (`scripts/run_backtest.py`) for backtest execution
+- Comprehensive tests (unit, integration, CLI)
+- Full documentation (`docs/backtesting.md`)
 
-**Polish Phase Completion Summary (2025-10-18):**
+**Current Metrics (Pre-Phase 5):**
 
-1. ✅ Ruff/Code Quality: Backtest, visualization, and CLI modules verified clean
-1. ✅ Coverage Verified: backtest.py = 86% (target ≥85% achieved)
-1. ✅ Real-World Validation: CLI tests pass (single strategy, comparison, error handling)
-1. ✅ Performance Validated: Backtest scenarios complete in \<1s for 2 years of data
+- Tests: 210 passing (100%) ✅
+- Mypy: 0 errors (perfect type safety) ✅
+- Coverage: ~85% maintained ✅
+- Code Quality: 9.5/10 (professional-grade) ✅
+- Technical Debt: MINIMAL (~30 P4 style warnings only) ✅
 
-**Next Phase:**
+**Next Steps:**
 
-- Phase 6: Advanced overlays (sentiment integration), automated visualization generation
-- Monitor technical debt if lint remediation becomes priority
-- Consider walk-forward analysis, Monte Carlo simulation for Phase 6
+1. Implement backtest exceptions in exceptions.py
+2. Create backtest.py with data models
+3. Implement transaction cost modeling
+4. Build BacktestEngine core
+5. Add visualization module
+6. Create CLI tool
+7. Write comprehensive tests
+8. Complete documentation
 
 ## Completed Phases Summary
 
