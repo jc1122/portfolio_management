@@ -114,7 +114,9 @@ class TestRunInParallel:
     def test_task_logging_enabled(self, caplog: Any) -> None:
         """Test that log_tasks=True produces debug logs."""
         args = [(1,), (2,), (3,)]
-        with caplog.at_level(logging.DEBUG, logger="src.portfolio_management.core.utils"):
+        with caplog.at_level(
+            logging.DEBUG, logger="src.portfolio_management.core.utils"
+        ):
             _run_in_parallel(simple_task, args, max_workers=1, log_tasks=True)
 
         # Should have logs for each task
@@ -126,7 +128,9 @@ class TestRunInParallel:
     def test_task_logging_disabled(self, caplog: Any) -> None:
         """Test that log_tasks=False doesn't produce debug logs."""
         args = [(1,), (2,), (3,)]
-        with caplog.at_level(logging.DEBUG, logger="src.portfolio_management.core.utils"):
+        with caplog.at_level(
+            logging.DEBUG, logger="src.portfolio_management.core.utils"
+        ):
             _run_in_parallel(simple_task, args, max_workers=2, log_tasks=False)
 
         # Should not have debug logs about task execution

@@ -15,15 +15,15 @@ Public API:
         - AssetSelectionError, ClassificationError, ReturnCalculationError
         - PortfolioConstructionError, OptimizationError, ConstraintViolationError
         - BacktestError, RebalanceError, TransactionCostError
-    
+
     Configuration:
         - STOOQ_COLUMNS, LEGACY_PREFIXES, SYMBOL_ALIAS_MAP
         - REGION_CURRENCY_MAP, STOOQ_PANDAS_COLUMNS
-    
+
     Utilities:
         - run_in_parallel: Execute tasks in parallel with result ordering
         - log_duration: Context manager for timing operations
-    
+
     Types:
         - SymbolType, DateType, PriceDataFrame (type aliases)
         - IDataLoader, IAssetFilter, IPortfolioStrategy (protocols)

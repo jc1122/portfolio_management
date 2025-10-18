@@ -1,7 +1,7 @@
 # Modular Monolith Refactoring Plan
 
-**Date:** October 18, 2025  
-**Version:** 1.0  
+**Date:** October 18, 2025
+**Version:** 1.0
 **Status:** Planning Phase
 
 ## Executive Summary
@@ -44,16 +44,17 @@ src/portfolio_management/
 ### Problems with Current Structure
 
 1. **Flat organization** - All modules at the same level, no clear hierarchy
-2. **Unclear boundaries** - Difficult to understand module relationships
-3. **Hidden dependencies** - Import statements scattered throughout code
-4. **Poor encapsulation** - No distinction between public API and implementation details
-5. **Hard to navigate** - 15+ modules in a single directory
-6. **Coupling issues** - Circular or unnecessary dependencies not immediately visible
-7. **Testing challenges** - No clear test organization matching code structure
+1. **Unclear boundaries** - Difficult to understand module relationships
+1. **Hidden dependencies** - Import statements scattered throughout code
+1. **Poor encapsulation** - No distinction between public API and implementation details
+1. **Hard to navigate** - 15+ modules in a single directory
+1. **Coupling issues** - Circular or unnecessary dependencies not immediately visible
+1. **Testing challenges** - No clear test organization matching code structure
 
 ### Current Dependency Analysis
 
 **Dependency Layers (simplified):**
+
 - **Layer 0 (Foundation):** exceptions, config, utils, models
 - **Layer 1 (Data):** stooq, io, matching, analysis
 - **Layer 2 (Assets):** selection → classification → universes
@@ -66,12 +67,12 @@ src/portfolio_management/
 ### Design Principles
 
 1. **Package Autonomy** - Each package has clear boundaries and responsibilities
-2. **Explicit Dependencies** - Packages depend on well-defined interfaces
-3. **Unidirectional Flow** - Dependencies flow in one direction (toward stable abstractions)
-4. **High Cohesion** - Related functionality grouped together
-5. **Low Coupling** - Minimal dependencies between packages
-6. **Public APIs** - Each package exposes a clean API through `__init__.py`
-7. **Information Hiding** - Implementation details remain internal
+1. **Explicit Dependencies** - Packages depend on well-defined interfaces
+1. **Unidirectional Flow** - Dependencies flow in one direction (toward stable abstractions)
+1. **High Cohesion** - Related functionality grouped together
+1. **Low Coupling** - Minimal dependencies between packages
+1. **Public APIs** - Each package exposes a clean API through `__init__.py`
+1. **Information Hiding** - Implementation details remain internal
 
 ### Target Package Structure
 
@@ -284,6 +285,7 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
 ### Phase-by-Phase Approach
 
 #### Phase 0: Preparation (1-2 hours)
+
 - ✅ Analyze current structure and dependencies
 - ✅ Create this refactoring plan document
 - ✅ Get stakeholder approval
@@ -292,44 +294,50 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
 - Create backup/tag of current state
 
 #### Phase 1: Core Package (2-3 hours)
+
 **Goal:** Establish foundation layer
 
 **Tasks:**
+
 1. Create `core/` package structure
-2. Move `exceptions.py` → `core/exceptions.py`
-3. Move `config.py` → `core/config.py`
-4. Move `utils.py` → `core/utils.py`
-5. Create `core/types.py` for common protocols
-6. Create `core/__init__.py` with public API
-7. Update all imports to use `portfolio_management.core`
-8. Run tests, fix any issues
+1. Move `exceptions.py` → `core/exceptions.py`
+1. Move `config.py` → `core/config.py`
+1. Move `utils.py` → `core/utils.py`
+1. Create `core/types.py` for common protocols
+1. Create `core/__init__.py` with public API
+1. Update all imports to use `portfolio_management.core`
+1. Run tests, fix any issues
 
 **Testing:**
+
 - All exception imports work correctly
 - Config constants accessible
 - Utility functions operate as before
 - No broken imports in any module
 
 #### Phase 2: Data Package (4-6 hours)
+
 **Goal:** Organize data management layer
 
 **Tasks:**
+
 1. Create `data/` package with subpackages
-2. Keep `models.py` in `data/` (StooqFile, TradeableInstrument, etc.)
-3. Move `stooq.py` → `data/ingestion/stooq.py`
-4. Split `io.py`:
+1. Keep `models.py` in `data/` (StooqFile, TradeableInstrument, etc.)
+1. Move `stooq.py` → `data/ingestion/stooq.py`
+1. Split `io.py`:
    - Readers → `data/io/readers.py`
    - Writers → `data/io/writers.py`
    - Exporters → `data/io/exporters.py`
-5. Move `matching.py` → `data/matching/matchers.py`
-6. Split `analysis.py`:
+1. Move `matching.py` → `data/matching/matchers.py`
+1. Split `analysis.py`:
    - Quality checks → `data/analysis/quality.py`
    - Currency logic → `data/analysis/currency.py`
-7. Create `__init__.py` files with public APIs
-8. Update imports in other modules
-9. Run tests, fix any issues
+1. Create `__init__.py` files with public APIs
+1. Update imports in other modules
+1. Run tests, fix any issues
 
 **Testing:**
+
 - Data loading works correctly
 - Stooq indexing functional
 - Symbol matching operational
@@ -337,74 +345,83 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
 - Integration test: `test_prepare_tradeable_data.py`
 
 #### Phase 3: Assets Package (4-6 hours)
+
 **Goal:** Organize asset universe layer
 
 **Tasks:**
+
 1. Create `assets/` package with subpackages
-2. Reorganize `selection.py`:
+1. Reorganize `selection.py`:
    - FilterCriteria → `assets/selection/criteria.py`
    - SelectedAsset → `assets/selection/models.py`
    - AssetSelector → `assets/selection/selector.py`
-3. Reorganize `classification.py`:
+1. Reorganize `classification.py`:
    - Enums → `assets/classification/taxonomy.py`
    - AssetClassification → `assets/classification/models.py`
    - AssetClassifier → `assets/classification/classifier.py`
    - ClassificationOverrides → `assets/classification/overrides.py`
-4. Reorganize `universes.py`:
+1. Reorganize `universes.py`:
    - UniverseDefinition → `assets/universes/definition.py`
    - UniverseConfigLoader → `assets/universes/loader.py`
    - UniverseManager → `assets/universes/manager.py` (if exists)
-5. Create `__init__.py` files with public APIs
-6. Update imports throughout codebase
-7. Run tests, fix any issues
+1. Create `__init__.py` files with public APIs
+1. Update imports throughout codebase
+1. Run tests, fix any issues
 
 **Testing:**
+
 - Asset selection works
 - Classification operational
 - Universe loading functional
 - Test files: `test_selection.py`, `test_classification.py`, `test_universes.py`
 
 #### Phase 4: Analytics Package (3-4 hours)
+
 **Goal:** Organize financial calculations
 
 **Tasks:**
+
 1. Create `analytics/` package with subpackages
-2. Reorganize `returns.py`:
+1. Reorganize `returns.py`:
    - ReturnConfig → `analytics/returns/config.py`
    - PriceLoader → `analytics/returns/loaders.py`
    - ReturnCalculator → `analytics/returns/calculator.py`
    - ReturnSummary → `analytics/returns/models.py`
-3. Extract metrics from `backtest.py` if applicable:
+1. Extract metrics from `backtest.py` if applicable:
    - Performance metrics → `analytics/metrics/performance.py`
    - Risk metrics → `analytics/metrics/risk.py`
-4. Create `__init__.py` files with public APIs
-5. Update imports
-6. Run tests, fix any issues
+1. Create `__init__.py` files with public APIs
+1. Update imports
+1. Run tests, fix any issues
 
 **Testing:**
+
 - Return calculation works
 - Metrics computation correct
 - Test file: `test_returns.py`
 - Script test: `test_calculate_returns.py`
 
 #### Phase 5: Portfolio Package (4-6 hours)
+
 **Goal:** Organize portfolio construction layer
 
 **Tasks:**
+
 1. Create `portfolio/` package with subpackages
-2. Reorganize `portfolio.py`:
+1. Reorganize `portfolio.py`:
    - Portfolio, StrategyType → `portfolio/models.py`
    - PortfolioStrategy ABC → `portfolio/strategies/base.py`
    - Specific strategies → `portfolio/strategies/equal_weight.py`, etc.
    - PortfolioConstraints → `portfolio/constraints/models.py`
    - RebalanceConfig → `portfolio/rebalancing/config.py`
    - Orchestration → `portfolio/builder.py`
-3. Move existing `filters/` and `strategies/` content if any
-4. Create `__init__.py` files with public APIs
-5. Update imports
-6. Run tests, fix any issues
+1. Move existing `filters/` and `strategies/` content if any
+1. Create `__init__.py` files with public APIs
+1. Update imports
+1. Run tests, fix any issues
 
 **Testing:**
+
 - Portfolio construction works
 - All strategies operational
 - Constraint validation works
@@ -412,21 +429,24 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
 - Script test: `test_construct_portfolio.py`
 
 #### Phase 6: Backtesting Package (4-6 hours)
+
 **Goal:** Organize historical simulation layer
 
 **Tasks:**
+
 1. Create `backtesting/` package with subpackages
-2. Reorganize `backtest.py`:
+1. Reorganize `backtest.py`:
    - BacktestConfig → `backtesting/models.py`
    - BacktestEngine → `backtesting/engine/backtest.py`
    - Transaction costs → `backtesting/transactions/costs.py`
    - Rebalancing events → `backtesting/rebalancing/events.py`
    - Performance metrics → `backtesting/performance/metrics.py`
-3. Create `__init__.py` files with public APIs
-4. Update imports
-5. Run tests, fix any issues
+1. Create `__init__.py` files with public APIs
+1. Update imports
+1. Run tests, fix any issues
 
 **Testing:**
+
 - Backtest engine works
 - Transaction costs calculated correctly
 - Performance metrics accurate
@@ -434,53 +454,61 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
 - Integration test: `test_full_pipeline.py`
 
 #### Phase 7: Reporting Package (3-4 hours)
+
 **Goal:** Organize visualization and reporting layer
 
 **Tasks:**
+
 1. Create `reporting/` package with subpackages
-2. Reorganize `visualization.py`:
+1. Reorganize `visualization.py`:
    - Equity curves → `reporting/visualization/equity_curves.py`
    - Drawdowns → `reporting/visualization/drawdowns.py`
    - Allocations → `reporting/visualization/allocations.py`
    - Distributions → `reporting/visualization/distributions.py`
    - Heatmaps → `reporting/visualization/heatmaps.py`
-3. Add report generation if needed:
+1. Add report generation if needed:
    - Summary → `reporting/reports/summary.py`
    - Comparison → `reporting/reports/comparison.py`
    - Trade analysis → `reporting/reports/trade_analysis.py`
-4. Create `__init__.py` files with public APIs
-5. Update imports
-6. Run tests, fix any issues
+1. Create `__init__.py` files with public APIs
+1. Update imports
+1. Run tests, fix any issues
 
 **Testing:**
+
 - All visualization functions work
 - Chart data prepared correctly
 - Test file: `test_visualization.py`
 
 #### Phase 8: Scripts Update (2-3 hours)
+
 **Goal:** Update all CLI scripts to use new structure
 
 **Tasks:**
+
 1. Update `scripts/prepare_tradeable_data.py`
-2. Update `scripts/select_assets.py`
-3. Update `scripts/classify_assets.py`
-4. Update `scripts/calculate_returns.py`
-5. Update `scripts/manage_universes.py`
-6. Update `scripts/construct_portfolio.py`
-7. Update `scripts/run_backtest.py`
-8. Run all script tests
-9. Test scripts manually end-to-end
+1. Update `scripts/select_assets.py`
+1. Update `scripts/classify_assets.py`
+1. Update `scripts/calculate_returns.py`
+1. Update `scripts/manage_universes.py`
+1. Update `scripts/construct_portfolio.py`
+1. Update `scripts/run_backtest.py`
+1. Run all script tests
+1. Test scripts manually end-to-end
 
 **Testing:**
+
 - All script imports work
 - CLI functionality unchanged
 - Integration tests pass
 - Test directory: `tests/scripts/`
 
 #### Phase 9: Test Reorganization (3-4 hours)
+
 **Goal:** Align test structure with new package structure
 
 **Tasks:**
+
 1. Create new test structure:
    ```
    tests/
@@ -496,26 +524,28 @@ from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClas
    ├── scripts/
    └── fixtures/
    ```
-2. Move existing tests to appropriate locations
-3. Update test imports
-4. Add package-level `conftest.py` files
-5. Run full test suite
-6. Ensure 100% test pass rate
+1. Move existing tests to appropriate locations
+1. Update test imports
+1. Add package-level `conftest.py` files
+1. Run full test suite
+1. Ensure 100% test pass rate
 
 #### Phase 10: Documentation & Cleanup (2-3 hours)
+
 **Goal:** Update documentation and clean up old files
 
 **Tasks:**
+
 1. Update `README.md` with new structure
-2. Create `docs/architecture/modular_monolith.md`
-3. Update `docs/` with new import patterns
-4. Create migration guide: `MIGRATION_GUIDE.md`
-5. Update `pyproject.toml` linting rules
-6. Remove old empty directories
-7. Update developer documentation
-8. Create architecture diagram
-9. Final code review
-10. Merge to main branch
+1. Create `docs/architecture/modular_monolith.md`
+1. Update `docs/` with new import patterns
+1. Create migration guide: `MIGRATION_GUIDE.md`
+1. Update `pyproject.toml` linting rules
+1. Remove old empty directories
+1. Update developer documentation
+1. Create architecture diagram
+1. Final code review
+1. Merge to main branch
 
 ### Backward Compatibility Strategy
 
@@ -555,6 +585,7 @@ def _create_backward_compatibility_warning(old_import: str, new_import: str):
 ```
 
 **Deprecation Timeline:**
+
 - **Version 1.0** (current): Old imports work, deprecation warnings
 - **Version 2.0** (3 months): Old imports still work, louder warnings
 - **Version 3.0** (6 months): Remove backward compatibility, new structure only
@@ -631,11 +662,12 @@ tests/
 ### Testing Checkpoints
 
 After each phase:
+
 1. Run unit tests: `pytest tests/unit/`
-2. Run integration tests: `pytest tests/integration/`
-3. Run script tests: `pytest tests/scripts/`
-4. Check coverage: `pytest --cov=portfolio_management --cov-report=html`
-5. Manual smoke tests of key workflows
+1. Run integration tests: `pytest tests/integration/`
+1. Run script tests: `pytest tests/scripts/`
+1. Check coverage: `pytest --cov=portfolio_management --cov-report=html`
+1. Manual smoke tests of key workflows
 
 ## Risk Mitigation
 
@@ -653,10 +685,11 @@ After each phase:
 ### Rollback Plan
 
 If critical issues arise:
+
 1. Revert to feature branch checkpoint
-2. Fix issues in isolated branch
-3. Re-run full test suite
-4. Restart from last successful phase
+1. Fix issues in isolated branch
+1. Re-run full test suite
+1. Restart from last successful phase
 
 ### Success Criteria
 
@@ -674,25 +707,26 @@ If critical issues arise:
 ### Immediate Benefits
 
 1. **Clearer Architecture** - Package structure immediately communicates system design
-2. **Better Navigation** - Developers can find code faster
-3. **Improved Testing** - Tests organized by package
-4. **Explicit Dependencies** - Import statements show relationships clearly
-5. **Better Encapsulation** - Internal details hidden from external packages
+1. **Better Navigation** - Developers can find code faster
+1. **Improved Testing** - Tests organized by package
+1. **Explicit Dependencies** - Import statements show relationships clearly
+1. **Better Encapsulation** - Internal details hidden from external packages
 
 ### Long-term Benefits
 
 1. **Easier Onboarding** - New developers understand structure faster
-2. **Reduced Coupling** - Packages can evolve independently
-3. **Better Maintainability** - Changes localized to specific packages
-4. **Facilitates Growth** - Easy to add new packages/features
-5. **Testing Improvements** - Mock boundaries more easily
-6. **Potential Microservices** - Could extract packages as services if needed
-7. **Code Quality** - Enforced boundaries prevent shortcuts
-8. **Documentation** - Package-level docs more natural
+1. **Reduced Coupling** - Packages can evolve independently
+1. **Better Maintainability** - Changes localized to specific packages
+1. **Facilitates Growth** - Easy to add new packages/features
+1. **Testing Improvements** - Mock boundaries more easily
+1. **Potential Microservices** - Could extract packages as services if needed
+1. **Code Quality** - Enforced boundaries prevent shortcuts
+1. **Documentation** - Package-level docs more natural
 
 ### Metrics to Track
 
 **Before Refactoring:**
+
 - Number of modules: 15+
 - Average module size: ~500 lines
 - Import depth: varies
@@ -700,6 +734,7 @@ If critical issues arise:
 - Test organization: flat
 
 **After Refactoring:**
+
 - Number of packages: 7
 - Average package size: 3-5 modules
 - Import depth: clear hierarchy
@@ -723,6 +758,7 @@ Update paths for linting exclusions:
 ### pytest.ini
 
 Already configured correctly:
+
 ```ini
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -732,6 +768,7 @@ testpaths = ["tests"]
 ### mypy.ini
 
 May need package-specific configurations:
+
 ```ini
 [mypy]
 python_version = 3.10
@@ -762,7 +799,8 @@ warn_unused_configs = True
 | Phase 10: Documentation | 2-3 hours | Phases 1-9 |
 | **Total** | **32-47 hours** | **(4-6 working days)** |
 
-**Recommended Approach:** 
+**Recommended Approach:**
+
 - Work in focused 3-4 hour blocks
 - Complete 1-2 phases per day
 - Run full test suite between phases
@@ -771,33 +809,36 @@ warn_unused_configs = True
 ## Next Steps
 
 1. **Review & Approval** - Get team approval for this plan
-2. **Create Feature Branch** - `git checkout -b refactor/modular-monolith`
-3. **Baseline Tests** - Ensure all tests pass before starting
-4. **Begin Phase 1** - Start with core package migration
-5. **Track Progress** - Update this document as phases complete
-6. **Regular Check-ins** - Review progress daily
-7. **Final Review** - Code review before merge
+1. **Create Feature Branch** - `git checkout -b refactor/modular-monolith`
+1. **Baseline Tests** - Ensure all tests pass before starting
+1. **Begin Phase 1** - Start with core package migration
+1. **Track Progress** - Update this document as phases complete
+1. **Regular Check-ins** - Review progress daily
+1. **Final Review** - Code review before merge
 
 ## References
 
 ### Related Documents
+
 - `README.md` - Current project documentation
 - `PHASE5_IMPLEMENTATION_PLAN.md` - Previous implementation plans
 - `CODE_REVIEW.md` - Existing code review notes
 - `TECHNICAL_DEBT_REVIEW_2025-10-15.md` - Technical debt analysis
 
 ### Architecture Patterns
+
 - **Modular Monolith**: Single deployment, multiple modules with clear boundaries
 - **Layered Architecture**: Dependencies flow from top (UI/reporting) to bottom (core/data)
 - **Package by Feature**: Related functionality grouped by domain
 - **Clean Architecture**: Dependency inversion, stable abstractions
 
 ### Inspiration
+
 - Domain-Driven Design (DDD) - Bounded contexts as packages
 - Hexagonal Architecture - Clear boundaries and adapters
 - Package Principles (Robert C. Martin) - REP, CCP, CRP
 
----
+______________________________________________________________________
 
 ## Appendix A: Module Mapping
 
@@ -824,6 +865,7 @@ warn_unused_configs = True
 ### Import Transformation Examples
 
 #### Before: Flat Structure
+
 ```python
 from src.portfolio_management.selection import FilterCriteria, AssetSelector
 from src.portfolio_management.classification import AssetClassifier
@@ -833,6 +875,7 @@ from src.portfolio_management.backtest import BacktestEngine
 ```
 
 #### After: Modular Structure
+
 ```python
 from portfolio_management.assets import FilterCriteria, AssetSelector, AssetClassifier
 from portfolio_management.analytics import ReturnCalculator
@@ -891,12 +934,12 @@ Public API:
         - FilterCriteria
         - SelectedAsset
         - AssetSelector
-    
+
     Classification:
         - AssetClass, Geography, SubClass (enums)
         - AssetClassification
         - AssetClassifier
-    
+
     Universes:
         - UniverseDefinition
         - UniverseConfigLoader
@@ -955,8 +998,8 @@ __all__ = [
 ]
 ```
 
----
+______________________________________________________________________
 
-**Document Prepared By:** GitHub Copilot  
-**Date:** October 18, 2025  
+**Document Prepared By:** GitHub Copilot
+**Date:** October 18, 2025
 **Status:** Ready for Review and Implementation

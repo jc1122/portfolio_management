@@ -10,7 +10,7 @@ Type Aliases:
 
 Protocols:
     - IDataLoader: Interface for data loading operations
-    - IAssetFilter: Interface for asset filtering operations  
+    - IAssetFilter: Interface for asset filtering operations
     - IPortfolioStrategy: Interface for portfolio construction strategies
 """
 
@@ -31,17 +31,17 @@ PriceDataFrame = "pd.DataFrame"  # DataFrame with specific columns expected
 
 class IDataLoader(Protocol):
     """Protocol for data loading operations.
-    
+
     Implementers must provide a load method that reads data from a path
     and returns it as a pandas DataFrame.
     """
 
     def load(self, path: str) -> pd.DataFrame:
         """Load data from the specified path.
-        
+
         Args:
             path: Path to the data file to load
-            
+
         Returns:
             DataFrame containing the loaded data
         """
@@ -50,18 +50,18 @@ class IDataLoader(Protocol):
 
 class IAssetFilter(Protocol):
     """Protocol for asset filtering operations.
-    
+
     Implementers must provide a filter method that applies criteria
     to a list of assets and returns the filtered subset.
     """
 
     def filter(self, assets: list, criteria: object) -> list:
         """Filter assets based on specified criteria.
-        
+
         Args:
             assets: List of assets to filter
             criteria: Filtering criteria to apply
-            
+
         Returns:
             Filtered list of assets meeting the criteria
         """
@@ -70,17 +70,17 @@ class IAssetFilter(Protocol):
 
 class IPortfolioStrategy(Protocol):
     """Protocol for portfolio construction strategies.
-    
+
     Implementers must provide a construct method that takes historical
     returns and produces portfolio weights.
     """
 
     def construct(self, returns: pd.DataFrame) -> pd.Series:
         """Construct portfolio weights from return data.
-        
+
         Args:
             returns: DataFrame of historical returns for assets
-            
+
         Returns:
             Series of portfolio weights (must sum to 1.0)
         """

@@ -5,10 +5,7 @@ Import from there instead. This module is maintained for backward compatibility 
 """
 
 # Backward compatibility - re-export all utils from core
-from .core.utils import (  # noqa: F401
-    _run_in_parallel,
-    log_duration,
-)
+from .core.utils import _run_in_parallel, log_duration  # noqa: F401
 
 __all__ = [
     "_run_in_parallel",

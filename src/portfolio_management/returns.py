@@ -21,11 +21,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.portfolio_management.exceptions import (
+from src.portfolio_management.core.exceptions import (
     InsufficientDataError,
     ReturnCalculationError,
 )
-from src.portfolio_management.selection import SelectedAsset
+from src.portfolio_management.assets.selection.selection import SelectedAsset
 
 logger = logging.getLogger(__name__)
 

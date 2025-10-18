@@ -1,17 +1,18 @@
 # Package Specifications and Technical Details
 
-**Date:** October 18, 2025  
+**Date:** October 18, 2025
 **Related:** MODULAR_MONOLITH_REFACTORING_PLAN.md, ARCHITECTURE_DIAGRAM.md
 
 ## Overview
 
 This document provides detailed technical specifications for each package in the modular monolith architecture, including public APIs, internal structure, dependencies, and implementation guidelines.
 
----
+______________________________________________________________________
 
 ## Package 1: core (Foundation Layer)
 
 ### Purpose
+
 Provide foundational utilities, exceptions, configuration, and common types used across all packages.
 
 ### Public API
@@ -112,39 +113,42 @@ PriceDataFrame: TypeAlias = pd.DataFrame  # With specific columns expected
 
 class IDataLoader(Protocol):
     """Protocol for data loading operations."""
-    
+
     def load(self, path: str) -> pd.DataFrame:
         """Load data from path."""
         ...
 
 class IAssetFilter(Protocol):
     """Protocol for asset filtering operations."""
-    
+
     def filter(self, assets: list, criteria: object) -> list:
         """Filter assets based on criteria."""
         ...
 
 class IPortfolioStrategy(Protocol):
     """Protocol for portfolio construction strategies."""
-    
+
     def construct(self, returns: pd.DataFrame) -> pd.Series:
         """Construct portfolio weights from returns."""
         ...
 ```
 
 ### Dependencies
+
 - None (foundation layer)
 
 ### Key Changes from Current
+
 - Add `types.py` with common protocols
 - Expose utilities with cleaner API (rename `_run_in_parallel` → `run_in_parallel`)
 - No other changes to existing code
 
----
+______________________________________________________________________
 
 ## Package 2: data (Data Management Layer)
 
 ### Purpose
+
 Handle all data ingestion, I/O operations, symbol matching, and data quality analysis.
 
 ### Public API
@@ -240,16 +244,19 @@ data/
 #### io.py → readers.py, writers.py, exporters.py
 
 **readers.py:**
+
 - `read_stooq_index()`
 - `load_tradeable_instruments()`
 - Helper functions for reading CSVs
 
 **writers.py:**
+
 - `write_stooq_index()`
 - `write_match_report()`
 - Helper functions for writing CSVs
 
 **exporters.py:**
+
 - `export_tradeable_prices()`
 - `ExportConfig` usage
 - Parallel export logic
@@ -257,28 +264,33 @@ data/
 #### analysis.py → quality.py, currency.py
 
 **quality.py:**
+
 - `summarize_price_file()`
 - Data quality checks
 - Gap analysis
 
 **currency.py:**
+
 - `infer_currency()`
 - `resolve_currency()`
 - Currency resolution logic
 
 ### Dependencies
+
 - core (exceptions, config, utils)
 
 ### Key Changes from Current
+
 - Split large modules for clarity
 - Keep models.py as-is (only data models)
 - Organize by functional area
 
----
+______________________________________________________________________
 
 ## Package 3: assets (Asset Universe Layer)
 
 ### Purpose
+
 Manage asset selection, classification, and universe definitions for portfolio construction.
 
 ### Public API
@@ -354,6 +366,7 @@ assets/
 #### selection.py → criteria.py, models.py, selector.py
 
 **criteria.py:**
+
 ```python
 from dataclasses import dataclass, field
 from portfolio_management.core import DataValidationError
@@ -364,13 +377,14 @@ class FilterCriteria:
     data_status: list[str] = field(default_factory=lambda: ["ok"])
     min_history_days: int = 252
     # ... rest of FilterCriteria
-    
+
     def validate(self) -> None:
         """Validate criteria."""
         # ... validation logic
 ```
 
 **models.py:**
+
 ```python
 from dataclasses import dataclass
 
@@ -384,6 +398,7 @@ class SelectedAsset:
 ```
 
 **selector.py:**
+
 ```python
 from portfolio_management.core import AssetSelectionError
 from .criteria import FilterCriteria
@@ -391,7 +406,7 @@ from .models import SelectedAsset
 
 class AssetSelector:
     """Main asset selection engine."""
-    
+
     def filter(self, assets: list, criteria: FilterCriteria) -> list[SelectedAsset]:
         """Filter assets based on criteria."""
         # ... filtering logic
@@ -400,6 +415,7 @@ class AssetSelector:
 #### classification.py → taxonomy.py, models.py, classifier.py, overrides.py
 
 **taxonomy.py:**
+
 ```python
 from enum import Enum
 
@@ -419,6 +435,7 @@ class SubClass(str, Enum):
 ```
 
 **models.py:**
+
 ```python
 from dataclasses import dataclass
 from .taxonomy import AssetClass, Geography
@@ -433,6 +450,7 @@ class AssetClassification:
 ```
 
 **classifier.py:**
+
 ```python
 from portfolio_management.core import ClassificationError
 from portfolio_management.assets.selection import SelectedAsset
@@ -442,23 +460,24 @@ from .taxonomy import AssetClass, Geography, SubClass
 
 class AssetClassifier:
     """Rule-based asset classification engine."""
-    
+
     def __init__(self, overrides: ClassificationOverrides | None = None):
         self.overrides = overrides
-    
+
     def classify(self, asset: SelectedAsset) -> AssetClassification:
         """Classify a single asset."""
         # ... classification logic
 ```
 
 **overrides.py:**
+
 ```python
 from pathlib import Path
 import pandas as pd
 
 class ClassificationOverrides:
     """Manual classification overrides."""
-    
+
     @classmethod
     def from_csv(cls, path: Path) -> ClassificationOverrides:
         """Load from CSV."""
@@ -468,6 +487,7 @@ class ClassificationOverrides:
 #### universes.py → definition.py, loader.py, manager.py
 
 **definition.py:**
+
 ```python
 from dataclasses import dataclass, field
 from portfolio_management.assets.selection import FilterCriteria
@@ -480,13 +500,14 @@ class UniverseDefinition:
     filter_criteria: FilterCriteria
     classification_requirements: dict = field(default_factory=dict)
     return_config: ReturnConfig = field(default_factory=ReturnConfig)
-    
+
     def validate(self) -> None:
         """Validate definition."""
         # ... validation logic
 ```
 
 **loader.py:**
+
 ```python
 from pathlib import Path
 import yaml
@@ -495,7 +516,7 @@ from .definition import UniverseDefinition
 
 class UniverseConfigLoader:
     """Load universe definitions from YAML."""
-    
+
     @staticmethod
     def load_config(path: Path) -> dict[str, UniverseDefinition]:
         """Load and parse configuration."""
@@ -503,6 +524,7 @@ class UniverseConfigLoader:
 ```
 
 **manager.py:**
+
 ```python
 from portfolio_management.core import UniverseLoadError
 from .definition import UniverseDefinition
@@ -510,29 +532,32 @@ from .loader import UniverseConfigLoader
 
 class UniverseManager:
     """Manage multiple universe definitions."""
-    
+
     def __init__(self, config_path: Path):
         self.universes = UniverseConfigLoader.load_config(config_path)
-    
+
     def get_universe(self, name: str) -> UniverseDefinition:
         """Retrieve universe by name."""
         # ... retrieval logic
 ```
 
 ### Dependencies
+
 - core (exceptions, config)
 - data (for loading price data if needed)
 
 ### Key Changes from Current
+
 - Split monolithic modules into focused files
 - Clear separation between data models and logic
 - Better encapsulation of classification rules
 
----
+______________________________________________________________________
 
 ## Package 4: analytics (Financial Calculations Layer)
 
 ### Purpose
+
 Perform financial calculations including returns, performance metrics, and risk analytics.
 
 ### Public API
@@ -590,6 +615,7 @@ analytics/
 #### returns.py → config.py, models.py, loaders.py, calculator.py
 
 **config.py:**
+
 ```python
 from dataclasses import dataclass
 
@@ -600,13 +626,14 @@ class ReturnConfig:
     frequency: str = "daily"
     risk_free_rate: float = 0.0
     # ... rest of config
-    
+
     def validate(self) -> None:
         """Validate configuration."""
         # ... validation
 ```
 
 **models.py:**
+
 ```python
 from dataclasses import dataclass
 import pandas as pd
@@ -621,6 +648,7 @@ class ReturnSummary:
 ```
 
 **loaders.py:**
+
 ```python
 from pathlib import Path
 import pandas as pd
@@ -628,13 +656,14 @@ from portfolio_management.core import InsufficientDataError
 
 class PriceLoader:
     """Load and validate price files."""
-    
+
     def load_price_file(self, path: Path) -> pd.Series:
         """Load single price file."""
         # ... loading logic
 ```
 
 **calculator.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.core import ReturnCalculationError
@@ -645,11 +674,11 @@ from .loaders import PriceLoader
 
 class ReturnCalculator:
     """Calculate aligned return series."""
-    
+
     def __init__(self, config: ReturnConfig):
         self.config = config
         self.loader = PriceLoader()
-    
+
     def calculate_returns(
         self,
         assets: list[SelectedAsset],
@@ -662,6 +691,7 @@ class ReturnCalculator:
 #### Extract Metrics (from backtest.py or create new)
 
 **metrics/performance.py:**
+
 ```python
 import pandas as pd
 import numpy as np
@@ -682,6 +712,7 @@ def calculate_sortino_ratio(
 ```
 
 **metrics/risk.py:**
+
 ```python
 import pandas as pd
 
@@ -702,19 +733,22 @@ def calculate_var(
 ```
 
 ### Dependencies
+
 - core (exceptions, config)
 - assets (SelectedAsset model)
 
 ### Key Changes from Current
+
 - Extract metrics from backtest.py if they exist
 - Split returns.py into focused modules
 - Add more financial metrics as needed
 
----
+______________________________________________________________________
 
 ## Package 5: portfolio (Portfolio Construction Layer)
 
 ### Purpose
+
 Construct portfolios using various allocation strategies with constraints and rebalancing logic.
 
 ### Public API
@@ -796,6 +830,7 @@ portfolio/
 #### portfolio.py → Comprehensive Split
 
 **models.py:**
+
 ```python
 from dataclasses import dataclass
 from enum import Enum
@@ -814,13 +849,14 @@ class Portfolio:
     strategy: str
     timestamp: pd.Timestamp
     metadata: dict | None = None
-    
+
     def validate(self) -> None:
         """Validate portfolio."""
         # ... validation
 ```
 
 **builder.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.analytics import ReturnCalculator
@@ -830,7 +866,7 @@ from .models import Portfolio
 
 class PortfolioBuilder:
     """Orchestrate portfolio construction."""
-    
+
     def __init__(
         self,
         strategy: PortfolioStrategy,
@@ -838,7 +874,7 @@ class PortfolioBuilder:
     ):
         self.strategy = strategy
         self.constraints = constraints
-    
+
     def build(
         self,
         returns: pd.DataFrame,
@@ -847,10 +883,10 @@ class PortfolioBuilder:
         """Build portfolio using strategy."""
         # ... orchestration logic
         weights = self.strategy.construct(returns, **kwargs)
-        
+
         if self.constraints:
             validate_constraints(weights, self.constraints)
-        
+
         return Portfolio(
             weights=weights,
             strategy=self.strategy.__class__.__name__,
@@ -859,13 +895,14 @@ class PortfolioBuilder:
 ```
 
 **strategies/base.py:**
+
 ```python
 from abc import ABC, abstractmethod
 import pandas as pd
 
 class PortfolioStrategy(ABC):
     """Base class for portfolio construction strategies."""
-    
+
     @abstractmethod
     def construct(
         self,
@@ -874,20 +911,21 @@ class PortfolioStrategy(ABC):
     ) -> pd.Series:
         """Construct portfolio weights."""
         pass
-    
+
     def validate_inputs(self, returns: pd.DataFrame) -> None:
         """Validate inputs before construction."""
         # ... common validation
 ```
 
 **strategies/equal_weight.py:**
+
 ```python
 import pandas as pd
 from .base import PortfolioStrategy
 
 class EqualWeightStrategy(PortfolioStrategy):
     """Equal-weight allocation strategy."""
-    
+
     def construct(
         self,
         returns: pd.DataFrame,
@@ -903,6 +941,7 @@ class EqualWeightStrategy(PortfolioStrategy):
 ```
 
 **strategies/risk_parity.py:**
+
 ```python
 import pandas as pd
 import numpy as np
@@ -911,7 +950,7 @@ from .base import PortfolioStrategy
 
 class RiskParityStrategy(PortfolioStrategy):
     """Risk parity allocation strategy."""
-    
+
     def construct(
         self,
         returns: pd.DataFrame,
@@ -924,6 +963,7 @@ class RiskParityStrategy(PortfolioStrategy):
 ```
 
 **strategies/mean_variance.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.core import OptimizationError, DependencyError
@@ -937,7 +977,7 @@ except ImportError:
 
 class MeanVarianceStrategy(PortfolioStrategy):
     """Mean-variance optimization strategy."""
-    
+
     def __init__(self, target_return: float | None = None):
         if not HAS_CVXPY:
             raise DependencyError(
@@ -945,7 +985,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 "Mean-variance optimization requires cvxpy"
             )
         self.target_return = target_return
-    
+
     def construct(
         self,
         returns: pd.DataFrame,
@@ -957,6 +997,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
 ```
 
 **constraints/models.py:**
+
 ```python
 from dataclasses import dataclass
 
@@ -968,13 +1009,14 @@ class PortfolioConstraints:
     max_equity_exposure: float = 0.90
     min_bond_exposure: float = 0.10
     sector_limits: dict[str, float] | None = None
-    
+
     def validate(self) -> None:
         """Validate constraints."""
         # ... validation
 ```
 
 **constraints/validators.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.core import ConstraintViolationError
@@ -988,14 +1030,15 @@ def validate_constraints(
     # Check max/min weights
     if (weights > constraints.max_weight).any():
         raise ConstraintViolationError("...")
-    
+
     if (weights < constraints.min_weight).any():
         raise ConstraintViolationError("...")
-    
+
     # ... other validations
 ```
 
 **rebalancing/config.py:**
+
 ```python
 from dataclasses import dataclass
 
@@ -1006,13 +1049,14 @@ class RebalanceConfig:
     tolerance_bands: float = 0.20
     min_trade_size: float = 0.01
     cost_per_trade: float = 0.001
-    
+
     def validate(self) -> None:
         """Validate config."""
         # ... validation
 ```
 
 **rebalancing/logic.py:**
+
 ```python
 import pandas as pd
 from .config import RebalanceConfig
@@ -1028,28 +1072,31 @@ def calculate_rebalance_trades(
         current = current_weights.get(symbol, 0.0)
         target = target_weights[symbol]
         diff = target - current
-        
+
         if abs(diff) >= config.min_trade_size:
             trades[symbol] = diff
-    
+
     return trades
 ```
 
 ### Dependencies
+
 - core (exceptions)
 - analytics (for return data)
 
 ### Key Changes from Current
+
 - Split 821-line portfolio.py into focused modules
 - Each strategy in its own file
 - Clear separation of concerns
 - Easy to add new strategies
 
----
+______________________________________________________________________
 
 ## Package 6: backtesting (Historical Simulation Layer)
 
 ### Purpose
+
 Simulate portfolio performance over historical periods with transaction costs and rebalancing.
 
 ### Public API
@@ -1136,6 +1183,7 @@ backtesting/
 #### backtest.py → Comprehensive Split
 
 **models.py:**
+
 ```python
 from dataclasses import dataclass
 from decimal import Decimal
@@ -1149,7 +1197,7 @@ class BacktestConfig:
     end_date: datetime.date
     initial_capital: Decimal = Decimal("100000.00")
     # ... other config
-    
+
     def validate(self) -> None:
         """Validate configuration."""
         # ... validation
@@ -1174,6 +1222,7 @@ class PerformanceMetrics:
 ```
 
 **engine/backtest.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.portfolio import Portfolio, PortfolioStrategy
@@ -1182,11 +1231,11 @@ from .simulator import PortfolioSimulator
 
 class BacktestEngine:
     """Main backtesting engine."""
-    
+
     def __init__(self, config: BacktestConfig):
         self.config = config
         self.simulator = PortfolioSimulator(config)
-    
+
     def run(
         self,
         strategy: PortfolioStrategy,
@@ -1199,6 +1248,7 @@ class BacktestEngine:
 ```
 
 **engine/simulator.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.portfolio import PortfolioStrategy
@@ -1207,11 +1257,11 @@ from ..transactions import TransactionCostModel
 
 class PortfolioSimulator:
     """Simulate portfolio evolution."""
-    
+
     def __init__(self, config: BacktestConfig):
         self.config = config
         self.cost_model = TransactionCostModel(config)
-    
+
     def simulate(
         self,
         strategy: PortfolioStrategy,
@@ -1223,17 +1273,18 @@ class PortfolioSimulator:
 ```
 
 **transactions/costs.py:**
+
 ```python
 from decimal import Decimal
 
 class TransactionCostModel:
     """Model transaction costs."""
-    
+
     def __init__(self, config):
         self.commission_pct = config.commission_pct
         self.commission_min = config.commission_min
         self.slippage_bps = config.slippage_bps
-    
+
     def calculate_commission(
         self,
         trade_value: Decimal
@@ -1241,7 +1292,7 @@ class TransactionCostModel:
         """Calculate commission for trade."""
         commission = trade_value * Decimal(str(self.commission_pct))
         return max(commission, Decimal(str(self.commission_min)))
-    
+
     def calculate_slippage(
         self,
         trade_value: Decimal
@@ -1251,6 +1302,7 @@ class TransactionCostModel:
 ```
 
 **rebalancing/triggers.py:**
+
 ```python
 from enum import Enum
 
@@ -1269,6 +1321,7 @@ class RebalanceTrigger(Enum):
 ```
 
 **rebalancing/events.py:**
+
 ```python
 from dataclasses import dataclass
 from decimal import Decimal
@@ -1287,6 +1340,7 @@ class RebalanceEvent:
 ```
 
 **performance/metrics.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.analytics import (
@@ -1303,7 +1357,7 @@ def calculate_performance_metrics(
     """Calculate performance metrics from backtest results."""
     total_return = (equity_curve.iloc[-1] / equity_curve.iloc[0]) - 1
     annual_return = (1 + total_return) ** (252 / len(equity_curve)) - 1
-    
+
     return PerformanceMetrics(
         total_return=total_return,
         annual_return=annual_return,
@@ -1315,20 +1369,23 @@ def calculate_performance_metrics(
 ```
 
 ### Dependencies
+
 - core (exceptions)
 - portfolio (strategies, Portfolio)
 - analytics (metrics)
 
 ### Key Changes from Current
+
 - Split 749-line backtest.py into focused modules
 - Separate transaction costs, rebalancing, performance
 - Clear simulation flow
 
----
+______________________________________________________________________
 
 ## Package 7: reporting (Visualization & Reporting Layer)
 
 ### Purpose
+
 Generate visualizations and reports from portfolio and backtest results.
 
 ### Public API
@@ -1405,6 +1462,7 @@ reporting/
 #### visualization.py → Multiple Focused Files
 
 **visualization/equity_curves.py:**
+
 ```python
 import pandas as pd
 
@@ -1415,6 +1473,7 @@ def prepare_equity_curve(equity_df: pd.DataFrame) -> pd.DataFrame:
 ```
 
 **visualization/drawdowns.py:**
+
 ```python
 import pandas as pd
 
@@ -1425,6 +1484,7 @@ def prepare_drawdown_series(equity_df: pd.DataFrame) -> pd.DataFrame:
 ```
 
 **visualization/allocations.py:**
+
 ```python
 import pandas as pd
 
@@ -1438,6 +1498,7 @@ def prepare_allocation_history(
 ```
 
 **reports/summary.py:**
+
 ```python
 import pandas as pd
 from portfolio_management.backtesting import BacktestResult
@@ -1453,6 +1514,7 @@ def create_summary_report(result: BacktestResult) -> dict:
 ```
 
 **exporters/csv.py:**
+
 ```python
 from pathlib import Path
 import pandas as pd
@@ -1464,6 +1526,7 @@ def export_to_csv(data: pd.DataFrame, output_path: Path) -> None:
 ```
 
 **exporters/html.py:**
+
 ```python
 from pathlib import Path
 import pandas as pd
@@ -1479,17 +1542,19 @@ def export_to_html(
 ```
 
 ### Dependencies
+
 - core (for utilities)
 - backtesting (BacktestResult, PerformanceMetrics)
 - portfolio (Portfolio)
 - analytics (metrics)
 
 ### Key Changes from Current
+
 - Split visualization.py by chart type
 - Add report generation capabilities
 - Add various export formats
 
----
+______________________________________________________________________
 
 ## Cross-Cutting Concerns
 
@@ -1561,12 +1626,12 @@ from portfolio_management.assets import FilterCriteria, AssetSelector
 
 class TestFilterCriteria:
     """Tests for FilterCriteria."""
-    
+
     def test_default_creation(self):
         """Test default criteria creation."""
         criteria = FilterCriteria.default()
         assert criteria.min_history_days == 252
-    
+
     def test_validation(self):
         """Test criteria validation."""
         criteria = FilterCriteria(min_history_days=-1)
@@ -1575,12 +1640,12 @@ class TestFilterCriteria:
 
 class TestAssetSelector:
     """Tests for AssetSelector."""
-    
+
     @pytest.fixture
     def selector(self):
         """Create selector instance."""
         return AssetSelector()
-    
+
     def test_filter_assets(self, selector, sample_assets):
         """Test asset filtering."""
         criteria = FilterCriteria.default()
@@ -1588,7 +1653,7 @@ class TestAssetSelector:
         assert len(result) > 0
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Checklist
 
@@ -1596,29 +1661,29 @@ class TestAssetSelector:
 
 For each package, ensure:
 
-- [ ] `__init__.py` created with public API exports
-- [ ] All modules split appropriately
-- [ ] Internal imports use relative imports
-- [ ] External imports use absolute imports from public APIs
-- [ ] Type hints added
-- [ ] Docstrings updated
-- [ ] Tests migrated and passing
-- [ ] Dependencies documented
-- [ ] Example usage in docstrings
+- \[ \] `__init__.py` created with public API exports
+- \[ \] All modules split appropriately
+- \[ \] Internal imports use relative imports
+- \[ \] External imports use absolute imports from public APIs
+- \[ \] Type hints added
+- \[ \] Docstrings updated
+- \[ \] Tests migrated and passing
+- \[ \] Dependencies documented
+- \[ \] Example usage in docstrings
 
 ### Global Checklist
 
-- [ ] All packages follow naming conventions
-- [ ] Dependency rules enforced
-- [ ] No circular dependencies
-- [ ] All tests passing
-- [ ] Coverage maintained
-- [ ] Scripts updated
-- [ ] Documentation updated
-- [ ] Migration guide created
+- \[ \] All packages follow naming conventions
+- \[ \] Dependency rules enforced
+- \[ \] No circular dependencies
+- \[ \] All tests passing
+- \[ \] Coverage maintained
+- \[ \] Scripts updated
+- \[ \] Documentation updated
+- \[ \] Migration guide created
 
----
+______________________________________________________________________
 
-**Document Prepared By:** GitHub Copilot  
-**Date:** October 18, 2025  
+**Document Prepared By:** GitHub Copilot
+**Date:** October 18, 2025
 **Related:** MODULAR_MONOLITH_REFACTORING_PLAN.md, ARCHITECTURE_DIAGRAM.md

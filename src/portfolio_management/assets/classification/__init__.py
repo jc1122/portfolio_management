@@ -1,10 +1,6 @@
-"""Asset classification.
+"""Asset classification taxonomy and logic."""
 
-DEPRECATED: This module has been moved to portfolio_management.assets.classification.
-Import from there instead. This module is maintained for backward compatibility only.
-"""
-
-from .assets.classification.classification import (  # noqa: F401
+from .classification import (
     AssetClass,
     AssetClassification,
     AssetClassifier,
