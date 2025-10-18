@@ -18,6 +18,8 @@ from typing import Any
 import pandas as pd
 import yaml
 
+from portfolio_management.analytics.returns import ReturnCalculator, ReturnConfig
+
 from ...core.exceptions import (
     AssetSelectionError,
     ClassificationError,
@@ -28,14 +30,7 @@ from ...core.exceptions import (
     UniverseLoadError,
 )
 from ..classification.classification import AssetClassifier
-from ..selection.selection import (
-    AssetSelector,
-    FilterCriteria,
-    SelectedAsset,
-)
-
-# Note: returns module not yet migrated, using old import
-from src.portfolio_management.returns import ReturnCalculator, ReturnConfig
+from ..selection.selection import AssetSelector, FilterCriteria, SelectedAsset
 
 
 @dataclass
@@ -87,7 +82,8 @@ class UniverseConfigLoader:
                 description=u_def.get("description", ""),
                 filter_criteria=filter_criteria,
                 classification_requirements=u_def.get(
-                    "classification_requirements", {}
+                    "classification_requirements",
+                    {},
                 ),
                 return_config=return_config,
                 constraints=u_def.get("constraints", {}),
@@ -127,7 +123,7 @@ class UniverseManager:
         """Get the definition for a named universe."""
         if name not in self.universes:
             raise ConfigurationError(
-                f"Universe '{name}' not found in the configuration."
+                f"Universe '{name}' not found in the configuration.",
             )
         return self.universes[name]
 

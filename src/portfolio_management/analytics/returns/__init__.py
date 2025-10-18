@@ -13,8 +13,8 @@ from .loaders import PriceLoader
 from .models import ReturnSummary
 
 __all__ = [
+    "PriceLoader",
     "ReturnCalculator",
     "ReturnConfig",
-    "PriceLoader",
     "ReturnSummary",
 ]

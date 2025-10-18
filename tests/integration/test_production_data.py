@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.portfolio_management.universes import UniverseManager
+from portfolio_management.assets.universes import UniverseManager
 
 pytestmark = pytest.mark.integration
 

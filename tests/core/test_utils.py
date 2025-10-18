@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from src.portfolio_management.utils import _run_in_parallel
+from portfolio_management.core.utils import _run_in_parallel
 
 
 def simple_task(x: int) -> int:
@@ -114,9 +114,7 @@ class TestRunInParallel:
     def test_task_logging_enabled(self, caplog: Any) -> None:
         """Test that log_tasks=True produces debug logs."""
         args = [(1,), (2,), (3,)]
-        with caplog.at_level(
-            logging.DEBUG, logger="src.portfolio_management.core.utils"
-        ):
+        with caplog.at_level(logging.DEBUG, logger="portfolio_management.core.utils"):
             _run_in_parallel(simple_task, args, max_workers=1, log_tasks=True)
 
         # Should have logs for each task

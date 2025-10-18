@@ -9,8 +9,8 @@ import logging
 import pandas as pd
 import pytest
 
-from src.portfolio_management.exceptions import DataValidationError
-from src.portfolio_management.selection import AssetSelector, FilterCriteria
+from portfolio_management.assets.selection import AssetSelector, FilterCriteria
+from portfolio_management.core.exceptions import DataValidationError
 
 
 class TestParseSeverity:

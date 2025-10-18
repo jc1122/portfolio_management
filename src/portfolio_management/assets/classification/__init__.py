@@ -11,9 +11,9 @@ from .classification import (
 
 __all__ = [
     "AssetClass",
-    "Geography",
-    "SubClass",
     "AssetClassification",
     "AssetClassifier",
     "ClassificationOverrides",
+    "Geography",
+    "SubClass",
 ]

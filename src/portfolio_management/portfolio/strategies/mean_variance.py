@@ -5,18 +5,14 @@ from __future__ import annotations
 import importlib
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
-import numpy as np
 import pandas as pd
 
 from ...core.exceptions import DependencyError, InsufficientDataError, OptimizationError
 from ..constraints.models import PortfolioConstraints
 from ..models import Portfolio
 from .base import PortfolioStrategy
-
-if TYPE_CHECKING:
-    from .risk_parity import RiskParityStrategy
 
 logger = logging.getLogger(__name__)
 

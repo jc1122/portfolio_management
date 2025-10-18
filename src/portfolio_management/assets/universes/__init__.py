@@ -2,4 +2,4 @@
 
 from .universes import UniverseConfigLoader, UniverseDefinition, UniverseManager
 
-__all__ = ["UniverseDefinition", "UniverseConfigLoader", "UniverseManager"]
+__all__ = ["UniverseConfigLoader", "UniverseDefinition", "UniverseManager"]

@@ -2,4 +2,4 @@
 
 from .selection import AssetSelector, FilterCriteria, SelectedAsset
 
-__all__ = ["FilterCriteria", "SelectedAsset", "AssetSelector"]
+__all__ = ["AssetSelector", "FilterCriteria", "SelectedAsset"]

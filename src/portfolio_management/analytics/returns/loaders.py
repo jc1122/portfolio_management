@@ -93,7 +93,9 @@ class PriceLoader:
     ) -> pd.DataFrame:
         """Load price data for many assets and align on the union of dates."""
         logger.info(
-            "Loading price series for %d assets from %s", len(assets), prices_dir
+            "Loading price series for %d assets from %s",
+            len(assets),
+            prices_dir,
         )
         all_prices: dict[str, pd.Series] = {}
         for asset in assets:
@@ -119,7 +121,8 @@ class PriceLoader:
 
             if prices.empty:
                 logger.warning(
-                    "Skipping %s because the price series is empty", asset.symbol
+                    "Skipping %s because the price series is empty",
+                    asset.symbol,
                 )
                 continue
 

@@ -204,15 +204,15 @@ src/portfolio_management/
 
 **Allowed Dependencies (packages can only depend on those listed):**
 
-| Package      | Can Depend On                    |
+| Package | Can Depend On |
 |--------------|----------------------------------|
-| core         | (none - foundation layer)        |
-| data         | core                             |
-| assets       | core, data                       |
-| analytics    | core, assets                     |
-| portfolio    | core, analytics                  |
-| backtesting  | core, portfolio, analytics       |
-| reporting    | core, backtesting, portfolio, analytics |
+| core | (none - foundation layer) |
+| data | core |
+| assets | core, data |
+| analytics | core, assets |
+| portfolio | core, analytics |
+| backtesting | core, portfolio, analytics |
+| reporting | core, backtesting, portfolio, analytics |
 
 **Dependency Diagram:**
 

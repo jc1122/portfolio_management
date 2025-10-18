@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from portfolio_management.assets.selection import SelectedAsset
 from scripts.calculate_returns import parse_args, run_cli
-from src.portfolio_management.selection import SelectedAsset
 
 
 @pytest.fixture

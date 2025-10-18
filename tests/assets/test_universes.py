@@ -5,12 +5,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.portfolio_management.exceptions import ConfigurationError
-from src.portfolio_management.universes import (
+from portfolio_management.assets.universes import (
     UniverseConfigLoader,
     UniverseDefinition,
     UniverseManager,
 )
+from portfolio_management.core.exceptions import ConfigurationError
 
 
 @pytest.fixture

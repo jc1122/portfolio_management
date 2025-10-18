@@ -8,18 +8,15 @@ This package provides:
 Public API:
     Selection:
         - FilterCriteria, SelectedAsset, AssetSelector
-    
+
     Classification:
         - AssetClass, Geography, SubClass
         - AssetClassification, AssetClassifier
         - ClassificationOverrides
-    
+
     Universes:
         - UniverseDefinition, UniverseConfigLoader
 """
-
-# Selection
-from .selection import AssetSelector, FilterCriteria, SelectedAsset
 
 # Classification
 from .classification import (
@@ -30,6 +27,9 @@ from .classification import (
     Geography,
     SubClass,
 )
+
+# Selection
+from .selection import AssetSelector, FilterCriteria, SelectedAsset
 
 # Universes
 from .universes import UniverseConfigLoader, UniverseDefinition, UniverseManager

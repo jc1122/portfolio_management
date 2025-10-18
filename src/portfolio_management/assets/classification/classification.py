@@ -13,8 +13,8 @@ Key components:
 Usage Example:
     from pathlib import Path
     import pandas as pd
-    from src.portfolio_management.selection import SelectedAsset
-    from src.portfolio_management.classification import (
+    from portfolio_management.assets.selection import SelectedAsset
+    from portfolio_management.assets.classification import (
         AssetClassifier,
         ClassificationOverrides
     )
@@ -233,12 +233,12 @@ class AssetClassifier:
         """Classify an iterable of assets and return a DataFrame of results."""
         if assets is None:
             raise DataValidationError(
-                "Assets to classify cannot be None."
-            )  # noqa: TRY003
+                "Assets to classify cannot be None.",
+            )
         if not isinstance(assets, list):
             raise DataValidationError(
-                "Assets must be provided as a list."
-            )  # noqa: TRY003
+                "Assets must be provided as a list.",
+            )
         if not assets:
             logging.getLogger(__name__).info("No assets supplied for classification.")
             return pd.DataFrame(
@@ -256,7 +256,7 @@ class AssetClassifier:
 
         classifications: list[AssetClassification] = []
         for asset in assets:
-            try:  # noqa: PERF203 - defensive guard per asset
+            try:
                 classifications.append(self.classify_asset(asset))
             except Exception as exc:  # pragma: no cover - defensive
                 raise ClassificationError(
@@ -321,7 +321,9 @@ class AssetClassifier:
         return Geography.UNKNOWN
 
     def _classify_sub_class(  # noqa: C901, PLR0911, PLR0912
-        self, asset: SelectedAsset, asset_class: AssetClass
+        self,
+        asset: SelectedAsset,
+        asset_class: AssetClass,
     ) -> str:
         if pd.isna(asset.name):
             return SubClass.UNKNOWN
@@ -353,7 +355,8 @@ class AssetClassifier:
 
     @staticmethod
     def export_for_review(
-        classifications: list[AssetClassification], path: Path
+        classifications: list[AssetClassification],
+        path: Path,
     ) -> None:
         df = pd.DataFrame([c.__dict__ for c in classifications])
         df.to_csv(path, index=False)

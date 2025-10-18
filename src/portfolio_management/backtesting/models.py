@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
-from portfolio_management.exceptions import InvalidBacktestConfigError
+from portfolio_management.core.exceptions import InvalidBacktestConfigError
 
 
 class RebalanceFrequency(Enum):

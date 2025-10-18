@@ -6,8 +6,8 @@ from .mean_variance import MeanVarianceStrategy
 from .risk_parity import RiskParityStrategy
 
 __all__ = [
-    "PortfolioStrategy",
     "EqualWeightStrategy",
     "MeanVarianceStrategy",
+    "PortfolioStrategy",
     "RiskParityStrategy",
 ]

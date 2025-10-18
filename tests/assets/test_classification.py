@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.portfolio_management.classification import (
+from portfolio_management.assets.classification import (
     AssetClass,
     AssetClassification,
     AssetClassifier,
@@ -12,7 +12,7 @@ from src.portfolio_management.classification import (
     Geography,
     SubClass,
 )
-from src.portfolio_management.selection import SelectedAsset
+from portfolio_management.assets.selection import SelectedAsset
 
 
 @pytest.fixture

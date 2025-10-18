@@ -19,7 +19,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from datetime import date
 
     import pandas as pd
 
@@ -44,6 +43,7 @@ class IDataLoader(Protocol):
 
         Returns:
             DataFrame containing the loaded data
+
         """
         ...
 
@@ -64,6 +64,7 @@ class IAssetFilter(Protocol):
 
         Returns:
             Filtered list of assets meeting the criteria
+
         """
         ...
 
@@ -83,5 +84,6 @@ class IPortfolioStrategy(Protocol):
 
         Returns:
             Series of portfolio weights (must sum to 1.0)
+
         """
         ...

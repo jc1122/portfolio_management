@@ -61,7 +61,7 @@ class ReturnCalculator:
             config.validate()
         except ValueError as exc:
             raise ReturnCalculationError(
-                f"Invalid return configuration: {exc}"
+                f"Invalid return configuration: {exc}",
             ) from exc
 
         logger.info("Preparing returns for %d assets", len(assets))
@@ -231,17 +231,19 @@ class ReturnCalculator:
 
         if config.handle_missing == "forward_fill":
             handled = self._handle_missing_forward_fill(
-                prices, config.max_forward_fill_days
+                prices,
+                config.max_forward_fill_days,
             )
         elif config.handle_missing == "drop":
             handled = self._handle_missing_drop(prices)
         elif config.handle_missing == "interpolate":
             handled = self._handle_missing_interpolate(
-                prices, config.max_forward_fill_days
+                prices,
+                config.max_forward_fill_days,
             )
         else:  # pragma: no cover - validated earlier
             raise ValueError(
-                f"Unknown missing data handling method: {config.handle_missing}"
+                f"Unknown missing data handling method: {config.handle_missing}",
             )
 
         remaining = int(handled.isna().sum().sum())

@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-from portfolio_management.exceptions import TransactionCostError
+from portfolio_management.core.exceptions import TransactionCostError
 
 
 @dataclass

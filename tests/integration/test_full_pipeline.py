@@ -8,14 +8,14 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.portfolio_management.classification import AssetClassifier
-from src.portfolio_management.exceptions import (
+from portfolio_management.analytics.returns import ReturnCalculator, ReturnConfig
+from portfolio_management.assets.classification import AssetClassifier
+from portfolio_management.assets.selection import AssetSelector, FilterCriteria
+from portfolio_management.assets.universes import UniverseManager
+from portfolio_management.core.exceptions import (
     ConfigurationError,
     ReturnCalculationError,
 )
-from src.portfolio_management.returns import ReturnCalculator, ReturnConfig
-from src.portfolio_management.selection import AssetSelector, FilterCriteria
-from src.portfolio_management.universes import UniverseManager
 
 pytestmark = pytest.mark.integration
 

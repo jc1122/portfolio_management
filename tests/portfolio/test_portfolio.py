@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management import exceptions as exc
 from portfolio_management import portfolio as portfolio_module
+from portfolio_management.core import exceptions as exc
 
 EqualWeightStrategy = portfolio_module.EqualWeightStrategy
 MeanVarianceStrategy = portfolio_module.MeanVarianceStrategy

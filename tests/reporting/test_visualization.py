@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management.backtest import (
+from portfolio_management.backtesting.models import (
     PerformanceMetrics,
     RebalanceEvent,
     RebalanceTrigger,
 )
-from portfolio_management.visualization import (
+from portfolio_management.reporting.visualization import (
     create_summary_report,
     prepare_drawdown_series,
     prepare_equity_curve,
@@ -31,7 +31,11 @@ def sample_equity_df() -> pd.DataFrame:
     dates = pd.to_datetime(pd.date_range("2020-01-01", periods=100, freq="D"))
     equity_values = (
         100000
-        * (1 + pd.Series(range(100)) / 1000 + np.random.randn(100) * 0.01).cumprod()
+        * (
+            1
+            + pd.Series(range(100)) / 1000
+            + np.random.default_rng().standard_normal(100) * 0.01
+        ).cumprod()
     )
     equity_df = pd.DataFrame({"equity": equity_values, "date": dates})
     # Introduce a drawdown

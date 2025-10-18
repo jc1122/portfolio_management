@@ -24,7 +24,10 @@ from portfolio_management.backtesting.models import (
 )
 from portfolio_management.backtesting.performance.metrics import calculate_metrics
 from portfolio_management.backtesting.transactions.costs import TransactionCostModel
-from portfolio_management.exceptions import InsufficientHistoryError, RebalanceError
+from portfolio_management.core.exceptions import (
+    InsufficientHistoryError,
+    RebalanceError,
+)
 
 
 class BacktestEngine:

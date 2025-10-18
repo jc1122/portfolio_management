@@ -7,17 +7,17 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management.backtest import (
+from portfolio_management.backtesting.engine import (
     BacktestConfig,
     BacktestEngine,
-    PerformanceMetrics,
     RebalanceEvent,
     RebalanceFrequency,
     RebalanceTrigger,
     TransactionCostModel,
 )
-from portfolio_management.exceptions import InvalidBacktestConfigError
-from portfolio_management.portfolio import (
+from portfolio_management.backtesting.models import PerformanceMetrics
+from portfolio_management.core.exceptions import InvalidBacktestConfigError
+from portfolio_management.portfolio.strategies import (
     EqualWeightStrategy,
     PortfolioStrategy,
     RiskParityStrategy,

@@ -57,13 +57,13 @@ def test_cli_compare_mode(
 ) -> None:
     """CLI comparison writes table of strategies."""
     # Limit strategies to equal-weight to avoid optional dependency requirements.
-    from portfolio_management import portfolio as portfolio_module
+    from portfolio_management.portfolio import PortfolioConstructor
 
     def list_strategies_stub(self):
         return ["equal_weight"]
 
     monkeypatch.setattr(
-        portfolio_module.PortfolioConstructor,
+        PortfolioConstructor,
         "list_strategies",
         list_strategies_stub,
         raising=False,

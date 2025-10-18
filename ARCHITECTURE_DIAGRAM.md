@@ -183,11 +183,11 @@ reporting ──────────┐
 
 ## Package Responsibility Matrix
 
-| Package      | Primary Responsibility | Key Classes/Functions | Dependencies |
+| Package | Primary Responsibility | Key Classes/Functions | Dependencies |
 |--------------|------------------------|----------------------|--------------|
-| **core**     | Foundation utilities, exceptions, config | Exception hierarchy, parallel processing, constants | None |
-| **data**     | Data ingestion, I/O, symbol matching | StooqIndexer, TradeableLoader, SymbolMatcher | core |
-| **assets**   | Asset selection, classification, universes | AssetSelector, AssetClassifier, UniverseLoader | core, data |
+| **core** | Foundation utilities, exceptions, config | Exception hierarchy, parallel processing, constants | None |
+| **data** | Data ingestion, I/O, symbol matching | StooqIndexer, TradeableLoader, SymbolMatcher | core |
+| **assets** | Asset selection, classification, universes | AssetSelector, AssetClassifier, UniverseLoader | core, data |
 | **analytics** | Financial calculations, returns, metrics | ReturnCalculator, PerformanceMetrics | core, assets |
 | **portfolio** | Portfolio construction, strategies | PortfolioBuilder, EqualWeight, RiskParity | core, analytics |
 | **backtesting** | Historical simulation, performance | BacktestEngine, TransactionCostModel | core, portfolio, analytics |

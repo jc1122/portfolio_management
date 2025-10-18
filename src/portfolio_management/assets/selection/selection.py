@@ -11,7 +11,7 @@ Key components:
 - AssetSelector: Main filtering and selection logic (to be implemented)
 
 Example:
-    >>> from src.portfolio_management.selection import FilterCriteria, SelectedAsset
+    >>> from portfolio_management.assets.selection import FilterCriteria, SelectedAsset
     >>> criteria = FilterCriteria.default()
     >>> criteria.min_history_days = 504  # Require 2 years of data
     >>> criteria.markets = ["UK", "US"]  # Focus on UK and US markets
@@ -231,7 +231,7 @@ class AssetSelector:
 
     Example:
         >>> import pandas as pd
-        >>> from src.portfolio_management.selection import AssetSelector, FilterCriteria
+        >>> from portfolio_management.assets.selection import AssetSelector, FilterCriteria
         >>> selector = AssetSelector()
         >>> matches_df = pd.read_csv('data/metadata/tradeable_matches.csv')
         >>> criteria = FilterCriteria(markets=['UK', 'US'])
