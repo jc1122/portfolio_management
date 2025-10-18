@@ -53,6 +53,7 @@ ignore = ["E501"]
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 testpaths = ["tests"]
 norecursedirs = ["data", "archive", ".git", "__pycache__", "*.egg-info"]
 markers = [

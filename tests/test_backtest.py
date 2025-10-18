@@ -1,4 +1,5 @@
 """Tests for the backtesting framework."""
+
 from datetime import date
 from decimal import Decimal
 
@@ -16,11 +17,12 @@ from portfolio_management.backtest import (
     TransactionCostModel,
 )
 from portfolio_management.exceptions import (
-    InvalidBacktestConfigError,
     InsufficientHistoryError,
+    InvalidBacktestConfigError,
 )
 from portfolio_management.portfolio import (
     EqualWeightStrategy,
+    PortfolioStrategy,
     RiskParityStrategy,
 )
 
@@ -30,37 +32,39 @@ def sample_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create sample price and returns data with matching shapes."""
     # Create dates - use 1460 dates for 4 years of daily data
     dates = pd.date_range("2020-01-01", periods=1460, freq="D")
-    
+
     np.random.seed(42)
     n = len(dates)
-    
+
     # Generate returns for all dates
     returns = np.random.multivariate_normal(
         mean=[0.0001, 0.00015, 0.0001, 0.00005],
-        cov=[[0.00025, 0.00015, 0.00010, 0.00005],
-             [0.00015, 0.00030, 0.00012, 0.00008],
-             [0.00010, 0.00012, 0.00020, 0.00006],
-             [0.00005, 0.00008, 0.00006, 0.00015]],
+        cov=[
+            [0.00025, 0.00015, 0.00010, 0.00005],
+            [0.00015, 0.00030, 0.00012, 0.00008],
+            [0.00010, 0.00012, 0.00020, 0.00006],
+            [0.00005, 0.00008, 0.00006, 0.00015],
+        ],
         size=n,
     )
-    
+
     # Create cumulative prices from returns
     prices = np.exp(np.cumsum(returns, axis=0))
     prices = prices * 100  # Scale to reasonable prices
-    
+
     # Create DataFrames
     prices_df = pd.DataFrame(
         prices,
         index=dates,
         columns=["A", "B", "C", "D"],
     )
-    
+
     returns_df = pd.DataFrame(
         returns,
         index=dates,
         columns=["A", "B", "C", "D"],
     )
-    
+
     return prices_df, returns_df
 
 
@@ -106,7 +110,7 @@ class TestTransactionCostModel:
             commission_min=5.0,
             slippage_bps=5.0,  # 5 basis points
         )
-        
+
         # Buy 1000 shares at $100
         # Trade value: $100,000
         # Commission: max(0.001 * 100000, 5) = $100
@@ -198,9 +202,7 @@ class TestPerformanceMetrics:
 class TestBacktestEngine:
     """Tests for BacktestEngine."""
 
-    def test_basic_run(
-        self, sample_data: tuple[pd.DataFrame, pd.DataFrame]
-    ) -> None:
+    def test_basic_run(self, sample_data: tuple[pd.DataFrame, pd.DataFrame]) -> None:
         """Test basic backtest run."""
         prices, returns = sample_data
         # Use dates that match actual data
@@ -251,12 +253,17 @@ class TestBacktestEngine:
     ) -> None:
         """Test different strategies."""
         prices, returns = sample_data
+        # Start later to allow for lookback period for RiskParityStrategy
         config = BacktestConfig(
-            start_date=date(2020, 1, 1),
+            start_date=date(2020, 6, 1),
             end_date=date(2023, 12, 30),
         )
 
-        for strategy in [EqualWeightStrategy(), RiskParityStrategy()]:
+        strategies: list[PortfolioStrategy] = [
+            EqualWeightStrategy(),
+            RiskParityStrategy(),
+        ]
+        for strategy in strategies:
             engine = BacktestEngine(
                 config=config,
                 strategy=strategy,
@@ -264,7 +271,7 @@ class TestBacktestEngine:
                 returns=returns,
             )
 
-            equity_curve, metrics, events = engine.run()
+            equity_curve, metrics, _ = engine.run()
             assert isinstance(metrics, PerformanceMetrics)
             assert metrics.total_return is not None
             assert len(equity_curve) > 0
