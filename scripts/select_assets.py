@@ -1,4 +1,4 @@
-# ruff: noqa: E402, F401
+# ruff: noqa: E402
 """CLI script for asset selection.
 
 This script provides a command-line interface for filtering and selecting assets

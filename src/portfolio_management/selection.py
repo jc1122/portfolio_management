@@ -1,4 +1,3 @@
-# ruff: noqa
 """Asset selection and filtering for portfolio construction.
 
 This module provides data models and filtering logic for selecting assets

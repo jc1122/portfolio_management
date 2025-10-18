@@ -1,4 +1,4 @@
-# ruff: noqa: E402, F401
+# ruff: noqa: E402
 """CLI script for asset classification.
 
 This script provides a command-line interface for classifying assets from a

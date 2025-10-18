@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for concurrency utilities in utils module."""
 
 from __future__ import annotations

@@ -1,4 +1,3 @@
-# ruff: noqa
 """Lightweight performance benchmarks for the Phase 3 pipeline."""
 
 from __future__ import annotations

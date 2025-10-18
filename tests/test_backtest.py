@@ -16,10 +16,7 @@ from portfolio_management.backtest import (
     RebalanceTrigger,
     TransactionCostModel,
 )
-from portfolio_management.exceptions import (
-    InsufficientHistoryError,
-    InvalidBacktestConfigError,
-)
+from portfolio_management.exceptions import InvalidBacktestConfigError
 from portfolio_management.portfolio import (
     EqualWeightStrategy,
     PortfolioStrategy,
@@ -33,11 +30,11 @@ def sample_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     # Create dates - use 1460 dates for 4 years of daily data
     dates = pd.date_range("2020-01-01", periods=1460, freq="D")
 
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
     n = len(dates)
 
     # Generate returns for all dates
-    returns = np.random.multivariate_normal(
+    returns = rng.multivariate_normal(
         mean=[0.0001, 0.00015, 0.0001, 0.00005],
         cov=[
             [0.00025, 0.00015, 0.00010, 0.00005],
@@ -96,7 +93,7 @@ class TestBacktestConfig:
             BacktestConfig(
                 start_date=date(2020, 1, 1),
                 end_date=date(2023, 12, 31),
-                initial_capital=Decimal("-1000"),
+                initial_capital=Decimal(-1000),
             )
 
 
@@ -121,7 +118,7 @@ class TestTransactionCostModel:
             price=100.0,
             is_buy=True,
         )
-        assert cost > Decimal("0")
+        assert cost > Decimal(0)
 
     def test_zero_shares(self) -> None:
         """Test cost calculation with zero shares."""
@@ -132,7 +129,7 @@ class TestTransactionCostModel:
             price=100.0,
             is_buy=True,
         )
-        assert cost == Decimal("0")
+        assert cost == Decimal(0)
 
 
 class TestRebalanceEnums:
@@ -163,10 +160,10 @@ class TestRebalanceEvent:
             trigger=RebalanceTrigger.SCHEDULED,
             trades={"A": 100, "B": -50},
             costs=Decimal("25.50"),
-            pre_rebalance_value=Decimal("100000"),
-            post_rebalance_value=Decimal("100100"),
-            cash_before=Decimal("5000"),
-            cash_after=Decimal("4500"),
+            pre_rebalance_value=Decimal(100000),
+            post_rebalance_value=Decimal(100100),
+            cash_before=Decimal(5000),
+            cash_after=Decimal(4500),
         )
         assert event.date == date(2020, 1, 15)
         assert event.trigger == RebalanceTrigger.SCHEDULED
@@ -219,13 +216,14 @@ class TestBacktestEngine:
             returns=returns,
         )
 
-        equity_curve, metrics, events = engine.run()
+        equity_curve, metrics, _events = engine.run()
         assert len(equity_curve) > 0
         assert isinstance(metrics, PerformanceMetrics)
         assert metrics.num_rebalances >= 0
 
     def test_daily_rebalancing(
-        self, sample_data: tuple[pd.DataFrame, pd.DataFrame]
+        self,
+        sample_data: tuple[pd.DataFrame, pd.DataFrame],
     ) -> None:
         """Test daily rebalancing."""
         prices, returns = sample_data
@@ -243,13 +241,14 @@ class TestBacktestEngine:
             returns=returns,
         )
 
-        equity_curve, metrics, events = engine.run()
+        _equity_curve, metrics, _events = engine.run()
         # With daily rebalancing, we should have multiple rebalances
         assert metrics.num_rebalances > 0
         assert isinstance(metrics, PerformanceMetrics)
 
     def test_multiple_strategies(
-        self, sample_data: tuple[pd.DataFrame, pd.DataFrame]
+        self,
+        sample_data: tuple[pd.DataFrame, pd.DataFrame],
     ) -> None:
         """Test different strategies."""
         prices, returns = sample_data

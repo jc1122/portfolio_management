@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Backtest CLI - Command-line interface for running portfolio backtests.
+r"""Backtest CLI - Command-line interface for running portfolio backtests.
 
 This script provides a user-friendly interface for executing backtests with
 configurable parameters including strategy selection, date ranges, transaction
@@ -26,6 +25,7 @@ Examples:
     python scripts/run_backtest.py equal_weight \\
         --universe-file config/custom_universe.yaml \\
         --no-visualize
+
 """
 
 import argparse
@@ -34,7 +34,6 @@ import sys
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import yaml
@@ -48,8 +47,8 @@ from portfolio_management.backtest import (
 )
 from portfolio_management.exceptions import (
     BacktestError,
-    InvalidBacktestConfigError,
     InsufficientHistoryError,
+    InvalidBacktestConfigError,
 )
 from portfolio_management.portfolio import (
     EqualWeightStrategy,
@@ -59,13 +58,9 @@ from portfolio_management.portfolio import (
 )
 from portfolio_management.visualization import (
     create_summary_report,
-    prepare_allocation_history,
     prepare_drawdown_series,
     prepare_equity_curve,
-    prepare_monthly_returns_heatmap,
-    prepare_returns_distribution,
     prepare_rolling_metrics,
-    prepare_trade_analysis,
     prepare_transaction_costs_summary,
 )
 
@@ -76,7 +71,7 @@ def parse_date(date_str: str) -> date:
         return datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError as e:
         raise argparse.ArgumentTypeError(
-            f"Invalid date format '{date_str}'. Use YYYY-MM-DD."
+            f"Invalid date format '{date_str}'. Use YYYY-MM-DD.",
         ) from e
 
 
@@ -86,7 +81,7 @@ def parse_decimal(value_str: str) -> Decimal:
         return Decimal(value_str)
     except Exception as e:
         raise argparse.ArgumentTypeError(
-            f"Invalid decimal value '{value_str}'."
+            f"Invalid decimal value '{value_str}'.",
         ) from e
 
 
@@ -123,7 +118,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--initial-capital",
         type=parse_decimal,
-        default=Decimal("100000"),
+        default=Decimal(100000),
         help="Initial portfolio capital. Default: 100000",
     )
     parser.add_argument(
@@ -248,7 +243,7 @@ def load_universe(universe_file: Path, universe_name: str) -> list[str]:
     if not universe_file.exists():
         raise FileNotFoundError(f"Universe file not found: {universe_file}")
 
-    with open(universe_file, "r") as f:
+    with open(universe_file) as f:
         config = yaml.safe_load(f)
 
     if "universes" not in config:
@@ -258,7 +253,7 @@ def load_universe(universe_file: Path, universe_name: str) -> list[str]:
     if universe_name not in universes:
         available = ", ".join(universes.keys())
         raise ValueError(
-            f"Universe '{universe_name}' not found. Available: {available}"
+            f"Universe '{universe_name}' not found. Available: {available}",
         )
 
     universe = universes[universe_name]
@@ -269,7 +264,9 @@ def load_universe(universe_file: Path, universe_name: str) -> list[str]:
 
 
 def load_data(
-    prices_file: Path, returns_file: Path, assets: list[str]
+    prices_file: Path,
+    returns_file: Path,
+    assets: list[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load prices and returns data for specified assets."""
     if not prices_file.exists():
@@ -298,12 +295,11 @@ def create_strategy(strategy_name: str) -> PortfolioStrategy:
     """Create portfolio strategy instance."""
     if strategy_name == "equal_weight":
         return EqualWeightStrategy()
-    elif strategy_name == "risk_parity":
+    if strategy_name == "risk_parity":
         return RiskParityStrategy()
-    elif strategy_name == "mean_variance":
+    if strategy_name == "mean_variance":
         return MeanVarianceStrategy()
-    else:
-        raise ValueError(f"Unknown strategy: {strategy_name}")
+    raise ValueError(f"Unknown strategy: {strategy_name}")
 
 
 def save_results(
@@ -320,11 +316,11 @@ def save_results(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if verbose:
-        print(f"\nSaving results to {output_dir}/")
+        pass
 
     # Convert equity curve to DataFrame
     equity_df = pd.DataFrame(equity_curve, columns=["date", "equity"])
-    equity_df.set_index("date", inplace=True)
+    equity_df = equity_df.set_index("date")
 
     # Save configuration
     config_dict = {
@@ -341,18 +337,18 @@ def save_results(
     with open(output_dir / "config.json", "w") as f:
         json.dump(config_dict, f, indent=2)
     if verbose:
-        print("  ✓ config.json")
+        pass
 
     # Save metrics
     with open(output_dir / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
     if verbose:
-        print("  ✓ metrics.json")
+        pass
 
     # Save equity curve
     equity_df.to_csv(output_dir / "equity_curve.csv")
     if verbose:
-        print("  ✓ equity_curve.csv")
+        pass
 
     # Save trade history
     if save_trades and rebalance_events:
@@ -369,12 +365,12 @@ def save_results(
                         "commission": trade["commission"],
                         "slippage": trade["slippage"],
                         "total_cost": trade["total_cost"],
-                    }
+                    },
                 )
         trades_df = pd.DataFrame(trades)
         trades_df.to_csv(output_dir / "trades.csv", index=False)
         if verbose:
-            print("  ✓ trades.csv")
+            pass
 
     # Generate visualization data
     if generate_viz:
@@ -401,52 +397,13 @@ def save_results(
             json.dump(summary, f, indent=2)
 
         if verbose:
-            print("  ✓ viz_equity_curve.csv")
-            print("  ✓ viz_drawdown.csv")
-            print("  ✓ viz_rolling_metrics.csv")
-            print("  ✓ viz_transaction_costs.csv")
-            print("  ✓ summary_report.json")
+            pass
 
 
 def print_results(metrics: dict[str, float], verbose: bool) -> None:
     """Print backtest results to console."""
-    print("\n" + "=" * 60)
-    print("BACKTEST RESULTS")
-    print("=" * 60)
-
-    print("\n📈 Performance Metrics:")
-    print(f"  Total Return:        {metrics['total_return']:>10.2%}")
-    print(f"  Annualized Return:   {metrics['annualized_return']:>10.2%}")
-    print(f"  Sharpe Ratio:        {metrics['sharpe_ratio']:>10.2f}")
-    print(f"  Sortino Ratio:       {metrics['sortino_ratio']:>10.2f}")
-    print(f"  Calmar Ratio:        {metrics['calmar_ratio']:>10.2f}")
-
-    print("\n📊 Risk Metrics:")
-    print(f"  Volatility:          {metrics['volatility']:>10.2%}")
-    print(f"  Max Drawdown:        {metrics['max_drawdown']:>10.2%}")
-    print(f"  Max Drawdown Days:   {metrics['max_drawdown_days']:>10.0f}")
-
-    print("\n💰 Trading Statistics:")
-    print(f"  Number of Rebalances: {metrics['num_rebalances']:>9.0f}")
-    print(f"  Total Transaction Costs: ${metrics['total_transaction_costs']:>8.2f}")
-    print(
-        f"  Transaction Cost %:  {metrics['transaction_costs_pct']:>10.2%}"
-    )
-
     if verbose:
-        print("\n📋 Additional Metrics:")
-        print(f"  Win Rate:            {metrics.get('win_rate', 0):>10.2%}")
-        print(
-            f"  Avg Win/Loss Ratio:  {metrics.get('avg_win_loss_ratio', 0):>10.2f}"
-        )
-        print(
-            f"  Best Day Return:     {metrics.get('best_day_return', 0):>10.2%}"
-        )
-        print(
-            f"  Worst Day Return:    {metrics.get('worst_day_return', 0):>10.2%}"
-        )
-
-    print("\n" + "=" * 60)
+        pass
 
 
 def main() -> int:
@@ -461,36 +418,28 @@ def main() -> int:
             args.output_dir = Path(f"results/backtest_{timestamp}")
 
         if args.verbose:
-            print("=" * 60)
-            print("PORTFOLIO BACKTEST")
-            print("=" * 60)
-            print(f"\nStrategy: {args.strategy}")
-            print(f"Date Range: {args.start_date} to {args.end_date}")
-            print(f"Initial Capital: ${args.initial_capital:,.2f}")
-            print(f"Rebalance Frequency: {args.rebalance_frequency}")
+            pass
 
         # Load universe
         if args.verbose:
-            print(f"\nLoading universe '{args.universe_name}' from {args.universe_file}...")
+            pass
         assets = load_universe(args.universe_file, args.universe_name)
         if args.verbose:
-            print(f"  ✓ Loaded {len(assets)} assets")
+            pass
 
         # Load data
         if args.verbose:
-            print(f"\nLoading prices from {args.prices_file}...")
-            print(f"Loading returns from {args.returns_file}...")
+            pass
         prices, returns = load_data(args.prices_file, args.returns_file, assets)
         if args.verbose:
-            print(f"  ✓ Loaded {len(prices)} price rows")
-            print(f"  ✓ Loaded {len(returns)} return rows")
+            pass
 
         # Create strategy
         if args.verbose:
-            print(f"\nCreating {args.strategy} strategy...")
+            pass
         strategy = create_strategy(args.strategy)
         if args.verbose:
-            print(f"  ✓ Strategy created")
+            pass
 
         # Create transaction cost model
         cost_model = TransactionCostModel(
@@ -528,7 +477,7 @@ def main() -> int:
 
         # Run backtest
         if args.verbose:
-            print(f"\nRunning backtest...")
+            pass
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
@@ -538,7 +487,7 @@ def main() -> int:
         )
         equity_curve, rebalance_events, metrics = engine.run()
         if args.verbose:
-            print(f"  ✓ Backtest complete")
+            pass
 
         # Print results
         print_results(metrics, args.verbose)
@@ -555,24 +504,19 @@ def main() -> int:
             args.verbose,
         )
 
-        print(f"\n✓ Results saved to {args.output_dir}/")
         return 0
 
     except (
         BacktestError,
         InvalidBacktestConfigError,
         InsufficientHistoryError,
-    ) as e:
-        print(f"\n❌ Backtest error: {e}", file=sys.stderr)
+    ):
         return 1
-    except FileNotFoundError as e:
-        print(f"\n❌ File not found: {e}", file=sys.stderr)
+    except FileNotFoundError:
         return 1
-    except ValueError as e:
-        print(f"\n❌ Invalid value: {e}", file=sys.stderr)
+    except ValueError:
         return 1
-    except Exception as e:
-        print(f"\n❌ Unexpected error: {e}", file=sys.stderr)
+    except Exception:
         if args.verbose:
             import traceback
 

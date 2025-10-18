@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for the return calculation pipeline."""
 
 from __future__ import annotations

@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for the calculate_returns CLI script."""
 
 from __future__ import annotations

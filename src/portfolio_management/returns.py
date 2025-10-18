@@ -1,4 +1,3 @@
-# ruff: noqa
 """Return calculation utilities for portfolio construction.
 
 This module turns cleaned price data into aligned return series that can be

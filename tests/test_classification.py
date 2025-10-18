@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for the asset classification module."""
 
 from pathlib import Path

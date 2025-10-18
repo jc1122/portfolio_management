@@ -1,4 +1,4 @@
-# ruff: noqa: E402, F401
+# ruff: noqa: E402
 """CLI script for universe management.
 
 This script provides a command-line interface for managing investment universes.

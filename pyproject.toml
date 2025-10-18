@@ -8,28 +8,36 @@ profile = "black"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C90", "I", "N", "D", "UP", "YTT", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "RUF"]
+select = ["E", "F", "W", "C90", "I", "N", "UP", "YTT", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "RUF", "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D200", "D201", "D202", "D204", "D205", "D206", "D207", "D208", "D209", "D210", "D211", "D212", "D214", "D215", "D300", "D301", "D400", "D401", "D402", "D403", "D404", "D405", "D406", "D407", "D408", "D409", "D410", "D411", "D412", "D413", "D414", "D415", "D416", "D417", "D418", "D419"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/prepare_tradeable_data.py" = ["C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "TRY300", "E402", "TCH003", "D407"]
+"scripts/run_backtest.py" = ["T201", "C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "DTZ", "PTH123", "FBT001", "ARG001", "D401", "BLE001", "PLC0415", "TRY300", "PERF401"]
+"create_test_fixtures.py" = ["D100", "PTH123", "PTH120"]
+"profile_pre_commit.py" = ["D100", "PTH123", "S603", "S607"]
 "tests/**/*.py" = [
   "D103",
   "S101",
   "PLR2004",
   "PT006",
+  "PT011",
+  "PT018",
   "ARG001",
-  "D212",
-  "D213",
   "PLR0913",
   "S603",
   "FLY002",
   "PD901",
+  "PD011",
   "TRY003",
   "SIM117",
   "SLF001",
   "D401",
   "PLC0415",
+  "COM812",
+  "TCH002",
+  "TCH003",
+  "ISC001",
 ]
 "src/portfolio_management/classification.py" = [
   "TRY003",
@@ -43,14 +51,41 @@ ignore = ["E501"]
   "SIM102",
   "UP037",
   "D102",
+  "RUF100",
+  "F821",
+  "PD901",
 ]
 "src/portfolio_management/universes.py" = [
   "TRY003",
   "TRY401",
+  "TRY400",
   "COM812",
   "FBT001",
   "FBT002",
+  "TCH003",
+  "PTH123",
+  "C901",
+  "PLR0912",
+  "PLR0915",
+  "PD901",
 ]
+"src/portfolio_management/returns.py" = ["D", "RUF002", "TCH001", "TRY003", "C901", "PD002", "PD901", "PLR2004", "COM812", "BLE001", "TRY400", "RET504"]
+"src/portfolio_management/selection.py" = ["D", "TRY003", "G004", "PERF203", "PLR2004", "PLC0415", "PD901"]
+"src/portfolio_management/utils.py" = ["D", "TCH003", "C901", "PLR0912", "PERF203", "G201", "TRY003", "PGH003"]
+"tests/integration/*.py" = ["D"]
+"tests/scripts/*.py" = ["D", "TCH003"]
+"tests/test_classification.py" = ["D"]
+"tests/test_returns.py" = ["D", "TCH003"]
+"tests/test_selection.py" = ["D"]
+"tests/test_universes.py" = ["D"]
+"tests/test_utils.py" = ["D", "RUF043"]
+"src/portfolio_management/backtest.py" = ["FBT001", "PLR0911", "PLR2004", "C901", "PLR0912", "PLR0915", "PLC0415"]
+"src/portfolio_management/filters/__init__.py" = ["D104"]
+"src/portfolio_management/strategies/__init__.py" = ["D104"]
+"src/portfolio_management/filters/selection.py" = ["TRY003", "G004", "PLR2004"]
+"src/portfolio_management/strategies/matching.py" = ["PLC0415"]
+"src/portfolio_management/visualization.py" = ["PD011", "PD010", "PD901"]
+"tests/test_visualization.py" = ["NPY002"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

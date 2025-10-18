@@ -1,4 +1,3 @@
-# ruff: noqa
 """End-to-end integration tests for the Phase 3 asset selection pipeline."""
 
 from __future__ import annotations

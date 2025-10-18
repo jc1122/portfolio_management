@@ -3,14 +3,14 @@
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Quick Start](#quick-start)
-3. [Core Concepts](#core-concepts)
-4. [API Reference](#api-reference)
-5. [CLI Usage](#cli-usage)
-6. [Examples](#examples)
-7. [Performance Metrics](#performance-metrics)
-8. [Advanced Usage](#advanced-usage)
-9. [Troubleshooting](#troubleshooting)
+1. [Quick Start](#quick-start)
+1. [Core Concepts](#core-concepts)
+1. [API Reference](#api-reference)
+1. [CLI Usage](#cli-usage)
+1. [Examples](#examples)
+1. [Performance Metrics](#performance-metrics)
+1. [Advanced Usage](#advanced-usage)
+1. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -98,6 +98,7 @@ class BacktestConfig:
 ```
 
 **Validation Rules**:
+
 - `start_date` must be before `end_date`
 - `initial_capital` must be positive
 - `rebalance_threshold` must be between 0 and 1
@@ -174,6 +175,7 @@ class PerformanceMetrics:
 Main simulation engine.
 
 **Constructor**:
+
 ```python
 def __init__(
     self,
@@ -186,11 +188,12 @@ def __init__(
 ```
 
 **run() Method**:
+
 ```python
 def run(self) -> tuple[pd.DataFrame, PerformanceMetrics, list[RebalanceEvent]]:
     """
     Execute the backtest simulation.
-    
+
     Returns:
         equity_curve: DataFrame with daily equity values
         metrics: PerformanceMetrics object with results
@@ -203,6 +206,7 @@ def run(self) -> tuple[pd.DataFrame, PerformanceMetrics, list[RebalanceEvent]]:
 Transaction cost calculator.
 
 **Constructor**:
+
 ```python
 def __init__(
     self,
@@ -213,6 +217,7 @@ def __init__(
 ```
 
 **calculate_cost() Method**:
+
 ```python
 def calculate_cost(
     self,
@@ -223,19 +228,20 @@ def calculate_cost(
 ) -> Decimal:
     """
     Calculate cost for a single trade.
-    
+
     Args:
         ticker: Asset ticker symbol
         shares: Number of shares (absolute value)
         price: Execution price per share
         is_buy: True for buy, False for sell
-        
+
     Returns:
         Total cost as Decimal
     """
 ```
 
 **calculate_batch_cost() Method**:
+
 ```python
 def calculate_batch_cost(
     self,
@@ -243,10 +249,10 @@ def calculate_batch_cost(
 ) -> dict[str, Decimal]:
     """
     Calculate costs for multiple trades.
-    
+
     Args:
         trades: Dict mapping ticker to (shares, price)
-        
+
     Returns:
         Dict mapping ticker to cost
     """
@@ -465,66 +471,81 @@ for name, metrics in results.items():
 ### Return Metrics
 
 **Total Return**
+
 - Cumulative return over entire backtest period
 - Formula: (Ending Value - Starting Value) / Starting Value
 
 **Annualized Return (CAGR)**
+
 - Compound annual growth rate
 - Formula: (Ending Value / Starting Value)^(1/years) - 1
 
 ### Risk Metrics
 
 **Annualized Volatility**
+
 - Annualized standard deviation of returns
 - Formula: daily_std_dev * sqrt(252)
 
 **Max Drawdown**
+
 - Maximum peak-to-trough percentage decline
 - Represents worst single continuous loss
 
 **Drawdown Duration**
+
 - Length of time from peak to recovery
 
 ### Risk-Adjusted Return Metrics
 
 **Sharpe Ratio**
+
 - Excess return per unit of risk
 - Formula: (annualized_return - risk_free_rate) / volatility
 - Assumes 0% risk-free rate
 
 **Sortino Ratio**
+
 - Similar to Sharpe but only penalizes downside
 - Only uses negative returns for volatility
 
 **Calmar Ratio**
+
 - Return per unit of drawdown risk
 - Formula: annualized_return / abs(max_drawdown)
 
 ### Trading Metrics
 
 **Win Rate**
+
 - Percentage of days with positive returns
 - Example: 55% = 55% of trading days had gains
 
 **Average Win**
+
 - Average gain on winning days
 
 **Average Loss**
+
 - Average loss on losing days
 
 **Profit Factor**
+
 - Total wins / Total losses (derived from above)
 
 ### Cost Metrics
 
 **Total Transaction Costs**
+
 - Sum of all commissions and slippage
 
 **Turnover**
+
 - Average portfolio turnover per rebalancing period
 - Measures trading activity
 
 **Expected Shortfall (95%)**
+
 - Average loss in the worst 5% of days
 - Also called Conditional Value at Risk (CVaR)
 
@@ -587,7 +608,7 @@ viz_drawdown.to_csv("drawdown.csv")
 
 ### "InsufficientHistoryError"
 
-**Problem**: Backtest period not covered by data  
+**Problem**: Backtest period not covered by data\
 **Solution**: Ensure prices and returns cover the entire backtest period
 
 ```python
@@ -600,7 +621,7 @@ print(f"Backtest End: {config.end_date}")
 
 ### "InvalidBacktestConfigError"
 
-**Problem**: Invalid configuration  
+**Problem**: Invalid configuration\
 **Solution**: Verify configuration values
 
 ```python
@@ -616,7 +637,7 @@ config = BacktestConfig(
 
 ### "RebalanceError"
 
-**Problem**: Error during portfolio rebalancing  
+**Problem**: Error during portfolio rebalancing\
 **Solution**: Check strategy compatibility and constraints
 
 ```python
@@ -628,7 +649,7 @@ print(f"Min History: {strategy.min_history_periods} days")
 
 ### Negative Equity Curve
 
-**Problem**: Portfolio goes negative  
+**Problem**: Portfolio goes negative\
 **Solution**: Check transaction costs and volatility
 
 ```python
@@ -645,7 +666,7 @@ config = BacktestConfig(
 
 ### Performance Issues
 
-**Problem**: Backtest runs slowly  
+**Problem**: Backtest runs slowly\
 **Solution**: Optimize data and reduce frequency
 
 ```python
@@ -662,13 +683,13 @@ config = BacktestConfig(
 ## Best Practices
 
 1. **Use Realistic Costs**: Include typical commissions and slippage
-2. **Sufficient History**: Ensure strategy has enough data for initialization
-3. **Monitor Drawdown**: Consider investor psychology and risk tolerance
-4. **Test Multiple Periods**: Validate across different market environments
-5. **Validate Results**: Compare with industry benchmarks
-6. **Document Assumptions**: Record all configuration choices
-7. **Use Constraints**: Apply realistic portfolio constraints
-8. **Track Costs**: Monitor impact of transaction costs
+1. **Sufficient History**: Ensure strategy has enough data for initialization
+1. **Monitor Drawdown**: Consider investor psychology and risk tolerance
+1. **Test Multiple Periods**: Validate across different market environments
+1. **Validate Results**: Compare with industry benchmarks
+1. **Document Assumptions**: Record all configuration choices
+1. **Use Constraints**: Apply realistic portfolio constraints
+1. **Track Costs**: Monitor impact of transaction costs
 
 ## Performance Tips
 

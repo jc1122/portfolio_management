@@ -1,4 +1,3 @@
-# ruff: noqa
 """Asset classification for portfolio construction.
 
 This module provides a taxonomy and data models for classifying assets into

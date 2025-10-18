@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for asset selection module.
 
 Tests cover filtering logic, data quality checks, and the asset selection

@@ -1,4 +1,3 @@
-# ruff: noqa
 """Universe management for portfolio construction.
 
 This module provides data models and logic for defining, loading, and managing

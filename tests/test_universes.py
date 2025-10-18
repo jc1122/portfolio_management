@@ -1,4 +1,3 @@
-# ruff: noqa
 """Tests for the universe management module."""
 
 from pathlib import Path

@@ -89,11 +89,11 @@ docs/
 ### Key Design Principles
 
 1. **Separation of Concerns:** Transaction costs, rebalancing logic, and metrics calculation are independent components
-2. **Strategy Agnostic:** Works with any PortfolioStrategy from Phase 4
-3. **Configurable Costs:** Commission and slippage rates configurable per backtest
-4. **Realistic Simulation:** Cash tracking, partial fills, and rounding to whole shares
-5. **Rich Logging:** Detailed rebalance events for audit trail
-6. **Visualization Ready:** Structured outputs for charting libraries
+1. **Strategy Agnostic:** Works with any PortfolioStrategy from Phase 4
+1. **Configurable Costs:** Commission and slippage rates configurable per backtest
+1. **Realistic Simulation:** Cash tracking, partial fills, and rounding to whole shares
+1. **Rich Logging:** Detailed rebalance events for audit trail
+1. **Visualization Ready:** Structured outputs for charting libraries
 
 ______________________________________________________________________
 
@@ -195,6 +195,7 @@ class TransactionCostError(BacktestError):
 ```
 
 **Verification:**
+
 ```bash
 python -c "from src.portfolio_management.exceptions import BacktestError, InvalidBacktestConfigError, InsufficientHistoryError"
 python -m mypy src/portfolio_management/exceptions.py
@@ -379,6 +380,7 @@ class PerformanceMetrics:
 ```
 
 **Verification:**
+
 ```bash
 python -c "from src.portfolio_management.backtest import BacktestConfig, RebalanceEvent, PerformanceMetrics"
 python -m mypy src/portfolio_management/backtest.py
@@ -471,6 +473,7 @@ class TransactionCostModel:
 ```
 
 **Tests to write:**
+
 - Test commission calculation (percentage vs minimum)
 - Test slippage calculation
 - Test batch cost calculation
@@ -818,6 +821,7 @@ class BacktestEngine:
 ```
 
 **Tests to write:**
+
 - Test initial rebalancing
 - Test scheduled rebalancing logic
 - Test cash management
@@ -1240,19 +1244,19 @@ ______________________________________________________________________
 Create comprehensive unit tests covering:
 
 1. **BacktestConfig validation**
-2. **TransactionCostModel calculations**
-3. **BacktestEngine initialization**
-4. **Rebalancing logic**
-5. **Metrics calculation**
-6. **Error handling**
+1. **TransactionCostModel calculations**
+1. **BacktestEngine initialization**
+1. **Rebalancing logic**
+1. **Metrics calculation**
+1. **Error handling**
 
 ### Task 8: Integration Tests
 
 Add integration tests to `tests/integration/test_full_pipeline.py`:
 
 1. **End-to-end backtest** (selection → portfolio → backtest)
-2. **Multi-strategy comparison**
-3. **Transaction cost sensitivity**
+1. **Multi-strategy comparison**
+1. **Transaction cost sensitivity**
 
 ### Task 9: CLI Tests
 
@@ -1261,9 +1265,9 @@ Add integration tests to `tests/integration/test_full_pipeline.py`:
 Test the CLI with:
 
 1. **Successful backtest execution**
-2. **Invalid strategy handling**
-3. **Date validation**
-4. **Output file generation**
+1. **Invalid strategy handling**
+1. **Date validation**
+1. **Output file generation**
 
 ______________________________________________________________________
 
@@ -1276,27 +1280,27 @@ ______________________________________________________________________
 Comprehensive guide covering:
 
 1. **Overview and concepts**
-2. **CLI usage examples**
-3. **Configuration options**
-4. **Performance metrics explanation**
-5. **Visualization outputs**
-6. **Best practices**
+1. **CLI usage examples**
+1. **Configuration options**
+1. **Performance metrics explanation**
+1. **Visualization outputs**
+1. **Best practices**
 
 ### Task 11: Update README
 
 Update `README.md` to include:
 
 1. **Phase 5 status** in project status section
-2. **Backtesting workflow** section
-3. **Update repository structure** to show backtest.py
+1. **Backtesting workflow** section
+1. **Update repository structure** to show backtest.py
 
 ### Task 12: Update Memory Bank
 
 Update `memory-bank/activeContext.md` and `memory-bank/progress.md` with:
 
 1. **Phase 5 completion status**
-2. **Test count updates**
-3. **Next phase planning**
+1. **Test count updates**
+1. **Next phase planning**
 
 ______________________________________________________________________
 
@@ -1304,28 +1308,29 @@ ______________________________________________________________________
 
 Before considering Phase 5 complete:
 
-- [ ] All exception types created with typed fields
-- [ ] BacktestConfig validates all parameters
-- [ ] TransactionCostModel calculates costs correctly
-- [ ] BacktestEngine simulates portfolio correctly
-- [ ] Rebalancing logic works (scheduled + opportunistic)
-- [ ] Cash management handles reserves properly
-- [ ] Performance metrics calculated accurately
-- [ ] Visualization data exports work
-- [ ] CLI executes backtests successfully
-- [ ] 40-50 new tests added (250-260 total)
-- [ ] All tests passing (100%)
-- [ ] Zero mypy errors
-- [ ] Coverage ≥85%
-- [ ] Documentation complete
-- [ ] Memory bank updated
-- [ ] README updated
+- \[ \] All exception types created with typed fields
+- \[ \] BacktestConfig validates all parameters
+- \[ \] TransactionCostModel calculates costs correctly
+- \[ \] BacktestEngine simulates portfolio correctly
+- \[ \] Rebalancing logic works (scheduled + opportunistic)
+- \[ \] Cash management handles reserves properly
+- \[ \] Performance metrics calculated accurately
+- \[ \] Visualization data exports work
+- \[ \] CLI executes backtests successfully
+- \[ \] 40-50 new tests added (250-260 total)
+- \[ \] All tests passing (100%)
+- \[ \] Zero mypy errors
+- \[ \] Coverage ≥85%
+- \[ \] Documentation complete
+- \[ \] Memory bank updated
+- \[ \] README updated
 
 ______________________________________________________________________
 
 ## Success Metrics
 
 **Code Quality:**
+
 - Test count: 210 → 250-260 (+40-50)
 - Coverage: ≥85% maintained
 - Mypy errors: 0 (maintained)
@@ -1333,6 +1338,7 @@ ______________________________________________________________________
 - Code quality: 9.5/10 (maintained)
 
 **Functionality:**
+
 - Backtest engine operational
 - Transaction costs modeled
 - Performance metrics calculated

@@ -9,8 +9,7 @@ This module provides historical simulation capabilities, including:
 
 from __future__ import annotations
 
-import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -19,12 +18,12 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    
+
+    import datetime
+
     from portfolio_management.portfolio import PortfolioStrategy
 
 from portfolio_management.exceptions import (
-    BacktestError,
     InsufficientHistoryError,
     InvalidBacktestConfigError,
     RebalanceError,
@@ -64,6 +63,7 @@ class BacktestConfig:
         commission_min: Minimum commission per trade (default: 0.0).
         slippage_bps: Slippage in basis points (default: 5.0 = 0.05%).
         cash_reserve_pct: Minimum cash reserve as percentage (default: 0.01 = 1%).
+
     """
 
     start_date: datetime.date
@@ -129,6 +129,7 @@ class RebalanceEvent:
         post_rebalance_value: Portfolio value after rebalancing.
         cash_before: Cash balance before rebalancing.
         cash_after: Cash balance after rebalancing.
+
     """
 
     date: datetime.date
@@ -160,6 +161,7 @@ class PerformanceMetrics:
         turnover: Average portfolio turnover per period.
         total_costs: Sum of all transaction costs.
         num_rebalances: Total number of rebalancing events.
+
     """
 
     total_return: float
@@ -186,6 +188,7 @@ class TransactionCostModel:
         commission_pct: Commission as percentage of trade value.
         commission_min: Minimum commission per trade.
         slippage_bps: Slippage in basis points.
+
     """
 
     commission_pct: float = 0.001  # 0.1%
@@ -193,7 +196,11 @@ class TransactionCostModel:
     slippage_bps: float = 5.0  # 5 bps
 
     def calculate_cost(
-        self, ticker: str, shares: int, price: float, is_buy: bool
+        self,
+        ticker: str,
+        shares: int,
+        price: float,
+        is_buy: bool,
     ) -> Decimal:
         """Calculate total transaction cost for a trade.
 
@@ -208,6 +215,7 @@ class TransactionCostModel:
 
         Raises:
             TransactionCostError: If calculation fails.
+
         """
         if shares < 0:
             raise TransactionCostError(
@@ -238,7 +246,8 @@ class TransactionCostModel:
         return Decimal(str(round(total_cost, 2)))
 
     def calculate_batch_cost(
-        self, trades: dict[str, tuple[int, float]]
+        self,
+        trades: dict[str, tuple[int, float]],
     ) -> dict[str, Decimal]:
         """Calculate costs for multiple trades.
 
@@ -248,6 +257,7 @@ class TransactionCostModel:
 
         Returns:
             Dict mapping ticker to transaction cost.
+
         """
         costs = {}
         for ticker, (shares, price) in trades.items():
@@ -285,6 +295,7 @@ class BacktestEngine:
 
         Raises:
             InsufficientHistoryError: If data doesn't cover backtest period.
+
         """
         self.config = config
         self.strategy = strategy
@@ -295,17 +306,17 @@ class BacktestEngine:
         # Validate date coverage
         data_start = self.prices.index.min()
         data_end = self.prices.index.max()
-        
+
         if pd.isna(data_start) or pd.isna(data_end):
             raise InsufficientHistoryError(
                 required_start=config.start_date,
                 available_start=config.start_date,
                 asset_ticker="N/A (no data)",
             )
-        
+
         data_start_date = data_start.date()
         data_end_date = data_end.date()
-        
+
         if data_start_date > config.start_date or data_end_date < config.end_date:
             raise InsufficientHistoryError(
                 required_start=config.start_date,
@@ -331,6 +342,7 @@ class BacktestEngine:
 
         Returns:
             Tuple of (equity_curve_df, performance_metrics, rebalance_events).
+
         """
         # Filter data to backtest period
         mask = (self.prices.index.date >= self.config.start_date) & (
@@ -346,15 +358,15 @@ class BacktestEngine:
                 asset_ticker="No data in period",
             )
 
-        # Initial rebalancing  
+        # Initial rebalancing
         first_date = period_prices.index[0].date()
         # Use returns for initial rebalance (need at least strategy min periods)
         initial_lookback = max(1, self.strategy.min_history_periods)
         self._rebalance(
-            first_date, 
+            first_date,
             period_returns.iloc[:initial_lookback],
             period_prices.iloc[:initial_lookback],
-            RebalanceTrigger.FORCED
+            RebalanceTrigger.FORCED,
         )
 
         # Simulate each trading day
@@ -369,13 +381,19 @@ class BacktestEngine:
 
             # Check for scheduled rebalancing
             if self._should_rebalance_scheduled(date):
-                lookback_returns = period_returns.iloc[:i+1]
-                lookback_prices = period_prices.iloc[:i+1]
-                self._rebalance(date, lookback_returns, lookback_prices, RebalanceTrigger.SCHEDULED)
+                lookback_returns = period_returns.iloc[: i + 1]
+                lookback_prices = period_prices.iloc[: i + 1]
+                self._rebalance(
+                    date,
+                    lookback_returns,
+                    lookback_prices,
+                    RebalanceTrigger.SCHEDULED,
+                )
 
         # Calculate performance metrics
         equity_df = pd.DataFrame(
-            self.equity_curve, columns=["date", "equity"]
+            self.equity_curve,
+            columns=["date", "equity"],
         ).set_index("date")
         metrics = self._calculate_metrics(equity_df)
 
@@ -383,7 +401,7 @@ class BacktestEngine:
 
     def _calculate_portfolio_value(self, prices: pd.Series) -> Decimal:
         """Calculate total portfolio value at current prices."""
-        holdings_value = Decimal("0")
+        holdings_value = Decimal(0)
         for ticker, shares in self.holdings.items():
             if ticker in prices.index and not pd.isna(prices[ticker]):
                 price = Decimal(str(float(prices[ticker])))
@@ -400,18 +418,18 @@ class BacktestEngine:
 
         if freq == RebalanceFrequency.DAILY:
             return (date - last_rebalance).days >= 1
-        elif freq == RebalanceFrequency.WEEKLY:
+        if freq == RebalanceFrequency.WEEKLY:
             return (date - last_rebalance).days >= 7
-        elif freq == RebalanceFrequency.MONTHLY:
+        if freq == RebalanceFrequency.MONTHLY:
             return (
                 date.month != last_rebalance.month or date.year != last_rebalance.year
             )
-        elif freq == RebalanceFrequency.QUARTERLY:
+        if freq == RebalanceFrequency.QUARTERLY:
             months_diff = (date.year - last_rebalance.year) * 12 + (
                 date.month - last_rebalance.month
             )
             return months_diff >= 3
-        elif freq == RebalanceFrequency.ANNUAL:
+        if freq == RebalanceFrequency.ANNUAL:
             return date.year != last_rebalance.year
         return False
 
@@ -432,11 +450,16 @@ class BacktestEngine:
 
         Raises:
             RebalanceError: If rebalancing fails.
+
         """
         try:
             # Get current prices for this date (last row of prices)
-            date_prices = historical_prices.iloc[-1] if len(historical_prices) > 0 else pd.Series()
-            
+            date_prices = (
+                historical_prices.iloc[-1]
+                if len(historical_prices) > 0
+                else pd.Series()
+            )
+
             # Calculate current portfolio value
             pre_value = self._calculate_portfolio_value(date_prices)
 
@@ -469,7 +492,7 @@ class BacktestEngine:
             target_weights = portfolio.weights
 
             # Calculate investable cash (keeping reserve)
-            investable_cash = float(self.cash) * (1 - self.config.cash_reserve_pct)
+            float(self.cash) * (1 - self.config.cash_reserve_pct)
             total_target_value = float(pre_value) * (1 - self.config.cash_reserve_pct)
 
             # Calculate target shares for each asset
@@ -486,7 +509,7 @@ class BacktestEngine:
             # Calculate trades needed
             trades: dict[str, int] = {}
             all_tickers = set(target_shares.keys()) | set(self.holdings.keys())
-            
+
             for ticker in all_tickers:
                 current = self.holdings.get(ticker, 0)
                 target = target_shares.get(ticker, 0)
@@ -494,7 +517,7 @@ class BacktestEngine:
                     trades[ticker] = target - current
 
             # Calculate transaction costs
-            total_cost = Decimal("0")
+            total_cost = Decimal(0)
             for ticker, share_change in trades.items():
                 if share_change == 0:
                     continue
@@ -503,14 +526,17 @@ class BacktestEngine:
                 price = float(date_prices[ticker])
                 if price <= 0:
                     continue
-                    
+
                 cost = self.cost_model.calculate_cost(
-                    ticker, abs(share_change), price, share_change > 0
+                    ticker,
+                    abs(share_change),
+                    price,
+                    share_change > 0,
                 )
                 total_cost += cost
 
             # Check if we have enough cash for buys + costs
-            total_buys = Decimal("0")
+            total_buys = Decimal(0)
             for ticker, share_change in trades.items():
                 if share_change > 0:  # Buy
                     if ticker not in date_prices.index or pd.isna(date_prices[ticker]):
@@ -520,7 +546,9 @@ class BacktestEngine:
 
             if total_buys + total_cost > self.cash:
                 # Scale back trades to fit cash constraints
-                scale_factor = float(self.cash * Decimal("0.95")) / float(total_buys + total_cost)
+                scale_factor = float(self.cash * Decimal("0.95")) / float(
+                    total_buys + total_cost,
+                )
                 trades = {
                     ticker: int(shares * scale_factor)
                     for ticker, shares in trades.items()
@@ -538,9 +566,12 @@ class BacktestEngine:
 
                 # Calculate cost for this trade
                 cost = self.cost_model.calculate_cost(
-                    ticker, abs(share_change), price, share_change > 0
+                    ticker,
+                    abs(share_change),
+                    price,
+                    share_change > 0,
                 )
-                
+
                 trade_value = Decimal(str(abs(share_change) * price))
 
                 if share_change > 0:  # Buy
@@ -581,7 +612,7 @@ class BacktestEngine:
 
     def _calculate_holdings_value(self, prices: pd.Series) -> Decimal:
         """Calculate value of current holdings only (excluding cash)."""
-        holdings_value = Decimal("0")
+        holdings_value = Decimal(0)
         for ticker, shares in self.holdings.items():
             if ticker in prices.index and not pd.isna(prices[ticker]):
                 price = Decimal(str(float(prices[ticker])))
@@ -590,12 +621,13 @@ class BacktestEngine:
 
     def _calculate_metrics(self, equity_df: pd.DataFrame) -> PerformanceMetrics:
         """Calculate performance metrics from equity curve.
-        
+
         Args:
             equity_df: DataFrame with equity values indexed by date.
-            
+
         Returns:
             PerformanceMetrics with calculated statistics.
+
         """
         if len(equity_df) < 2:
             # Not enough data for meaningful metrics
@@ -612,13 +644,13 @@ class BacktestEngine:
                 avg_win=0.0,
                 avg_loss=0.0,
                 turnover=0.0,
-                total_costs=sum((e.costs for e in self.rebalance_events), Decimal("0")),
+                total_costs=sum((e.costs for e in self.rebalance_events), Decimal(0)),
                 num_rebalances=len(self.rebalance_events),
             )
 
         # Calculate returns
         returns = equity_df["equity"].pct_change().dropna()
-        
+
         if len(returns) == 0:
             return PerformanceMetrics(
                 total_return=0.0,
@@ -633,13 +665,13 @@ class BacktestEngine:
                 avg_win=0.0,
                 avg_loss=0.0,
                 turnover=0.0,
-                total_costs=sum((e.costs for e in self.rebalance_events), Decimal("0")),
+                total_costs=sum((e.costs for e in self.rebalance_events), Decimal(0)),
                 num_rebalances=len(self.rebalance_events),
             )
 
         # Total and annualized returns
         total_return = float(
-            (equity_df["equity"].iloc[-1] / equity_df["equity"].iloc[0]) - 1
+            (equity_df["equity"].iloc[-1] / equity_df["equity"].iloc[0]) - 1,
         )
         days = len(equity_df)
         years = days / 252  # Approximate trading days per year
@@ -680,7 +712,7 @@ class BacktestEngine:
         avg_loss = float(negative_returns.mean()) if len(negative_returns) > 0 else 0.0
 
         # Turnover and costs
-        total_costs = sum((event.costs for event in self.rebalance_events), Decimal("0"))
+        total_costs = sum((event.costs for event in self.rebalance_events), Decimal(0))
         num_rebalances = len(self.rebalance_events)
 
         # Simple turnover calculation: sum of absolute trades / avg portfolio value

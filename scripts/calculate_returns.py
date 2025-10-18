@@ -1,4 +1,4 @@
-# ruff: noqa: E402, F401
+# ruff: noqa: E402
 """Command-line interface for the return preparation pipeline."""
 
 from __future__ import annotations

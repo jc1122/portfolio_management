@@ -1,4 +1,3 @@
-# ruff: noqa
 """Shared utilities for parallel execution and performance monitoring.
 
 This module provides helper functions for:

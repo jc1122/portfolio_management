@@ -1,4 +1,3 @@
-# ruff: noqa
 """Integration tests that touch the production-sized configuration."""
 
 from __future__ import annotations

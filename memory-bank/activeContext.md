@@ -36,13 +36,13 @@
 **Next Steps:**
 
 1. Implement backtest exceptions in exceptions.py
-2. Create backtest.py with data models
-3. Implement transaction cost modeling
-4. Build BacktestEngine core
-5. Add visualization module
-6. Create CLI tool
-7. Write comprehensive tests
-8. Complete documentation
+1. Create backtest.py with data models
+1. Implement transaction cost modeling
+1. Build BacktestEngine core
+1. Add visualization module
+1. Create CLI tool
+1. Write comprehensive tests
+1. Complete documentation
 
 ## Completed Phases Summary
 
