@@ -19,9 +19,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.exceptions import PortfolioManagementError
-from src.portfolio_management.returns import ReturnCalculator, ReturnConfig
-from src.portfolio_management.selection import SelectedAsset
+from portfolio_management.analytics.returns import ReturnCalculator, ReturnConfig
+from portfolio_management.assets.selection import SelectedAsset
+from portfolio_management.core.exceptions import PortfolioManagementError
 
 
 def build_parser() -> argparse.ArgumentParser:

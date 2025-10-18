@@ -24,12 +24,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.classification import (
+from portfolio_management.assets.classification import (
     AssetClassifier,
     ClassificationOverrides,
 )
-from src.portfolio_management.exceptions import PortfolioManagementError
-from src.portfolio_management.selection import SelectedAsset
+from portfolio_management.assets.selection import SelectedAsset
+from portfolio_management.core.exceptions import PortfolioManagementError
 
 LOW_CONFIDENCE_THRESHOLD = 0.6
 

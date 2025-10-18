@@ -1,23 +1,13 @@
-"""Backward compatibility shim for visualization module.
+"""Reporting and visualization package.
 
-This module has been refactored into portfolio_management.reporting.visualization.
-All imports are forwarded to the new location for backward compatibility.
+This package provides utilities for preparing backtest results for visualization
+and generating comprehensive performance reports.
 
-.. deprecated::
-    Import from ``portfolio_management.reporting.visualization`` instead.
-
-Examples:
-    Old import (still works)::
-
-        from portfolio_management.visualization import prepare_equity_curve
-
-    New import (recommended)::
-
-        from portfolio_management.reporting.visualization import prepare_equity_curve
-
+Main Modules:
+    - visualization: Data preparation utilities for charts and plots
 """
 
-from portfolio_management.reporting.visualization import (
+from .visualization import (
     create_summary_report,
     prepare_allocation_history,
     prepare_drawdown_series,

@@ -38,14 +38,14 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from portfolio_management.backtest import (
+from portfolio_management.backtesting import (
     BacktestConfig,
     BacktestEngine,
     RebalanceFrequency,
     RebalanceTrigger,
     TransactionCostModel,
 )
-from portfolio_management.exceptions import (
+from portfolio_management.core.exceptions import (
     BacktestError,
     InsufficientHistoryError,
     InvalidBacktestConfigError,
@@ -56,7 +56,7 @@ from portfolio_management.portfolio import (
     PortfolioStrategy,
     RiskParityStrategy,
 )
-from portfolio_management.visualization import (
+from portfolio_management.reporting.visualization import (
     create_summary_report,
     prepare_drawdown_series,
     prepare_equity_curve,
