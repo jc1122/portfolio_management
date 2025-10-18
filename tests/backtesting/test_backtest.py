@@ -260,8 +260,15 @@ class TestBacktestEngine:
 
         strategies: list[PortfolioStrategy] = [
             EqualWeightStrategy(),
-            RiskParityStrategy(),
         ]
+        
+        # Only test RiskParityStrategy if dependency is available
+        try:
+            import riskparityportfolio  # noqa: F401
+            strategies.append(RiskParityStrategy())
+        except ImportError:
+            pytest.skip("RiskParityStrategy requires riskparityportfolio dependency")
+        
         for strategy in strategies:
             engine = BacktestEngine(
                 config=config,
