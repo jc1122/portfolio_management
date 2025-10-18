@@ -1,0 +1,25 @@
+{
+    "python.defaultInterpreterPath": "/usr/local/python/current/bin/python",
+    "python.testing.pytestArgs": [
+        "tests",
+        "--tb=short"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.include": [
+        "src",
+        "tests",
+        "scripts"
+    ],
+    "python.analysis.exclude": [
+        "data/**",
+        "archive/**"
+    ],
+    "files.exclude": {
+        "data/": true,
+        "archive/": true,
+        "**/__pycache__": true,
+        "**/*.egg-info": true
+    }
+}

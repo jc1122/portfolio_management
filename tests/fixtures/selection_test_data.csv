@@ -1,0 +1,19 @@
+symbol,isin,name,market,region,currency,category,price_start,price_end,price_rows,data_status,data_flags,stooq_path,resolved_currency,currency_status
+TSTA.UK,GB00BFZ2M695,TEST-ASSET-A,UK,Europe,GBP,Stock,2022-01-01,2025-01-01,756,ok,"zero_volume_severity=low",d_uk_txt/data/daily/uk/tsta.txt,GBP,matched
+TSTB.US,US0000000001,TEST-ASSET-B,US,North America,USD,ETF,2024-01-01,2025-01-01,252,ok,"zero_volume_severity=low",d_us_txt/data/daily/us/tstb.txt,USD,matched
+TSTC.DE,DE0000000001,TEST-ASSET-C,DE,Europe,EUR,Stock,2020-01-01,2025-01-01,1260,ok,"",d_de_txt/data/daily/de/tstc.txt,EUR,matched
+TSTD.UK,GB00BFZ2M696,TEST-ASSET-D,UK,Europe,GBP,Stock,2022-01-01,2025-01-01,756,warning,"zero_volume_severity=moderate",d_uk_txt/data/daily/uk/tstd.txt,GBP,matched
+TSTE.US,US0000000002,TEST-ASSET-E,US,North America,USD,ETF,2024-01-01,2025-01-01,252,warning,"zero_volume_severity=high",d_us_txt/data/daily/us/tste.txt,USD,matched
+TSTF.DE,DE0000000002,TEST-ASSET-F,DE,Europe,EUR,Bond,2020-01-01,2025-01-01,1260,empty,"",d_de_txt/data/daily/de/tstf.txt,EUR,matched
+TSTG.UK,GB00BFZ2M697,TEST-ASSET-G,UK,Europe,GBP,Stock,2024-06-01,2025-01-01,147,ok,"",d_uk_txt/data/daily/uk/tstg.txt,GBP,matched
+TSTH.US,US0000000003,TEST-ASSET-H,US,North America,USD,ETF,2022-01-01,2023-01-01,252,ok,"",d_us_txt/data/daily/us/tsth.txt,USD,matched
+TSTI.DE,DE0000000003,TEST-ASSET-I,DE,Europe,EUR,Stock,2022-01-01,2025-01-01,756,ok,"zero_volume_severity=low",d_de_txt/data/daily/de/tsti.txt,EUR,matched
+TSTJ.FR,FR0000000001,TEST-ASSET-J,FR,Europe,EUR,Stock,2022-01-01,2025-01-01,756,ok,"",d_fr_txt/data/daily/fr/tstj.txt,EUR,matched
+TSTK.JP,JP0000000001,TEST-ASSET-K,JP,Asia,JPY,Stock,2022-01-01,2025-01-01,756,ok,"",d_jp_txt/data/daily/jp/tstk.txt,JPY,matched
+TSTL.UK,GB00BFZ2M698,TEST-ASSET-L,UK,Europe,GBP,ETF,2022-01-01,2022-06-01,105,ok,"",d_uk_txt/data/daily/uk/tstl.txt,GBP,matched
+TSTM.US,US0000000004,TEST-ASSET-M,US,North America,USD,Stock,invalid-date,2025-01-01,252,ok,"",d_us_txt/data/daily/us/tstm.txt,USD,matched
+TSTN.DE,DE0000000004,TEST-ASSET-N,DE,Europe,EUR,Stock,2022-01-01,2025-01-01,0,ok,"",d_de_txt/data/daily/de/tstn.txt,EUR,matched
+TSTO.UK,GB00BFZ2M699,TEST-ASSET-O,UK,Europe,GBP,Stock,2022-01-01,2025-01-01,756,ok,nan,d_uk_txt/data/daily/uk/tsto.txt,GBP,matched
+TSTP.US,US0000000005,TEST-ASSET-P,US,North America,USD,Stock,2022-01-01,2025-01-01,756,ok,"special-char-&",d_us_txt/data/daily/us/tstP.txt,USD,matched
+BLOCK.US,US0000000006,BLOCK-ME,US,North America,USD,Stock,2022-01-01,2025-01-01,756,ok,"",d_us_txt/data/daily/us/block.txt,USD,matched
+ALLOW.US,US0000000007,ALLOW-ME,US,North America,USD,Stock,2024-12-01,2025-01-01,21,warning,"",d_us_txt/data/daily/us/allow.txt,USD,matched

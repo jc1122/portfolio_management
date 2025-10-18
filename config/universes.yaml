@@ -1,0 +1,198 @@
+# Predefined universes used by the portfolio construction pipeline.
+# Each universe pairs selection filters with classification and return
+# preparation settings. See docs/universes.md for full guidance.
+
+universes:
+  core_global:
+    description: "Global core sleeve of diversified ETFs"
+    filter_criteria:
+      # High quality data only (clean files with 3+ years of history)
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 756
+      markets: ["LSE", "GBR-LSE"]
+      currencies: ["GBP"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+    classification_requirements:
+      # Retain broad asset coverage for diversified core exposure
+      asset_class: ["equity", "commodity", "real_estate"]
+      geography: ["united_kingdom", "north_america"]
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 5
+      align_method: "outer"
+      min_coverage: 0.85
+    constraints:
+      min_assets: 30
+      max_assets: 50
+
+  satellite_factor:
+    description: "Factor / satellite sleeve (growth, value, small-cap tilts)"
+    filter_criteria:
+      data_status: ["ok", "warning"]
+      min_history_days: 600
+      min_price_rows: 600
+      markets: ["GBR-LSE", "LSE", "NSQ", "NYSE"]
+      currencies: ["USD", "GBP"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nasdaq stocks/2"
+        - "nasdaq stocks/3"
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+      allowlist:
+        - ASDV:LN
+        - BATT:LN
+        - BME
+        - CTO
+        - DGRA:LN
+        - GGRP:LN
+        - GGRW
+        - GLDV:LN
+        - IDP6:LN
+        - IDVY:LN
+        - IEDY:LN
+        - R2US:LN
+        - RWAY
+        - SRG
+        - TDIV:LN
+        - UDVD:LN
+        - USVL
+        - VALU
+        - VHYL:LN
+        - WSML:LN
+    classification_requirements:
+      asset_class: ["equity"]
+      sub_class: ["growth", "value", "small_cap", "dividend"]
+    return_config:
+      method: "log"
+      frequency: "weekly"
+      handle_missing: "interpolate"
+      max_forward_fill_days: 10
+      min_periods: 5
+      align_method: "outer"
+      min_coverage: 0.4
+    constraints:
+      min_assets: 20
+      max_assets: 35
+
+  defensive:
+    description: "Defensive sleeve (income, precious metals, property)"
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 756
+      markets: ["LSE", "GBR-LSE"]
+      currencies: ["USD", "GBP"]
+      categories:
+        - "lse stocks"
+        - "lse etfs/1"
+        - "lse etfs/2"
+    classification_requirements:
+      sub_class: ["gold", "reit", "dividend"]
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "drop"
+      min_periods: 5
+      align_method: "inner"
+      min_coverage: 0.9
+    constraints:
+      min_assets: 10
+      max_assets: 20
+
+  equity_only:
+    description: "Pure equity growth sleeve (US + UK large/mid cap)"
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 756
+      markets: ["NSQ", "NYSE", "LSE", "GBR-LSE"]
+      currencies: ["USD", "GBP"]
+      categories:
+        - "nasdaq stocks/1"
+        - "nasdaq stocks/2"
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+        - "lse stocks"
+      allowlist:
+        - DAL
+        - LPX
+        - AAPL
+        - AEM
+        - CXT
+        - B
+        - ATRO
+        - DLX
+        - GNTX
+        - AXGN
+        - DLTR
+        - AU
+        - IBCP
+        - BRC
+        - BLK
+        - BDN
+        - EAT
+        - BCO
+        - BYD
+        - BXP
+        - BWA
+        - BRO
+        - BXMT
+        - BKH
+        - GPN
+        - GBCI
+        - GTY
+        - GGB
+        - BIO
+        - BHP
+        - BHE
+        - BZH
+        - BTI
+        - CBRE
+        - CBZ
+        - CYH
+        - CMC
+        - FIX
+        - COHR
+        - CNS
+        - CDE
+        - GNW
+        - IT
+        - GME
+        - BDC
+        - GEO
+        - GATX
+        - FUL
+        - FMX
+        - FLS
+        - FLO
+        - CRS
+        - CUK
+        - KMX
+        - CSL
+        - CPT
+        - CWT
+        - AJG
+        - AXL
+        - AMX
+    classification_requirements:
+      asset_class: ["equity"]
+      geography: ["north_america", "united_kingdom"]
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 5
+      align_method: "outer"
+      min_coverage: 0.7
+    constraints:
+      min_assets: 40
+      max_assets: 60

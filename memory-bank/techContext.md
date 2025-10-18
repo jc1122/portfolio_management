@@ -12,6 +12,11 @@
 - Virtual environment/Poetry for dependency isolation; Git for version control.
 - Recommend integrating basic logging (Python `logging`) and plotting backend compatible with headless runs (e.g., Agg).
 
+## Key Patterns
+
+- **Exception Hierarchy**: Custom exceptions derive from `PortfolioManagementError`, capturing missing dependencies and data directory issues with structured messages and context attributes.
+- **Type-Checking Optimization**: Type-only imports now live behind `TYPE_CHECKING` guards, reducing runtime import overhead while preserving full static analysis coverage.
+
 ## Repository Structure Constraints
 
 **CRITICAL**: This repository contains **71,379+ files**, with **70,420+ data files** in the `data/` directory (primarily CSV price files from Stooq). The `data/` directory is gitignored but present in the working directory.

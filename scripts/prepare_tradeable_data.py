@@ -23,30 +23,36 @@ Example usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import logging
 import os
-import re
+import sys
 from pathlib import Path
 
-try:
-    import pandas as pd
-except ImportError as exc:  # pragma: no cover - pandas is required for this module
+if (
+    importlib.util.find_spec("pandas") is None
+):  # pragma: no cover - runtime dependency check
     raise ImportError(
         "pandas is required to run prepare_tradeable_data.py. "
         "Please install pandas before executing this script.",
-    ) from exc
+    )
 
 LOGGER = logging.getLogger(__name__)
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-from src.portfolio_management.analysis import (
+from portfolio_management.core.utils import log_duration
+from portfolio_management.data.analysis import (
     collect_available_extensions,
     infer_currency,
     log_summary_counts,
     resolve_currency,
     summarize_price_file,
 )
-from src.portfolio_management.io import (
+from portfolio_management.data.ingestion import build_stooq_index
+from portfolio_management.data.io import (
     export_tradeable_prices,
     load_tradeable_instruments,
     read_stooq_index,
@@ -54,20 +60,40 @@ from src.portfolio_management.io import (
     write_stooq_index,
     write_unmatched_report,
 )
-from src.portfolio_management.matching import (
+from portfolio_management.data.matching import (
     annotate_unmatched_instruments,
     build_stooq_lookup,
     determine_unmatched_reason,
     match_tradeables,
 )
-from src.portfolio_management.models import (
+from portfolio_management.data.models import (
     ExportConfig,
     StooqFile,
     TradeableInstrument,
     TradeableMatch,
 )
-from src.portfolio_management.stooq import build_stooq_index
-from src.portfolio_management.utils import log_duration
+
+__all__ = [
+    "ExportConfig",
+    "StooqFile",
+    "TradeableInstrument",
+    "TradeableMatch",
+    "annotate_unmatched_instruments",
+    "build_stooq_lookup",
+    "collect_available_extensions",
+    "determine_unmatched_reason",
+    "export_tradeable_prices",
+    "infer_currency",
+    "load_tradeable_instruments",
+    "log_summary_counts",
+    "match_tradeables",
+    "read_stooq_index",
+    "resolve_currency",
+    "summarize_price_file",
+    "write_match_report",
+    "write_stooq_index",
+    "write_unmatched_report",
+]
 
 
 def parse_args() -> argparse.Namespace:
