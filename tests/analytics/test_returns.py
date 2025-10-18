@@ -8,13 +8,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from src.portfolio_management.assets.selection.selection import SelectedAsset
 from src.portfolio_management.returns import (
     PriceLoader,
     ReturnCalculator,
     ReturnConfig,
     ReturnSummary,
 )
-from src.portfolio_management.selection import SelectedAsset
 
 
 @pytest.fixture
