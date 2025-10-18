@@ -28,4 +28,4 @@ jobs:
 
       - name: Run pytest suite
         run: |
-          pytest tests/scripts/test_prepare_tradeable_data.py
+          pytest
