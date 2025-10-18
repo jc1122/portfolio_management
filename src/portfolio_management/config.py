@@ -1,37 +1,22 @@
-"""Configuration for the portfolio management toolkit."""
+"""Configuration for the portfolio management toolkit.
 
-REGION_CURRENCY_MAP = {
-    "us": "USD",
-    "world": "USD",
-    "uk": "GBP",
-    "pl": "PLN",
-    "hk": "HKD",
-    "jp": "JPY",
-    "hu": "HUF",
-}
+DEPRECATED: This module has been moved to portfolio_management.core.config.
+Import from there instead. This module is maintained for backward compatibility only.
+"""
 
-LEGACY_PREFIXES = ("L", "Q")
-SYMBOL_ALIAS_MAP: dict[tuple[str, str], list[str]] = {
-    ("FB", ".US"): ["META.US"],
-    ("BRKS", ".US"): ["AZTA.US"],
-    ("PKI", ".US"): ["RVTY.US"],
-    ("FISV", ".US"): ["FI.US"],
-    ("FBHS", ".US"): ["FBIN.US"],
-    ("NRZ", ".US"): ["RITM.US"],
-    ("DWAV", ".US"): ["QBTS.US"],
-}
+# Backward compatibility - re-export all config from core
+from .core.config import (  # noqa: F401
+    LEGACY_PREFIXES,
+    REGION_CURRENCY_MAP,
+    STOOQ_COLUMNS,
+    STOOQ_PANDAS_COLUMNS,
+    SYMBOL_ALIAS_MAP,
+)
 
-STOOQ_COLUMNS = [
-    "ticker",
-    "per",
-    "date",
-    "time",
-    "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-    "openint",
+__all__ = [
+    "REGION_CURRENCY_MAP",
+    "LEGACY_PREFIXES",
+    "SYMBOL_ALIAS_MAP",
+    "STOOQ_COLUMNS",
+    "STOOQ_PANDAS_COLUMNS",
 ]
-
-STOOQ_PANDAS_COLUMNS = ["date", "close", "volume"]
