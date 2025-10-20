@@ -121,17 +121,6 @@ class BacktestEngine:
                 asset_ticker="No data in period",
             )
 
-        # Initial rebalancing
-        first_date = period_prices.index[0].date()
-        # Use returns for initial rebalance (need at least strategy min periods)
-        initial_lookback = max(1, self.strategy.min_history_periods)
-        self._rebalance(
-            first_date,
-            period_returns.iloc[:initial_lookback],
-            period_prices.iloc[:initial_lookback],
-            RebalanceTrigger.FORCED,
-        )
-
         # Simulate each trading day
         for i in range(len(period_prices)):
             date_idx = period_prices.index[i]
@@ -142,8 +131,21 @@ class BacktestEngine:
             portfolio_value = self._calculate_portfolio_value(prices_row)
             self.equity_curve.append((date, float(portfolio_value)))
 
+            has_min_history = (i + 1) >= self.strategy.min_history_periods
+
+            if not self.rebalance_events and has_min_history:
+                lookback_returns = period_returns.iloc[: i + 1]
+                lookback_prices = period_prices.iloc[: i + 1]
+                self._rebalance(
+                    date,
+                    lookback_returns,
+                    lookback_prices,
+                    RebalanceTrigger.FORCED,
+                )
+                continue
+
             # Check for scheduled rebalancing
-            if self._should_rebalance_scheduled(date):
+            if has_min_history and self._should_rebalance_scheduled(date):
                 lookback_returns = period_returns.iloc[: i + 1]
                 lookback_prices = period_prices.iloc[: i + 1]
                 self._rebalance(

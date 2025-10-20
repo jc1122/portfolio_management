@@ -80,6 +80,14 @@ ignore = ["E501"]
 "tests/test_universes.py" = ["D"]
 "tests/core/test_utils.py" = ["D"]
 "src/portfolio_management/backtest.py" = ["FBT001", "PLR0911", "PLR2004", "C901", "PLR0912", "PLR0915", "PLC0415"]
+"src/portfolio_management/backtesting/engine/backtest.py" = [
+  "TCH003",
+  "PLR0911",
+  "PLR2004",
+  "C901",
+  "PLR0912",
+  "PLR0915",
+]
 "src/portfolio_management/filters/__init__.py" = ["D104"]
 "src/portfolio_management/strategies/__init__.py" = ["D104"]
 "src/portfolio_management/filters/selection.py" = ["TRY003", "G004", "PLR2004"]

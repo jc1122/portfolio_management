@@ -5,14 +5,22 @@ from __future__ import annotations
 import importlib
 import logging
 from collections.abc import Sequence
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
+import numpy as np
 import pandas as pd
 
-from ...core.exceptions import DependencyError, InsufficientDataError, OptimizationError
-from ..constraints.models import PortfolioConstraints
-from ..models import Portfolio
+from portfolio_management.core.exceptions import (
+    DependencyError,
+    InsufficientDataError,
+    OptimizationError,
+)
+from portfolio_management.portfolio.models import Portfolio
+
 from .base import PortfolioStrategy
+
+if TYPE_CHECKING:
+    from portfolio_management.portfolio.constraints.models import PortfolioConstraints
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +72,13 @@ class MeanVarianceStrategy(PortfolioStrategy):
         efficient_frontier_cls, expected_returns, risk_models = self._load_backend()
 
         self._validate_returns(returns)
-        mu, cov_matrix = self._estimate_moments(returns, expected_returns, risk_models)
+        prepared_returns = self._prepare_returns(returns)
+        self._validate_returns(prepared_returns)
+        mu, cov_matrix = self._estimate_moments(
+            prepared_returns,
+            expected_returns,
+            risk_models,
+        )
 
         ef = self._initialise_frontier(
             efficient_frontier_cls,
@@ -116,6 +130,23 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
         return module.EfficientFrontier, expected_returns, risk_models
 
+    def _prepare_returns(self, returns: pd.DataFrame) -> pd.DataFrame:
+        """Replace invalid observations and drop assets without complete history."""
+        sanitized = returns.replace([np.inf, -np.inf], np.nan)
+
+        # Drop assets that have missing observations in the estimation window.
+        valid_assets = sanitized.columns[sanitized.notna().all()]
+        sanitized = sanitized[valid_assets]
+
+        sanitized = sanitized.dropna(axis=0, how="any")
+        if sanitized.empty:
+            raise InsufficientDataError(
+                required_periods=self.min_history_periods,
+                available_periods=0,
+                message="No valid return observations after sanitising data.",
+            )
+        return sanitized
+
     def _validate_returns(self, returns: pd.DataFrame) -> None:
         if returns.empty:
             raise InsufficientDataError(
@@ -134,7 +165,35 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
     def _estimate_moments(self, returns: pd.DataFrame, expected_returns, risk_models):
         mu = expected_returns.mean_historical_return(returns, frequency=252)
-        cov_matrix = risk_models.sample_cov(returns, frequency=252)
+        if hasattr(risk_models, "CovarianceShrinkage"):
+            try:
+                shrinker = risk_models.CovarianceShrinkage(returns, frequency=252)
+                cov_matrix = shrinker.ledoit_wolf()
+            except (
+                ModuleNotFoundError,
+                AttributeError,
+                ImportError,
+                ValueError,
+                np.linalg.LinAlgError,
+            ):
+                cov_matrix = risk_models.sample_cov(returns, frequency=252)
+        else:
+            cov_matrix = risk_models.sample_cov(returns, frequency=252)
+
+        # Ensure covariance matrix is positive semi-definite to keep the solver stable.
+        cov_array = cov_matrix.to_numpy()
+        eigvals = np.linalg.eigvalsh(cov_array)
+        if np.any(eigvals < 0):
+            adjustment = np.eye(len(cov_matrix), dtype=float) * (
+                abs(eigvals.min()) + 1e-6
+            )
+            cov_array = cov_array + adjustment
+            cov_matrix = pd.DataFrame(
+                cov_array,
+                index=cov_matrix.index,
+                columns=cov_matrix.columns,
+            )
+
         return mu, cov_matrix
 
     def _initialise_frontier(
