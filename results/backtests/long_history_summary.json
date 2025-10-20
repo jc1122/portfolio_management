@@ -1,0 +1,50 @@
+{
+  "equal_weight": {
+    "total_return": 6.2244679197699995,
+    "annualized_return": 0.09639384503667014,
+    "annualized_volatility": 0.162312285620416,
+    "sharpe_ratio": 0.5938789209222097,
+    "sortino_ratio": 0.726080465205854,
+    "max_drawdown": -0.5078807433577583,
+    "calmar_ratio": 0.18979621948133002,
+    "expected_shortfall_95": -0.014968651211528222,
+    "win_rate": 0.5411895086811969,
+    "avg_win": 0.006574739881205,
+    "avg_loss": -0.0070549263321587515,
+    "turnover": 0.0035249969108385537,
+    "total_costs": 8184.01,
+    "num_rebalances": 84
+  },
+  "risk_parity": {
+    "total_return": 5.02183249664,
+    "annualized_return": 0.08714267008537613,
+    "annualized_volatility": 0.1397330001910995,
+    "sharpe_ratio": 0.6236370074799754,
+    "sortino_ratio": 0.7361331467540803,
+    "max_drawdown": -0.4601519908792973,
+    "calmar_ratio": 0.1893780138142107,
+    "expected_shortfall_95": -0.012866921400798953,
+    "win_rate": 0.5166235685260436,
+    "avg_win": 0.005767775433932896,
+    "avg_loss": -0.006163399143519038,
+    "turnover": 0.002756522758356974,
+    "total_costs": 7628.71,
+    "num_rebalances": 80
+  },
+  "mean_variance": {
+    "total_return": 3.4312924183,
+    "annualized_return": 0.07173605606687361,
+    "annualized_volatility": 0.12474693896145325,
+    "sharpe_ratio": 0.5750526358730135,
+    "sortino_ratio": 0.6899714109441929,
+    "max_drawdown": -0.4018503269803499,
+    "calmar_ratio": 0.17851436530094308,
+    "expected_shortfall_95": -0.011269292213455078,
+    "win_rate": 0.5068341337273735,
+    "avg_win": 0.005310932444250512,
+    "avg_loss": -0.0055081885294478335,
+    "turnover": 0.00020592079941286387,
+    "total_costs": 27267.06,
+    "num_rebalances": 80
+  }
+}

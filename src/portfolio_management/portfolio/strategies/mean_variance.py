@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import pandas as pd
+from pypfopt import objective_functions
 
 from portfolio_management.core.exceptions import (
     DependencyError,
@@ -80,23 +81,89 @@ class MeanVarianceStrategy(PortfolioStrategy):
             risk_models,
         )
 
-        ef = self._initialise_frontier(
-            efficient_frontier_cls,
-            mu,
-            cov_matrix,
-            constraints,
-        )
-        index_map = {ticker: idx for idx, ticker in enumerate(mu.index)}
+        attempts = [
+            {
+                "cov": cov_matrix,
+                "solver": None,
+                "l2_gamma": None,
+                "objective": self._objective,
+            },
+        ]
 
-        if constraints.sector_limits and asset_classes is not None:
-            self._apply_sector_limits(ef, constraints, asset_classes, index_map)
+        if self._objective == "max_sharpe":
+            reg_cov_array = (
+                cov_matrix.to_numpy() + np.eye(len(cov_matrix), dtype=float) * 1e-4
+            )
+            regularised_cov = pd.DataFrame(
+                reg_cov_array,
+                index=cov_matrix.index,
+                columns=cov_matrix.columns,
+            )
+            attempts.append(
+                {
+                    "cov": regularised_cov,
+                    "solver": "ECOS",
+                    "l2_gamma": 1e-3,
+                    "objective": "max_sharpe",
+                },
+            )
+            attempts.append(
+                {
+                    "cov": regularised_cov,
+                    "solver": "ECOS",
+                    "l2_gamma": 1e-3,
+                    "objective": "min_volatility",
+                },
+            )
 
-        if asset_classes is not None:
-            self._apply_asset_class_limits(ef, constraints, asset_classes, index_map)
+        final_weights: pd.Series | None = None
+        final_ef = None
+        last_error: OptimizationError | None = None
 
-        self._optimise_frontier(ef)
+        for attempt in attempts:
+            try:
+                candidate_ef = self._build_frontier(
+                    efficient_frontier_cls,
+                    mu,
+                    attempt["cov"],
+                    constraints,
+                    asset_classes,
+                )
+                if attempt["l2_gamma"]:
+                    candidate_ef.add_objective(
+                        objective_functions.L2_reg,
+                        gamma=attempt["l2_gamma"],
+                    )
+                if attempt["solver"]:
+                    candidate_ef._solver = attempt["solver"]
+                self._optimise_frontier(candidate_ef, objective=attempt["objective"])
+                weights_candidate = self._extract_weights(candidate_ef)
+                weight_sum = float(weights_candidate.sum())
+                if weight_sum <= 0:
+                    last_error = OptimizationError(
+                        strategy_name=self.name,
+                        message="Optimisation produced non-positive total weight.",
+                    )
+                    continue
+                final_weights = weights_candidate / weight_sum
+                final_ef = candidate_ef
+                break
+            except OptimizationError as error:
+                last_error = error
+                continue
 
-        weights = self._extract_weights(ef)
+        if final_weights is None or final_ef is None:
+            raise (
+                last_error
+                if last_error
+                else OptimizationError(
+                    strategy_name=self.name,
+                    message="Mean-variance optimisation failed for all fallback strategies.",
+                )
+            )
+
+        weights = self._enforce_weight_bounds(final_weights, constraints)
+        ef = final_ef
         # Import at runtime to avoid circular dependency
         from .risk_parity import RiskParityStrategy
 
@@ -167,7 +234,11 @@ class MeanVarianceStrategy(PortfolioStrategy):
         mu = expected_returns.mean_historical_return(returns, frequency=252)
         if hasattr(risk_models, "CovarianceShrinkage"):
             try:
-                shrinker = risk_models.CovarianceShrinkage(returns, frequency=252)
+                shrinker = risk_models.CovarianceShrinkage(
+                    returns,
+                    frequency=252,
+                    returns_data=True,
+                )
                 cov_matrix = shrinker.ledoit_wolf()
             except (
                 ModuleNotFoundError,
@@ -176,9 +247,9 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 ValueError,
                 np.linalg.LinAlgError,
             ):
-                cov_matrix = risk_models.sample_cov(returns, frequency=252)
+                cov_matrix = self._fallback_covariance(returns, risk_models)
         else:
-            cov_matrix = risk_models.sample_cov(returns, frequency=252)
+            cov_matrix = self._fallback_covariance(returns, risk_models)
 
         # Ensure covariance matrix is positive semi-definite to keep the solver stable.
         cov_array = cov_matrix.to_numpy()
@@ -188,13 +259,28 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 abs(eigvals.min()) + 1e-6
             )
             cov_array = cov_array + adjustment
-            cov_matrix = pd.DataFrame(
-                cov_array,
-                index=cov_matrix.index,
-                columns=cov_matrix.columns,
-            )
+        # Add a small jitter to improve conditioning even when matrix is PSD.
+        cov_array = cov_array + np.eye(len(cov_matrix), dtype=float) * 1e-6
+        cov_matrix = pd.DataFrame(
+            cov_array,
+            index=cov_matrix.index,
+            columns=cov_matrix.columns,
+        )
 
         return mu, cov_matrix
+
+    def _fallback_covariance(self, returns: pd.DataFrame, risk_models) -> pd.DataFrame:
+        """Compute a regularised covariance matrix without optional dependencies."""
+        cov_matrix = risk_models.sample_cov(returns, frequency=252)
+        base = cov_matrix.to_numpy()
+        diag = np.diag(np.diag(base))
+        shrinkage_intensity = 0.05
+        shrunk = (1 - shrinkage_intensity) * base + shrinkage_intensity * diag
+        return pd.DataFrame(
+            shrunk,
+            index=cov_matrix.index,
+            columns=cov_matrix.columns,
+        )
 
     def _initialise_frontier(
         self,
@@ -209,6 +295,80 @@ class MeanVarianceStrategy(PortfolioStrategy):
             cov_matrix,
             weight_bounds=(constraints.min_weight, constraints.max_weight),
         )
+
+    def _build_frontier(
+        self,
+        efficient_frontier_cls,
+        mu: pd.Series,
+        cov_matrix: pd.DataFrame,
+        constraints: PortfolioConstraints,
+        asset_classes: pd.Series | None,
+    ):
+        """Create an EfficientFrontier instance with all applicable constraints."""
+        ef = self._initialise_frontier(
+            efficient_frontier_cls,
+            mu,
+            cov_matrix,
+            constraints,
+        )
+        index_map = {ticker: idx for idx, ticker in enumerate(mu.index)}
+
+        if constraints.sector_limits and asset_classes is not None:
+            self._apply_sector_limits(ef, constraints, asset_classes, index_map)
+
+        if asset_classes is not None:
+            self._apply_asset_class_limits(ef, constraints, asset_classes, index_map)
+
+        return ef
+
+    def _enforce_weight_bounds(
+        self,
+        weights: pd.Series,
+        constraints: PortfolioConstraints,
+    ) -> pd.Series:
+        """Project weights onto the feasible region defined by portfolio constraints."""
+        projected = weights.copy()
+        upper = constraints.max_weight
+        lower = constraints.min_weight
+
+        if upper < 1.0:
+            projected = projected.clip(upper=upper)
+        if lower > 0.0:
+            projected = projected.clip(lower=lower)
+
+        target_sum = 1.0 if constraints.require_full_investment else projected.sum()
+        diff = target_sum - float(projected.sum())
+        iteration = 0
+        tolerance = 1e-8
+        max_iterations = 100
+
+        while abs(diff) > tolerance and iteration < max_iterations:
+            if diff > 0:
+                room = upper - projected
+                room = room[room > 0]
+                if room.empty:
+                    break
+                allocation = room / room.sum()
+                projected.loc[allocation.index] += allocation * diff
+            else:
+                excess = projected - lower
+                excess = excess[excess > 0]
+                if excess.empty:
+                    break
+                allocation = excess / excess.sum()
+                projected.loc[allocation.index] += allocation * diff
+
+            if upper < 1.0:
+                projected = projected.clip(upper=upper)
+            if lower > 0.0:
+                projected = projected.clip(lower=lower)
+            diff = target_sum - float(projected.sum())
+            iteration += 1
+
+        if constraints.require_full_investment and projected.sum() > 0:
+            projected = projected / projected.sum()
+
+        return projected
 
     def _apply_sector_limits(
         self,
@@ -264,11 +424,12 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 >= limit,
             )
 
-    def _optimise_frontier(self, ef) -> None:
+    def _optimise_frontier(self, ef, objective: str | None = None) -> None:
+        target_objective = objective or self._objective
         try:
-            if self._objective == "max_sharpe":
+            if target_objective == "max_sharpe":
                 ef.max_sharpe(risk_free_rate=self._risk_free_rate)
-            elif self._objective == "min_volatility":
+            elif target_objective == "min_volatility":
                 ef.min_volatility()
             else:
                 ef.efficient_risk(target_volatility=0.10)
