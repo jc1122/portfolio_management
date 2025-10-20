@@ -11,6 +11,19 @@
 **Repository State:** 🧹 Clean and organized
 **Status:** 🎉 **MODULAR MONOLITH REFACTORING COMPLETE + DOCUMENTATION CLEANUP DONE!**
 
+### 2025-10-19 Update – Synthetic Workflow Integration Tests
+
+- Implemented deterministic synthetic market generator (`tests/synthetic_data.py`) producing 50-year Stooq-style data for 40 assets with embedded validation scenarios (missing files, sparse histories, zero volume, negative prices, gaps, late starts).
+- Added comprehensive integration suite (`tests/integration/test_synthetic_workflow.py`) covering:
+  - Data preparation pipeline (indexing, matching, diagnostics, export) on synthetic fixtures.
+  - UniverseManager strict vs. balanced universes, return calculation resilience, and coverage checks.
+  - Portfolio construction across supported strategies (equal weight always; risk parity/mean-variance executed when dependencies available) with graceful handling of optimisation failures.
+  - Backtesting engine smoke tests using synthetic prices/returns.
+  - CLI smoke tests for `scripts.calculate_returns` and `scripts.construct_portfolio`.
+- Added focused strategy regression tests to enforce both success (well-conditioned multivariate-normal returns) and failure (`InsufficientDataError` with short histories) paths for optional optimisers (`PyPortfolioOpt`, `riskparityportfolio`).
+- Documented workflow plan/status in `docs/synthetic_workflow_plan.md` and added fixture usage guidance (`tests/fixtures/synthetic_workflow/README.md`).
+- New tests increase suite count by 6 integration cases; runtime ≈ 130s due to full workflow execution.
+
 ### 2025-10-18 Update (Late Evening) - DOCUMENTATION CLEANUP COMPLETE!
 
 **Documentation & Repository Cleanup - Phase 10:**

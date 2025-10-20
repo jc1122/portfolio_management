@@ -29,17 +29,12 @@ from portfolio_management.reporting.visualization import (
 def sample_equity_df() -> pd.DataFrame:
     """Create a sample equity DataFrame for testing."""
     dates = pd.to_datetime(pd.date_range("2020-01-01", periods=100, freq="D"))
-    equity_values = (
-        100000
-        * (
-            1
-            + pd.Series(range(100)) / 1000
-            + np.random.default_rng().standard_normal(100) * 0.01
-        ).cumprod()
-    )
+    trend = 100000 + np.linspace(0, 20000, 100)
+    oscillation = 2000 * np.sin(np.linspace(0, 10, 100))
+    equity_values = trend + oscillation
     equity_df = pd.DataFrame({"equity": equity_values, "date": dates})
-    # Introduce a drawdown
-    equity_df.loc[50:70, "equity"] = equity_df.loc[50:70, "equity"] * 0.95
+    # Introduce a pronounced drawdown that exceeds -100%.
+    equity_df.loc[55:57, "equity"] = -500.0
     return equity_df
 
 

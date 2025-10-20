@@ -10,6 +10,17 @@
 **Current Focus:** System ready for production deployment or future enhancements
 **Next Options:** Production deployment, additional features, or new capabilities
 
+### Latest Update – 2025-10-19 (Synthetic Workflow Validation)
+
+- Added deterministic synthetic Stooq dataset generator `tests/synthetic_data.py` covering 40 assets across equities, bonds, REITs, and alternatives with embedded data-quality edge cases (missing files, sparse histories, zero volume, negative prices, gaps).
+- Introduced `tests/integration/test_synthetic_workflow.py` to exercise the full offline workflow:
+  - Data preparation (indexing, matching, diagnostics, exports) on synthetic fixtures.
+  - Universe loading (strict vs. balanced), return calculation resilience, and coverage assertions.
+  - Portfolio construction across available strategies (equal weight mandatory; risk parity/mean-variance executed when dependencies present).
+  - Backtesting engine runs and CLI smoke tests for `calculate_returns` and `construct_portfolio`.
+- Added dedicated strategy regression tests ensuring optional dependencies execute both successful optimisations (well-conditioned multivariate normal returns) and expected rejections (`InsufficientDataError`) when history is too short.
+- Documented plan and status in `docs/synthetic_workflow_plan.md`; fixtures guidance added under `tests/fixtures/synthetic_workflow/README.md`.
+
 ### Latest Update – 2025-10-18 (Night - GitHub Actions CI Fix)
 
 **Fixed GitHub Actions Test Collection Issue:**
