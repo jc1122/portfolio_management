@@ -8,7 +8,18 @@ and three CSV files describing the tradeable universes. It performs the followin
 3. Match tradeable instruments to Stooq tickers using heuristic symbol mapping.
 4. Export matched price histories and emit reports for matched/unmatched assets.
 
+Incremental Resume Feature:
+    The --incremental flag enables smart caching to skip redundant processing when
+    inputs haven't changed. The script tracks:
+    - Stooq index file hash
+    - Tradeable CSV directory hash (file names and modification times)
+    
+    When both inputs are unchanged and output files exist, processing is skipped
+    entirely, completing in seconds instead of minutes. Use --force-reindex to
+    override the cache.
+
 Example usage:
+    # First run - builds everything
     python scripts/prepare_tradeable_data.py \
         --data-dir data/stooq \
         --metadata-output data/metadata/stooq_index.csv \
@@ -17,7 +28,15 @@ Example usage:
         --unmatched-report data/metadata/tradeable_unmatched.csv \
         --prices-output data/processed/tradeable_prices \
         --max-workers 8 \
-        --overwrite-prices
+        --incremental
+    
+    # Second run - skips if unchanged (completes in seconds)
+    python scripts/prepare_tradeable_data.py \
+        --incremental
+    
+    # Force full rebuild
+    python scripts/prepare_tradeable_data.py \
+        --force-reindex
 """
 
 from __future__ import annotations
@@ -45,6 +64,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from portfolio_management.core.utils import log_duration
+from portfolio_management.data import cache
 from portfolio_management.data.analysis import (
     collect_available_extensions,
     infer_currency,
@@ -176,6 +196,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="Number of threads for directory indexing (0 falls back to --max-workers).",
     )
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Enable incremental resume: skip processing if inputs unchanged and outputs exist.",
+    )
+    parser.add_argument(
+        "--cache-metadata",
+        type=Path,
+        default=Path("data/metadata/.prepare_cache.json"),
+        help="Path to cache metadata file for incremental resume.",
+    )
     return parser
 
 
@@ -300,9 +331,43 @@ def prepare_tradeable_data(args: argparse.Namespace) -> None:
         cpu_count,
     )
 
+    # Check for incremental resume opportunity
+    if args.incremental:
+        cache_metadata = cache.load_cache_metadata(args.cache_metadata)
+        
+        # Check if we can skip processing
+        if (
+            cache.inputs_unchanged(
+                args.tradeable_dir,
+                args.metadata_output,
+                cache_metadata,
+            )
+            and cache.outputs_exist(args.match_report, args.unmatched_report)
+        ):
+            LOGGER.info(
+                "Incremental resume: inputs unchanged and outputs exist - skipping processing"
+            )
+            LOGGER.info("Match report: %s", args.match_report)
+            LOGGER.info("Unmatched report: %s", args.unmatched_report)
+            LOGGER.info(
+                "To force full rebuild, use --force-reindex or omit --incremental"
+            )
+            return
+        
+        LOGGER.info("Incremental resume: inputs changed or outputs missing - running full pipeline")
+
     stooq_index = _handle_stooq_index(args, index_workers)
     matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
     _generate_reports(matches, unmatched, args, data_dir, max_workers)
+    
+    # Save cache metadata for next run if incremental mode enabled
+    if args.incremental:
+        new_cache_metadata = cache.create_cache_metadata(
+            args.tradeable_dir,
+            args.metadata_output,
+        )
+        cache.save_cache_metadata(args.cache_metadata, new_cache_metadata)
+        LOGGER.debug("Saved cache metadata for future incremental resumes")
 
 
 def run_cli(args: argparse.Namespace) -> int:

@@ -5,6 +5,7 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 ## Current Capabilities
 
 - Offline-first data pipeline that ingests Stooq exports, validates quality, and produces tradeable match reports with diagnostics.
+- **Incremental resume** for data preparation - skips redundant processing when inputs unchanged, reducing runtime from minutes to seconds.
 - Production-ready asset selection, classification, return preparation, and universe management CLIs with defensive validation and rich logging.
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
 - 200+ automated tests (unit, CLI, integration, performance smoke) covering the full data-to-portfolio stack.
@@ -140,8 +141,21 @@ python scripts/prepare_tradeable_data.py \
     --match-report data/metadata/tradeable_matches.csv \
     --unmatched-report data/metadata/tradeable_unmatched.csv \
     --prices-output data/processed/tradeable_prices \
+    --incremental \
     --overwrite-prices --force-reindex
 ```
+
+### Incremental Resume (New!)
+
+The `--incremental` flag enables smart caching that dramatically speeds up repeated runs:
+
+- **First run**: Processes everything normally (≈3-5 minutes for 500 instruments, 70k+ files)
+- **Subsequent runs**: If inputs haven't changed, completes in **< 5 seconds** by reusing cached outputs
+- **Automatic invalidation**: Detects when tradeable CSVs or Stooq index change and rebuilds automatically
+
+To force a full rebuild, use `--force-reindex` or omit `--incremental`.
+
+See [`docs/incremental_resume.md`](docs/incremental_resume.md) for detailed documentation.
 
 The first run builds a cached index (≈40 s for ~62k files); subsequent runs can omit `--force-reindex` for \<3 s incremental updates.
 
