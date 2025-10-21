@@ -80,8 +80,12 @@ def process_chunked(
         except AssetSelectionError as e:
             # If this chunk had no matching allowlist items, that's OK in chunked mode
             # We'll validate the complete allowlist at the end
-            if required_allowlist and "No assets matched the provided allowlist" in str(
-                e,
+            if (
+                required_allowlist
+                and "No assets matched the provided allowlist"
+                in str(
+                    e,
+                )
             ):
                 logger.debug(
                     "Chunk %s contained no allowlist items (expected in streaming mode)",
@@ -95,7 +99,10 @@ def process_chunked(
         # Track found allowlist items
         if required_allowlist:
             for asset in selected_assets:
-                if asset.symbol in required_allowlist or asset.isin in required_allowlist:
+                if (
+                    asset.symbol in required_allowlist
+                    or asset.isin in required_allowlist
+                ):
                     found_allowlist_items.add(asset.symbol)
                     found_allowlist_items.add(asset.isin)
 
