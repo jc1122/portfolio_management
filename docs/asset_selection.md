@@ -86,3 +86,43 @@ python scripts/select_assets.py \
 - `--blocklist`: Path to a file with symbols/ISINs to exclude.
 - `--verbose`: Enable detailed logging output.
 - `--dry-run`: Show a summary of what would be selected without writing any files.
+- `--chunk-size`: Enable streaming mode with the specified chunk size (e.g., `5000`). When not specified, loads the entire file into memory (default behavior).
+
+## Memory Management: Streaming Mode
+
+For large match reports (tens of thousands of rows or more), the script offers a **streaming mode** that processes the CSV file in configurable chunks rather than loading it all into memory at once.
+
+### When to Use Streaming Mode
+
+- **Large Files**: Match reports with tens of thousands of rows
+- **Memory-Constrained Environments**: When running on systems with limited RAM
+- **Production Pipelines**: When consistent memory usage is critical
+
+### How to Enable Streaming Mode
+
+Use the `--chunk-size` parameter to specify how many rows to process at a time:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/selected_assets.csv \
+    --min-history-days 730 \
+    --markets "LSE,NYSE,NSQ" \
+    --data-status "ok" \
+    --chunk-size 5000
+```
+
+### Streaming Mode Guarantees
+
+- **Identical Results**: Streaming mode produces exactly the same output as eager loading
+- **Bounded Memory**: Memory usage is limited to processing `chunk-size` rows at a time
+- **Allowlist Validation**: When using `--allowlist`, the script validates that all required symbols are found across all chunks and raises an error if any are missing
+- **Blocklist Support**: The blocklist is applied to each chunk independently
+
+### Performance Considerations
+
+- **Chunk Size**: Typical values range from 1,000 to 10,000 rows
+  - Smaller chunks: Lower memory usage, more overhead
+  - Larger chunks: Higher memory usage, less overhead
+- **Default Behavior**: When `--chunk-size` is not specified, the script uses eager loading (loads entire file)
+- **Recommendation**: Start with `--chunk-size 5000` for files over 50,000 rows
