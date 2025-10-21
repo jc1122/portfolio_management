@@ -36,4 +36,4 @@ coverage.json
 
 # Misc
 .DS_Store
-data/
+/data/
