@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import logging
+import os
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import TYPE_CHECKING
+from threading import Lock
+from typing import TYPE_CHECKING, Iterable
 
 import pandas as pd
 
@@ -16,6 +20,11 @@ logger = logging.getLogger(__name__)
 
 class PriceLoader:
     """Utilities for reading price files into pandas objects."""
+
+    def __init__(self, max_workers: int | None = None):
+        self.max_workers = max_workers
+        self._cache: dict[Path, pd.Series] = {}
+        self._cache_lock = Lock()
 
     def load_price_file(self, path: Path) -> pd.Series:
         """Load a single price file into a ``Series`` indexed by date."""
@@ -97,36 +106,44 @@ class PriceLoader:
             len(assets),
             prices_dir,
         )
-        all_prices: dict[str, pd.Series] = {}
+        symbol_to_path: dict[str, Path] = {}
+        path_to_symbols: dict[Path, list[str]] = defaultdict(list)
+
         for asset in assets:
-            price_path = prices_dir / asset.stooq_path
-            if not price_path.exists():
-                alt_name = Path(asset.stooq_path).stem.lower()
-                alt_path = prices_dir / f"{alt_name}.csv"
-                if alt_path.exists():
-                    price_path = alt_path
-                else:
-                    logger.warning(
-                        "Price file not found for %s (%s)",
-                        asset.symbol,
-                        price_path,
-                    )
-                    continue
-
-            try:
-                prices = self.load_price_file(price_path)
-            except Exception as exc:  # pragma: no cover - defensive logging
-                logger.error("Failed to load %s: %s", price_path, exc)
+            resolved_path = self._resolve_price_path(prices_dir, asset)
+            if resolved_path is None:
                 continue
+            symbol_to_path[asset.symbol] = resolved_path
+            path_to_symbols[resolved_path].append(asset.symbol)
 
-            if prices.empty:
-                logger.warning(
-                    "Skipping %s because the price series is empty",
-                    asset.symbol,
-                )
+        if not symbol_to_path:
+            logger.warning("No price files were successfully resolved")
+            return pd.DataFrame()
+
+        unique_paths = list(path_to_symbols.keys())
+        logger.debug("Resolved %d unique price files", len(unique_paths))
+
+        price_series: dict[Path, pd.Series] = {}
+        tasks = self._submit_load_tasks(unique_paths)
+        for path, series in tasks:
+            if series is None or series.empty:
+                logger.warning("Skipping %s because the price series is empty", path)
                 continue
+            price_series[path] = series
 
-            all_prices[asset.symbol] = prices
+        if not price_series:
+            logger.warning("No price files were successfully loaded")
+            return pd.DataFrame()
+
+        all_prices: dict[str, pd.Series] = {}
+        for path, symbols in path_to_symbols.items():
+            series = price_series.get(path)
+            if series is None or series.empty:
+                missing = ", ".join(symbols[:5])
+                logger.warning("Price data missing for assets: %s", missing)
+                continue
+            for symbol in symbols:
+                all_prices[symbol] = series
 
         if not all_prices:
             logger.warning("No price files were successfully loaded")
@@ -135,3 +152,74 @@ class PriceLoader:
         df = pd.DataFrame(all_prices).sort_index()
         logger.info("Loaded price matrix with shape %s", df.shape)
         return df
+
+    def _load_price_with_cache(self, path: Path) -> pd.Series:
+        with self._cache_lock:
+            cached = self._cache.get(path)
+        if cached is not None:
+            return cached
+
+        series = self.load_price_file(path)
+        if not series.empty:
+            with self._cache_lock:
+                self._cache[path] = series
+        return series
+
+    def _submit_load_tasks(
+        self, paths: Iterable[Path]
+    ) -> list[tuple[Path, pd.Series | None]]:
+        paths = list(paths)
+        if not paths:
+            return []
+
+        # If only one path or concurrency disabled, fall back to sequential loading.
+        if len(paths) == 1 or (self.max_workers is not None and self.max_workers <= 1):
+            return [(path, self._load_price_with_cache(path)) for path in paths]
+
+        max_workers = self.max_workers
+        if max_workers is None:
+            cpu_count = os.cpu_count() or 1
+            max_workers = min(32, cpu_count * 5, len(paths))
+        else:
+            max_workers = min(max_workers, len(paths))
+
+        if max_workers <= 1:
+            return [(path, self._load_price_with_cache(path)) for path in paths]
+
+        results: list[tuple[Path, pd.Series | None]] = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_path = {
+                executor.submit(self._load_price_with_cache, path): path
+                for path in paths
+            }
+            for future in as_completed(future_to_path):
+                path = future_to_path[future]
+                try:
+                    series = future.result()
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    logger.error("Failed to load %s: %s", path, exc)
+                    series = None
+                results.append((path, series))
+
+        return results
+
+    def _resolve_price_path(
+        self,
+        prices_dir: Path,
+        asset: "SelectedAsset",
+    ) -> Path | None:
+        price_path = prices_dir / asset.stooq_path
+        if price_path.exists():
+            return price_path
+
+        alt_name = Path(asset.stooq_path).stem.lower()
+        alt_path = prices_dir / f"{alt_name}.csv"
+        if alt_path.exists():
+            return alt_path
+
+        logger.warning(
+            "Price file not found for %s (%s)",
+            asset.symbol,
+            price_path,
+        )
+        return None
