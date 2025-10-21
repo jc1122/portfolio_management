@@ -22,7 +22,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.assets.universes import UniverseManager
+from portfolio_management.assets.universes import (
+    UniverseConfigLoader,
+    UniverseManager,
+)
 from portfolio_management.core.exceptions import PortfolioManagementError
 
 
@@ -87,7 +90,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:  # noqa: C901
+def main() -> None:  # noqa: C901, PLR0912
     """Run the universe management CLI."""
     args = get_args()
 
@@ -97,39 +100,48 @@ def main() -> None:  # noqa: C901
     )
 
     try:
-        matches_df = pd.read_csv(args.matches)
-        manager = UniverseManager(args.config, matches_df, args.prices_dir)
+        # For lightweight commands, only load the config
+        if args.command in ("list", "show"):
+            universes = UniverseConfigLoader.load_config(args.config)
 
-        if args.command == "list":
-            print("Available universes:")  # noqa: T201
-            for name in manager.list_universes():
-                print(f"- {name}")  # noqa: T201
+            if args.command == "list":
+                print("Available universes:")  # noqa: T201
+                for name in universes:
+                    print(f"- {name}")  # noqa: T201
 
-        elif args.command == "show":
-            definition = manager.get_definition(args.name)
-            print(f"--- Universe: {args.name} ---")  # noqa: T201
-            print(definition)  # noqa: T201
+            elif args.command == "show":
+                if args.name not in universes:
+                    logging.error("Universe '%s' not found in configuration.", args.name)
+                    sys.exit(1)
+                definition = universes[args.name]
+                print(f"--- Universe: {args.name} ---")  # noqa: T201
+                print(definition)  # noqa: T201
 
-        elif args.command == "load":
-            universe = manager.load_universe(args.name)
-            if universe:
-                for key, df in universe.items():
-                    if isinstance(df, pd.DataFrame):
-                        df.to_csv(
-                            args.output_dir / f"{args.name}_{key}.csv",
-                            index=False,
-                        )
-                print(  # noqa: T201
-                    f"Universe '{args.name}' loaded and exported to {args.output_dir}",
-                )
+        # For heavy commands, load the full manager with data
+        else:
+            matches_df = pd.read_csv(args.matches)
+            manager = UniverseManager(args.config, matches_df, args.prices_dir)
 
-        elif args.command == "compare":
-            comparison_df = manager.compare_universes(args.names)
-            print(comparison_df.to_string())  # noqa: T201
+            if args.command == "load":
+                universe = manager.load_universe(args.name)
+                if universe:
+                    for key, df in universe.items():
+                        if isinstance(df, pd.DataFrame):
+                            df.to_csv(
+                                args.output_dir / f"{args.name}_{key}.csv",
+                                index=False,
+                            )
+                    print(  # noqa: T201
+                        f"Universe '{args.name}' loaded and exported to {args.output_dir}",
+                    )
 
-        elif args.command == "validate":
-            result = manager.validate_universe(args.name)
-            print(result)  # noqa: T201
+            elif args.command == "compare":
+                comparison_df = manager.compare_universes(args.names)
+                print(comparison_df.to_string())  # noqa: T201
+
+            elif args.command == "validate":
+                result = manager.validate_universe(args.name)
+                print(result)  # noqa: T201
 
     except PortfolioManagementError:
         logging.exception("Universe management failed")
