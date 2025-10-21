@@ -4,12 +4,35 @@
 This script provides a command-line interface for filtering and selecting assets
 from a tradeable matches report based on specified criteria.
 
-Example:
+The script supports two modes of operation:
+
+1. **Eager Loading (Default)**: Loads the entire CSV file into memory at once.
+   Best for small to medium-sized files or when memory is not a constraint.
+
+2. **Streaming Mode**: Processes the CSV in configurable chunks to reduce memory
+   usage. Enable with --chunk-size parameter. Best for large files (tens of
+   thousands of rows) or memory-constrained environments.
+
+Example (Eager Loading):
     python scripts/select_assets.py \
         --match-report data/metadata/tradeable_matches.csv \
         --output /tmp/selected_assets.csv \
         --min-history-days 365 \
         --markets UK,US
+
+Example (Streaming Mode):
+    python scripts/select_assets.py \
+        --match-report data/metadata/tradeable_matches.csv \
+        --output /tmp/selected_assets.csv \
+        --min-history-days 365 \
+        --markets UK,US \
+        --chunk-size 5000
+
+Note on Streaming Mode:
+    - Results are identical to eager loading mode
+    - Memory usage is bounded by chunk_size (e.g., 5000 rows at a time)
+    - Allowlist validation ensures all required symbols are found across all chunks
+    - Blocklist is applied to each chunk independently
 
 """
 
