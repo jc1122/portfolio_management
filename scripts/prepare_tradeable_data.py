@@ -27,6 +27,7 @@ import importlib.util
 import logging
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 if (
@@ -96,8 +97,8 @@ __all__ = [
 ]
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
+def build_parser() -> argparse.ArgumentParser:
+    """Create the CLI argument parser."""
     parser = argparse.ArgumentParser(description="Prepare tradeable Stooq datasets.")
     parser.add_argument(
         "--data-dir",
@@ -175,7 +176,12 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Number of threads for directory indexing (0 falls back to --max-workers).",
     )
-    return parser.parse_args()
+    return parser
+
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments."""
+    return build_parser().parse_args(argv)
 
 
 def configure_logging(level: str) -> None:
@@ -220,7 +226,7 @@ def _load_and_match_tradeables(stooq_index, args, max_workers):
     return matches, unmatched
 
 
-def _generate_reports(matches, unmatched, args, data_dir):
+def _generate_reports(matches, unmatched, args, data_dir, max_workers):
     with log_duration("tradeable_match_report"):
         (
             diagnostics_cache,
@@ -233,6 +239,7 @@ def _generate_reports(matches, unmatched, args, data_dir):
             args.match_report,
             data_dir,
             lse_currency_policy=args.lse_currency_policy,
+            max_workers=max_workers,
         )
     log_summary_counts(currency_counts, data_status_counts)
     if empty_tickers:
@@ -270,11 +277,8 @@ def _export_prices(matches, args, diagnostics_cache, max_workers):
         export_tradeable_prices(matches, config)
 
 
-def main() -> None:
+def prepare_tradeable_data(args: argparse.Namespace) -> None:
     """Run the end-to-end tradeable data preparation workflow."""
-    args = parse_args()
-    configure_logging(args.log_level)
-
     data_dir = args.data_dir
     cpu_count = os.cpu_count() or 1
     auto_workers = max(1, (cpu_count - 1) or 1)
@@ -297,9 +301,26 @@ def main() -> None:
 
     stooq_index = _handle_stooq_index(args, index_workers)
     matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
-    diagnostics_cache = _generate_reports(matches, unmatched, args, data_dir)
+    diagnostics_cache = _generate_reports(matches, unmatched, args, data_dir, max_workers)
     _export_prices(matches, args, diagnostics_cache, max_workers)
 
 
-if __name__ == "__main__":
+def run_cli(args: argparse.Namespace) -> int:
+    """Execute the CLI workflow with logging and error handling."""
+    configure_logging(args.log_level)
+    try:
+        prepare_tradeable_data(args)
+    except Exception:  # pragma: no cover - defensive
+        LOGGER.exception("Tradeable data preparation failed")
+        return 1
+    return 0
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    """CLI entry point."""
+    args = parse_args(argv)
+    sys.exit(run_cli(args))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry point
     main()
