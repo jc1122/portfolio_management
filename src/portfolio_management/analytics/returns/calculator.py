@@ -153,28 +153,36 @@ class ReturnCalculator:
         if eligible_columns.empty:
             return pd.DataFrame()
 
-        filtered_prices = prices[eligible_columns]
-        long_prices = filtered_prices.stack(future_stack=True).dropna()
+        filtered_prices = prices[eligible_columns].sort_index()
+        shifted = filtered_prices.shift(1)
 
-        if long_prices.empty:
-            return pd.DataFrame()
+        with np.errstate(divide="ignore", invalid="ignore"):
+            if config.method == "log":
+                returns = np.log(filtered_prices / shifted)
+            else:
+                returns = (filtered_prices / shifted) - 1
+                if config.method == "excess":
+                    daily_rf = (1 + config.risk_free_rate) ** (1 / 252) - 1
+                    returns = returns - daily_rf
 
-        grouped = long_prices.groupby(level=1)
-        previous = grouped.shift(1)
+        returns = returns.replace([np.inf, -np.inf], np.nan)
+        returns = returns.dropna(how="all")
+        returns = returns.dropna(axis=1, how="all")
 
-        if config.method == "log":
-            returns = np.log(long_prices / previous)
-        else:
-            returns = (long_prices / previous) - 1
-            if config.method == "excess":
-                daily_rf = (1 + config.risk_free_rate) ** (1 / 252) - 1
-                returns = returns - daily_rf
-
-        returns = returns.dropna()
         if returns.empty:
             return pd.DataFrame()
 
-        extreme_counts = (returns.abs() > 1).groupby(level=1).sum()
+        nonzero_counts = returns.count()
+        empty_returns = nonzero_counts[nonzero_counts == 0].index.tolist()
+        if empty_returns:
+            for symbol in empty_returns:
+                logger.warning("No returns generated for %s; skipping", symbol)
+            returns = returns.drop(columns=empty_returns)
+
+        if returns.empty:
+            return pd.DataFrame()
+
+        extreme_counts = (returns.abs() > 1).sum()
         for symbol, count in extreme_counts.items():
             if count:
                 logger.warning(
@@ -183,8 +191,8 @@ class ReturnCalculator:
                     symbol,
                 )
 
-        returns_df = returns.unstack(level=1).sort_index()
-        return returns_df
+        returns = returns.sort_index()
+        return returns
 
     def _handle_missing_forward_fill(
         self,
@@ -229,7 +237,8 @@ class ReturnCalculator:
         if prices.empty:
             return prices
 
-        initial_missing = int(prices.isna().sum().sum())
+        missing_mask = prices.isna()
+        initial_missing = int(missing_mask.to_numpy().sum())
         if initial_missing == 0:
             logger.debug("No missing data detected")
             return prices

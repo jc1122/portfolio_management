@@ -20,6 +20,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from portfolio_management.analytics.returns import ReturnCalculator, ReturnConfig
+from portfolio_management.analytics.returns.loaders import PriceLoader
 from portfolio_management.assets.selection import SelectedAsset
 from portfolio_management.core.exceptions import PortfolioManagementError
 
@@ -83,6 +84,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimum number of price observations required per asset",
     )
     parser.add_argument(
+        "--loader-workers",
+        type=int,
+        default=None,
+        help="Maximum worker threads for price loading (default: auto)",
+    )
+    parser.add_argument(
         "--align-method",
         choices=["outer", "inner"],
         default="outer",
@@ -129,14 +136,15 @@ def _load_assets(csv_path: Path) -> list[SelectedAsset]:
     if not csv_path.exists():
         raise FileNotFoundError(f"Assets file not found: {csv_path}")  # noqa: TRY003
 
-    assets_df = pd.read_csv(csv_path)
-    assets: list[SelectedAsset] = []
-    for row in assets_df.to_dict("records"):
-        cleaned = {key: ("" if pd.isna(value) else value) for key, value in row.items()}
-        if "price_rows" in cleaned:
-            cleaned["price_rows"] = int(cleaned["price_rows"])
-        assets.append(SelectedAsset(**cleaned))
-    return assets
+    assets_df = pd.read_csv(csv_path, keep_default_na=False)
+    if "price_rows" in assets_df.columns:
+        assets_df["price_rows"] = pd.to_numeric(
+            assets_df["price_rows"],
+            errors="coerce",
+        ).fillna(0).astype(int)
+
+    records = assets_df.to_dict("records")
+    return [SelectedAsset(**record) for record in records]
 
 
 def _build_config(args: argparse.Namespace) -> ReturnConfig:
@@ -221,7 +229,8 @@ def run_cli(args: argparse.Namespace) -> int:
 
     config = _build_config(args)
 
-    calculator = ReturnCalculator()
+    price_loader = PriceLoader(max_workers=args.loader_workers)
+    calculator = ReturnCalculator(price_loader=price_loader)
     try:
         returns_df = calculator.load_and_prepare(assets, args.prices_dir, config)
     except PortfolioManagementError:
