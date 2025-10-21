@@ -16,6 +16,7 @@
 - Documented the risk parity inverse-volatility fallback and mean-variance analytic tangency guard rails that keep 1,000-asset universes stable.
 - Refreshed backtesting docs to highlight the normalised visualization exports (`viz_equity_curve.csv`, `viz_drawdown.csv`, `viz_rolling_metrics.csv`) so chart generation no longer produces blank plots.
 - Logged the `long_history_1000` universe refresh (long-gap tickers removed, 2005-02-25 start) and captured where the derived prices/returns live under `outputs/long_history_1000/` (returns published as `long_history_1000_returns_daily.csv.gz`).
+- Reorganised repository documentation: architecture specifications now live under `docs/architecture/`, tooling notes under `docs/tooling/`, the test-suite overview under `docs/testing/overview.md`, and historical cleanup/metrics reports were archived (`archive/cleanup/`, `archive/meta/`, `archive/reports/`). Root directory trimmed to just `README.md` and `AGENTS.md` for active guidance.
 
 ### 2025-10-19 Update – Synthetic Workflow Integration Tests
 

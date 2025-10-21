@@ -16,6 +16,7 @@
 - Documented the large-universe safeguards for both risk parity and mean-variance strategies, referencing the newly refreshed `long_history_1000` dataset.
 - Confirmed the `long_history_1000` roster now excludes long-gap tickers and delivers clean daily prices/returns (2005-02-25 onward) under `outputs/long_history_1000/` (returns stored as the compressed `long_history_1000_returns_daily.csv.gz`).
 - Updated the backtest CLI guidance to note the normalised visualization exports that keep equity and drawdown charts populated.
+- Sanitised repository documentation: moved architecture specs to `docs/architecture/`, tooling references to `docs/tooling/`, testing overview to `docs/testing/overview.md`, and archived historical cleanup/metrics memos under `archive/`. Root now only exposes `README.md` and `AGENTS.md` for active reference.
 
 ### Latest Update – 2025-10-19 (Synthetic Workflow Validation)
 
