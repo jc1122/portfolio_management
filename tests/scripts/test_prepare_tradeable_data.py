@@ -113,17 +113,29 @@ def pipeline_result(
     )
     assert not unmatched, "Fixture subset should have complete matches"
 
+    export_dir = session_tmp_path / "exports"
+    export_dir.mkdir(parents=True, exist_ok=True)
+
     (
         diagnostics,
         currency_counts,
         data_status_counts,
         empty_tickers,
         flagged_records,
+        exported_count,
+        skipped_count,
     ) = ptd.write_match_report(
         matches,
         report_path,
         STOOQ_FIXTURES,
         lse_currency_policy="broker",
+        export_config=ptd.ExportConfig(
+            data_dir=STOOQ_FIXTURES,
+            dest_dir=export_dir,
+            overwrite=True,
+            include_empty=True,
+            max_workers=8,
+        ),
     )
     report_df = pd.read_csv(report_path)
 
@@ -136,6 +148,9 @@ def pipeline_result(
         "flagged_records": flagged_records,
         "report_df": report_df,
         "report_path": report_path,
+        "exported_count": exported_count,
+        "skipped_count": skipped_count,
+        "export_dir": export_dir,
     }
 
     matches, unmatched = ptd.match_tradeables(
@@ -193,6 +208,8 @@ def test_match_report_matches_fixture(
     expected_sorted = expected.sort_values("matched_ticker").reset_index(drop=True)
 
     pd.testing.assert_frame_equal(actual_sorted, expected_sorted, check_dtype=True)
+    assert pipeline_result["exported_count"] == len(expected_match_report)
+    assert pipeline_result["skipped_count"] == 0
 
 
 def test_match_report_summaries(

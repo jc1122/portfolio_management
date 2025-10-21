@@ -227,6 +227,14 @@ def _load_and_match_tradeables(stooq_index, args, max_workers):
 
 
 def _generate_reports(matches, unmatched, args, data_dir, max_workers):
+    export_config = ExportConfig(
+        data_dir=args.data_dir,
+        dest_dir=args.prices_output,
+        overwrite=args.overwrite_prices,
+        max_workers=max_workers,
+        include_empty=args.include_empty_prices,
+    )
+    export_config.dest_dir.mkdir(parents=True, exist_ok=True)
     with log_duration("tradeable_match_report"):
         (
             diagnostics_cache,
@@ -234,12 +242,15 @@ def _generate_reports(matches, unmatched, args, data_dir, max_workers):
             data_status_counts,
             empty_tickers,
             flagged_samples,
+            exported_count,
+            skipped_count,
         ) = write_match_report(
             matches,
             args.match_report,
             data_dir,
             lse_currency_policy=args.lse_currency_policy,
             max_workers=max_workers,
+            export_config=export_config,
         )
     log_summary_counts(currency_counts, data_status_counts)
     if empty_tickers:
@@ -261,20 +272,10 @@ def _generate_reports(matches, unmatched, args, data_dir, max_workers):
         )
     with log_duration("tradeable_unmatched_report"):
         write_unmatched_report(unmatched, args.unmatched_report)
+    LOGGER.info("Exported %s price files to %s", exported_count, export_config.dest_dir)
+    if skipped_count:
+        LOGGER.warning("Skipped %s price files without usable data", skipped_count)
     return diagnostics_cache
-
-
-def _export_prices(matches, args, diagnostics_cache, max_workers):
-    with log_duration("tradeable_export"):
-        config = ExportConfig(
-            data_dir=args.data_dir,
-            dest_dir=args.prices_output,
-            overwrite=args.overwrite_prices,
-            max_workers=max_workers,
-            diagnostics=diagnostics_cache,
-            include_empty=args.include_empty_prices,
-        )
-        export_tradeable_prices(matches, config)
 
 
 def prepare_tradeable_data(args: argparse.Namespace) -> None:
@@ -301,8 +302,7 @@ def prepare_tradeable_data(args: argparse.Namespace) -> None:
 
     stooq_index = _handle_stooq_index(args, index_workers)
     matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
-    diagnostics_cache = _generate_reports(matches, unmatched, args, data_dir, max_workers)
-    _export_prices(matches, args, diagnostics_cache, max_workers)
+    _generate_reports(matches, unmatched, args, data_dir, max_workers)
 
 
 def run_cli(args: argparse.Namespace) -> int:

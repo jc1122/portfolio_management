@@ -17,10 +17,26 @@ Key functions:
 
 from __future__ import annotations
 
+import collections
 import logging
-from typing import TYPE_CHECKING
+import pathlib
+from dataclasses import asdict, dataclass
+from typing import Sequence
 
-from ...core.exceptions import DependencyNotInstalledError
+from portfolio_management.core.config import STOOQ_COLUMNS
+from portfolio_management.core.exceptions import DependencyNotInstalledError
+from portfolio_management.core.utils import _run_in_parallel
+from portfolio_management.data.analysis import (
+    infer_currency,
+    resolve_currency,
+    summarize_price_file,
+)
+from portfolio_management.data.models import (
+    ExportConfig,
+    StooqFile,
+    TradeableInstrument,
+    TradeableMatch,
+)
 
 try:
     import pandas as pd
@@ -30,22 +46,10 @@ except ImportError as exc:  # pragma: no cover - pandas is required for this mod
         context="to run I/O workflows",
     ) from exc
 
-from collections import Counter
-from dataclasses import asdict, dataclass
-
-from ...core.config import STOOQ_COLUMNS
-from ...core.utils import _run_in_parallel
-from ..analysis import infer_currency, resolve_currency, summarize_price_file
-from ..models import ExportConfig, StooqFile, TradeableInstrument, TradeableMatch
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from pathlib import Path
-
 LOGGER = logging.getLogger(__name__)
 
 
-def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
+def write_stooq_index(entries: Sequence[StooqFile], output_path: pathlib.Path) -> None:
     """Persist the Stooq index to CSV."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     records = [
@@ -63,7 +67,7 @@ def write_stooq_index(entries: Sequence[StooqFile], output_path: Path) -> None:
     LOGGER.info("Stooq index written to %s", output_path)
 
 
-def read_stooq_index(csv_path: Path) -> list[StooqFile]:
+def read_stooq_index(csv_path: pathlib.Path) -> list[StooqFile]:
     """Load the Stooq index from an existing CSV."""
     index_frame = pd.read_csv(csv_path, dtype=str).fillna("")
     entries = [
@@ -81,7 +85,7 @@ def read_stooq_index(csv_path: Path) -> list[StooqFile]:
 
 
 def _load_tradeable_frame(
-    csv_path: Path,
+    csv_path: pathlib.Path,
     expected_columns: Sequence[str],
 ) -> pd.DataFrame | None:
     """Load and normalize a single tradeable instrument CSV."""
@@ -105,7 +109,9 @@ def _load_tradeable_frame(
     return instrument_frame[[*expected_columns, "source_file"]]
 
 
-def load_tradeable_instruments(tradeable_dir: Path) -> list[TradeableInstrument]:
+def load_tradeable_instruments(
+    tradeable_dir: pathlib.Path,
+) -> list[TradeableInstrument]:
     """Load and normalize tradeable instrument CSV files."""
     instruments: list[TradeableInstrument] = []
     csv_paths = sorted(tradeable_dir.glob("*.csv"))
@@ -134,7 +140,7 @@ def load_tradeable_instruments(tradeable_dir: Path) -> list[TradeableInstrument]
 
 def _write_report(
     data: Sequence[object],
-    output_path: Path,
+    output_path: pathlib.Path,
     columns: list[str],
 ) -> None:
     """Write a list of dataclasses to a CSV file."""
@@ -149,7 +155,7 @@ def _write_report(
 
 def write_unmatched_report(
     unmatched: Sequence[TradeableInstrument],
-    output_path: Path,
+    output_path: pathlib.Path,
 ) -> None:
     """Persist the unmatched instrument list for manual follow-up."""
     columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
@@ -159,44 +165,74 @@ def write_unmatched_report(
 
 def _summarize_match_for_report(
     match: TradeableMatch,
-    data_dir: "Path",
+    data_dir: pathlib.Path,
 ) -> tuple[str, dict[str, str]]:
     """Summarize a single match for diagnostics caching."""
     diagnostics = summarize_price_file(data_dir, match.stooq_file)
     return match.stooq_file.ticker.upper(), diagnostics
 
 
+def _summarize_and_export_match(
+    match: TradeableMatch,
+    data_dir: pathlib.Path,
+    export_config: ExportConfig,
+) -> tuple[str, dict[str, str], _ExportOutcome]:
+    """Summarize a match and export prices in a single pass."""
+    diagnostics = summarize_price_file(data_dir, match.stooq_file)
+    outcome = _export_streaming_match(match, export_config, diagnostics)
+    return match.stooq_file.ticker.upper(), diagnostics, outcome
+
+
 def _prepare_match_report_data(
     matches: Sequence[TradeableMatch],
-    data_dir: Path,
+    data_dir: pathlib.Path,
     lse_currency_policy: str,
     *,
     max_workers: int,
+    export_config: ExportConfig | None = None,
 ) -> tuple[
     list[dict[str, str]],
     dict[str, dict[str, str]],
-    Counter[str],
-    Counter[str],
+    collections.Counter[str],
+    collections.Counter[str],
     list[str],
     list[tuple[str, str, str]],
+    int,
+    int,
 ]:
     """Prepare data for the match report."""
     diagnostics_cache: dict[str, dict[str, str]] = {}
-    currency_counts: Counter[str] = Counter()
-    data_status_counts: Counter[str] = Counter()
+    currency_counts: collections.Counter[str] = collections.Counter()
+    data_status_counts: collections.Counter[str] = collections.Counter()
     empty_tickers: list[str] = []
     flagged_samples: list[tuple[str, str, str]] = []
     rows: list[dict[str, str]] = []
+    exported_total = 0
+    skipped_total = 0
 
     unique_matches = _deduplicate_matches(matches)
-    diagnostics_results = _run_in_parallel(
-        _summarize_match_for_report,
-        [(match, data_dir) for match in unique_matches],
-        max_workers,
-        preserve_order=False,
-    )
-    for ticker_key, diagnostics in diagnostics_results:
-        diagnostics_cache[ticker_key] = diagnostics
+    if export_config is None:
+        diagnostics_results = _run_in_parallel(
+            _summarize_match_for_report,
+            [(match, data_dir) for match in unique_matches],
+            max_workers,
+            preserve_order=False,
+        )
+        diagnostics_cache.update(dict(diagnostics_results))
+    else:
+        tasks = [(match, data_dir, export_config) for match in unique_matches]
+        results = _run_in_parallel(
+            _summarize_and_export_match,
+            tasks,
+            max_workers,
+            preserve_order=False,
+        )
+        for ticker_key, diagnostics, outcome in results:
+            diagnostics_cache[ticker_key] = diagnostics
+            if outcome.exported:
+                exported_total += 1
+            if outcome.skipped:
+                skipped_total += 1
 
     for match in matches:
         ticker_key = match.stooq_file.ticker.upper()
@@ -250,22 +286,27 @@ def _prepare_match_report_data(
         data_status_counts,
         empty_tickers,
         flagged_samples,
+        exported_total,
+        skipped_total,
     )
 
 
 def write_match_report(
     matches: Sequence[TradeableMatch],
-    output_path: Path,
-    data_dir: Path,
+    output_path: pathlib.Path,
+    data_dir: pathlib.Path,
     *,
     lse_currency_policy: str,
     max_workers: int | None = None,
+    export_config: ExportConfig | None = None,
 ) -> tuple[
     dict[str, dict[str, str]],
-    Counter[str],
-    Counter[str],
+    collections.Counter[str],
+    collections.Counter[str],
     list[str],
     list[tuple[str, str, str]],
+    int,
+    int,
 ]:
     """Persist the match report showing which tradeables map to which Stooq files."""
     (
@@ -275,11 +316,14 @@ def write_match_report(
         data_status_counts,
         empty_tickers,
         flagged_samples,
+        exported_count,
+        skipped_count,
     ) = _prepare_match_report_data(
         matches,
         data_dir,
         lse_currency_policy,
         max_workers=max(max_workers or 1, 1),
+        export_config=export_config,
     )
     columns = [
         "symbol",
@@ -310,6 +354,8 @@ def write_match_report(
         data_status_counts,
         empty_tickers,
         flagged_samples,
+        exported_count,
+        skipped_count,
     )
 
 
@@ -348,7 +394,11 @@ def _requires_skip(status: str, *, include_empty: bool) -> bool:
     )
 
 
-def _remove_existing_export(target_path: Path, ticker: str, descriptor: str) -> None:
+def _remove_existing_export(
+    target_path: pathlib.Path,
+    ticker: str,
+    descriptor: str,
+) -> None:
     """Remove a previously exported file when overwriting is allowed."""
     if not target_path.exists():
         return
@@ -363,7 +413,112 @@ def _remove_existing_export(target_path: Path, ticker: str, descriptor: str) -> 
         )
 
 
-def _load_price_frame(source_path: Path) -> pd.DataFrame:
+def _stream_price_file(source_path: pathlib.Path, target_path: pathlib.Path) -> int:
+    """Stream the raw Stooq file to CSV with normalized header; return rows written."""
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    rows_written = 0
+    with source_path.open("r", encoding="utf-8", newline="") as src, target_path.open(
+        "w",
+        encoding="utf-8",
+        newline="",
+    ) as dst:
+        dst.write(",".join(STOOQ_COLUMNS) + "\n")
+        for raw_line in src:
+            if not raw_line:
+                continue
+            if raw_line.startswith("<"):
+                continue
+            stripped = raw_line.strip()
+            if not stripped:
+                continue
+            if stripped.lower().startswith("ticker"):
+                continue
+            dst.write(stripped)
+            dst.write("\n")
+            rows_written += 1
+    return rows_written
+
+
+def _export_streaming_match(
+    match: TradeableMatch,
+    config: ExportConfig,
+    diagnostics: dict[str, str],
+) -> _ExportOutcome:
+    """Export a match using streaming I/O based on diagnostics."""
+    target_path = config.dest_dir / f"{match.stooq_file.ticker.lower()}.csv"
+    status = diagnostics.get("data_status", "")
+
+    if _requires_skip(status, include_empty=config.include_empty):
+        LOGGER.debug(
+            "Skipping export for %s due to data_status=%s",
+            match.stooq_file.ticker,
+            status,
+        )
+        if config.overwrite:
+            _remove_existing_export(target_path, match.stooq_file.ticker, "stale")
+        return _ExportOutcome(exported=False, skipped=True)
+
+    if target_path.exists() and not config.overwrite:
+        return _ExportOutcome(exported=False, skipped=False)
+
+    source_path = config.data_dir / match.stooq_file.rel_path
+    try:
+        rows_written = _stream_price_file(source_path, target_path)
+    except OSError as exc:
+        LOGGER.warning(
+            "Failed to export %s -> %s: %s",
+            source_path,
+            target_path,
+            exc,
+        )
+        return _ExportOutcome(exported=False, skipped=False)
+
+    if rows_written == 0 and not config.include_empty:
+        if config.overwrite:
+            _remove_existing_export(target_path, match.stooq_file.ticker, "empty")
+        return _ExportOutcome(exported=False, skipped=False)
+
+    return _ExportOutcome(exported=True, skipped=False)
+
+
+def _export_preloaded_frame(
+    match: TradeableMatch,
+    config: ExportConfig,
+    price_frame: pd.DataFrame,
+    diagnostics: dict[str, str],
+) -> _ExportOutcome:
+    """Export a match using a preloaded price frame."""
+    target_path = config.dest_dir / f"{match.stooq_file.ticker.lower()}.csv"
+    status = diagnostics.get("data_status", "")
+
+    if _requires_skip(status, include_empty=config.include_empty):
+        LOGGER.debug(
+            "Skipping export for %s due to data_status=%s",
+            match.stooq_file.ticker,
+            status,
+        )
+        if config.overwrite:
+            _remove_existing_export(target_path, match.stooq_file.ticker, "stale")
+        return _ExportOutcome(exported=False, skipped=True)
+
+    if target_path.exists() and not config.overwrite:
+        return _ExportOutcome(exported=False, skipped=False)
+
+    try:
+        price_frame.to_csv(target_path, index=False)
+    except OSError as exc:
+        LOGGER.warning(
+            "Failed to export %s -> %s: %s",
+            config.data_dir / match.stooq_file.rel_path,
+            target_path,
+            exc,
+        )
+        return _ExportOutcome(exported=False, skipped=False)
+
+    return _ExportOutcome(exported=True, skipped=False)
+
+
+def _load_price_frame(source_path: pathlib.Path) -> pd.DataFrame:
     """Read a Stooq price file into a DataFrame."""
     return pd.read_csv(
         source_path,
@@ -411,13 +566,7 @@ def _export_match(
         )
         return _ExportOutcome(exported=False, skipped=False)
 
-    if price_frame.empty and not config.include_empty:
-        if config.overwrite:
-            _remove_existing_export(target_path, match.stooq_file.ticker, "empty")
-        return _ExportOutcome(exported=False, skipped=False)
-
-    price_frame.to_csv(target_path, index=False)
-    return _ExportOutcome(exported=True, skipped=False)
+    return _export_preloaded_frame(match, config, price_frame, diagnostics)
 
 
 def export_tradeable_prices(
