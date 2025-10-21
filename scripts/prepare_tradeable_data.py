@@ -8,7 +8,18 @@ and three CSV files describing the tradeable universes. It performs the followin
 3. Match tradeable instruments to Stooq tickers using heuristic symbol mapping.
 4. Export matched price histories and emit reports for matched/unmatched assets.
 
+Incremental Resume Feature:
+    The --incremental flag enables smart caching to skip redundant processing when
+    inputs haven't changed. The script tracks:
+    - Stooq index file hash
+    - Tradeable CSV directory hash (file names and modification times)
+    
+    When both inputs are unchanged and output files exist, processing is skipped
+    entirely, completing in seconds instead of minutes. Use --force-reindex to
+    override the cache.
+
 Example usage:
+    # First run - builds everything
     python scripts/prepare_tradeable_data.py \
         --data-dir data/stooq \
         --metadata-output data/metadata/stooq_index.csv \
@@ -17,7 +28,15 @@ Example usage:
         --unmatched-report data/metadata/tradeable_unmatched.csv \
         --prices-output data/processed/tradeable_prices \
         --max-workers 8 \
-        --overwrite-prices
+        --incremental
+    
+    # Second run - skips if unchanged (completes in seconds)
+    python scripts/prepare_tradeable_data.py \
+        --incremental
+    
+    # Force full rebuild
+    python scripts/prepare_tradeable_data.py \
+        --force-reindex
 """
 
 from __future__ import annotations
