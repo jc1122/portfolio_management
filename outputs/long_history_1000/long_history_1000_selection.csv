@@ -1,0 +1,1001 @@
+,isin,name,market,region,currency,category,price_start,price_end,price_rows,data_status,data_flags,stooq_path
+DAL,US2473617023,Delta Air Lines USD,NYSE,us,,nyse stocks/1,1980-01-02,2025-10-03,11531,ok,,d_us_txt/data/daily/us/nyse stocks/1/dal.us.txt
+DAL:US,US2473617023,DELTA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DELTA AIR,us,USD,nyse stocks/1,1980-01-02,2025-10-03,11531,ok,,d_us_txt/data/daily/us/nyse stocks/1/dal.us.txt
+LPX:US,US5463471053,LOUISIANAPAC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LOUISIANA-PACIFIC,us,USD,nyse stocks/1,1982-01-04,2025-10-03,11025,ok,,d_us_txt/data/daily/us/nyse stocks/1/lpx.us.txt
+LPX,US5463471053,Louisiana Pacific Corp. USD,NYSE,us,,nyse stocks/1,1982-01-04,2025-10-03,11025,ok,,d_us_txt/data/daily/us/nyse stocks/1/lpx.us.txt
+T,US00206R1023,"AT&T, Inc. USD",NYSE,us,,nyse stocks/2,1984-07-19,2025-10-03,10384,ok,,d_us_txt/data/daily/us/nyse stocks/2/t.us.txt
+T:US,US00206R1023,AT&T INC AT&T INC,NEW YORK STOCK EXCHANGE (USD),us,USD,nyse stocks/2,1984-07-19,2025-10-03,10384,ok,,d_us_txt/data/daily/us/nyse stocks/2/t.us.txt
+AAPL:US,US0378331005,INC,NASDAQ (USD) USA-NASDAQ APPLE INC,us,USD,nasdaq stocks/1,1984-09-07,2025-10-03,10349,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aapl.us.txt
+AAPL,US0378331005,Apple Inc. USD,NSQ,us,,nasdaq stocks/1,1984-09-07,2025-10-03,10349,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aapl.us.txt
+AEM:US,CA0084741085,EAGLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AGNICO EAGLE MINES,us,USD,nyse stocks/1,1984-09-07,2025-10-03,10341,ok,,d_us_txt/data/daily/us/nyse stocks/1/aem.us.txt
+AEM,CA0084741085,AGNICO EAGLE MINES USD,NYSE,us,,nyse stocks/1,1984-09-07,2025-10-03,10341,ok,,d_us_txt/data/daily/us/nyse stocks/1/aem.us.txt
+WEC,US92939U1060,Wisconsin Energy Corp USD,NYSE,us,,nyse stocks/2,1984-10-26,2025-10-03,10306,ok,,d_us_txt/data/daily/us/nyse stocks/2/wec.us.txt
+WEC:US,US92939U1060,ENERGY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WEC ENERGY GROUP,us,USD,nyse stocks/2,1984-10-26,2025-10-03,10306,ok,,d_us_txt/data/daily/us/nyse stocks/2/wec.us.txt
+CXT,US2244411052,Crane NXT Co USD,NYSE,us,,nyse stocks/1,1984-11-01,2025-10-03,10306,ok,,d_us_txt/data/daily/us/nyse stocks/1/cxt.us.txt
+B,CA06849F1080,Barrick Mining Corporation USD,NYSE,us,,nyse stocks/1,1985-02-04,2025-10-03,10238,ok,,d_us_txt/data/daily/us/nyse stocks/1/b.us.txt
+ATRO,US0464331083,Astronics Corporation USD,NSQ,us,,nasdaq stocks/1,1984-09-07,2025-10-03,9772,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/atro.us.txt
+MNST,US61174X1090,Monster Beverage Corp. USD,NSQ,us,,nasdaq stocks/2,1985-12-10,2025-10-03,9694,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mnst.us.txt
+MNST:US,US61174X1090,BEVE,NASDAQ (USD) USA-NASDAQ MONSTER BEVERAGE CORP,us,USD,nasdaq stocks/2,1985-12-10,2025-10-03,9694,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mnst.us.txt
+DLX,US2480191012,Deluxe Corp USD,NYSE,us,,nyse stocks/1,1987-07-23,2025-10-03,9623,ok,,d_us_txt/data/daily/us/nyse stocks/1/dlx.us.txt
+RR.,GB00B63H8491,Rolls-Royce PLC GBX,LSE,uk,,lse stocks,1987-09-10,2025-10-03,9513,ok,,d_uk_txt/data/daily/uk/lse stocks/rr.uk.txt
+LLOY,GB0008706128,Lloyds-TSB Group PLC GBX,LSE,uk,,lse stocks,1987-09-01,2025-10-03,9481,ok,,d_uk_txt/data/daily/uk/lse stocks/lloy.uk.txt
+SCHW,US8085131055,USD,NYSE,us,,nyse stocks/2,1989-06-30,2025-10-03,9131,ok,,d_us_txt/data/daily/us/nyse stocks/2/schw.us.txt
+GNTX,US3719011096,Gentex Corp. USD,NSQ,us,,nasdaq stocks/1,1990-03-26,2025-10-03,8947,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/gntx.us.txt
+GNTX:US,US3719011096,CORP,NASDAQ (USD) USA-NASDAQ GENTEX CORP,us,USD,nasdaq stocks/1,1990-03-26,2025-10-03,8947,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/gntx.us.txt
+WOR,US9818111026,"Worthington Industries, Inc. USD",NYSE,us,,nyse stocks/2,1990-03-26,2025-10-03,8943,ok,,d_us_txt/data/daily/us/nyse stocks/2/wor.us.txt
+SSE,GB0007908733,GBX,LSE,uk,,lse stocks,1991-06-18,2025-10-03,8664,ok,,d_uk_txt/data/daily/uk/lse stocks/sse.uk.txt
+SNPS:US,US8716071076,INC,NASDAQ (USD) USA-NASDAQ SYNOPSYS INC,us,USD,nasdaq stocks/2,1992-02-26,2025-10-03,8459,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/snps.us.txt
+SNPS,US8716071076,Synopsys Inc.  USD,NSQ,us,,nasdaq stocks/2,1992-02-26,2025-10-03,8459,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/snps.us.txt
+MSA,US5534981064,MSA Safety Inc USD,NYSE,us,,nyse stocks/2,1990-03-26,2025-10-03,8405,ok,,d_us_txt/data/daily/us/nyse stocks/2/msa.us.txt
+MSA:US,US5534981064,SAFETY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MSA SAFETY INC,us,USD,nyse stocks/2,1990-03-26,2025-10-03,8405,ok,,d_us_txt/data/daily/us/nyse stocks/2/msa.us.txt
+III,GB00B1YW4409,3i Group PLC GBX,LSE,uk,,lse stocks,1994-07-18,2025-10-03,7886,ok,,d_uk_txt/data/daily/uk/lse stocks/iii.uk.txt
+RAVE,US7541981095,Rave Restaurant Group Inc. USD,NSQ,us,,nasdaq stocks/2,1993-09-01,2025-10-03,7853,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rave.us.txt
+EMG,JE00BJ1DLW90,MAN Group Plc GBX,LSE,uk,,lse stocks,1994-10-10,2025-10-03,7824,ok,,d_uk_txt/data/daily/uk/lse stocks/emg.uk.txt
+DLTR,US2567461080,"Dollar Tree, Inc. USD",NSQ,us,,nasdaq stocks/1,1995-03-09,2025-10-03,7692,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dltr.us.txt
+DLTR:US,US2567461080,TREE,NASDAQ (USD) USA-NASDAQ DOLLAR TREE INC,us,USD,nasdaq stocks/1,1995-03-09,2025-10-03,7692,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dltr.us.txt
+IMB,GB0004544929,Imperial Brands PLC GBX,LSE,uk,,lse stocks,1996-10-01,2025-10-03,7319,ok,,d_uk_txt/data/daily/uk/lse stocks/imb.uk.txt
+CNA,US1261171003,CNA Financial Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cna.us.txt
+BHP,US0886061086,BHP Group Limited USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bhp.us.txt
+IHG,GB00BHJYC057,GBX,LSE,uk,,lse stocks,1998-01-02,2025-10-03,6999,ok,,d_uk_txt/data/daily/uk/lse stocks/ihg.uk.txt
+AU,GB00BRXH2664,Anglogold Ashanti Ltd ADR  USD,NYSE,us,,nyse stocks/1,1998-08-05,2025-10-03,6833,ok,,d_us_txt/data/daily/us/nyse stocks/1/au.us.txt
+CPG,GB00BD6K4575,Compass Group PLC GBX,LSE,uk,,lse stocks,1998-07-09,2025-10-03,6794,ok,,d_uk_txt/data/daily/uk/lse stocks/cpg.uk.txt
+AAL,GB00BTK05J60,Anglo American PLC  GBX,LSE,uk,,lse stocks,1999-05-24,2025-10-03,6663,ok,,d_uk_txt/data/daily/uk/lse stocks/aal.uk.txt
+CCL,GB0031215220,Carnival PLC GBX,LSE,uk,,lse stocks,2000-10-23,2025-10-03,6289,ok,,d_uk_txt/data/daily/uk/lse stocks/ccl.uk.txt
+IBCP,US4538386099,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ibcp.us.txt
+RIO,US7672041008,Rio Tinto ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nyse stocks/2/rio.us.txt
+WWD,US9807451037,Woodward Inc. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wwd.us.txt
+MSI:US,US6200763075,SOL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOTOROLA SOLUTIONS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nyse stocks/2/msi.us.txt
+SBRA,US78573L1061,"Sabra Health Care REIT, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sbra.us.txt
+MSI,US6200763075,"Motorola Solutions, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nyse stocks/2/msi.us.txt
+ODFL,US6795801009,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/odfl.us.txt
+WWD:US,US9807451037,INC,NASDAQ (USD) USA-NASDAQ WOODWARD INC,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wwd.us.txt
+ODFL:US,US6795801009,DOMINION,NASDAQ (USD) USA-NASDAQ OLD DOMINION FREIGHT LINE,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/odfl.us.txt
+SBRA:US,US78573L1061,HEALTH,NASDAQ (USD) USA-NASDAQ SABRA HEALTHCARE REINT INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sbra.us.txt
+XOMA,US98419J2069,Xoma Corp USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5185,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/xoma.us.txt
+VLO,US91913Y1001,Valero Energy Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vlo.us.txt
+VHI,US9189052098,Valhi Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vhi.us.txt
+UFI,US9046772003,Unifi Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ufi.us.txt
+WTI,US92922P1066,W&T OFFSHORE INC USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wti.us.txt
+SCL,US8585861003,Stepan Co USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/scl.us.txt
+VNO,US9290421091,VORNADO REALTY TRUST USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vno.us.txt
+SCS,US8581552036,Steelcase Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/scs.us.txt
+UL,US9047677045,UNILEVER PLC -SP ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ul.us.txt
+ZTR,US92835W1071,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ztr.us.txt
+UMC,US9108734057,United Micro Electronics ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/umc.us.txt
+UNFI,US9111631035,"United Natural Foods, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/unfi.us.txt
+URI,US9113631090,United Rentals USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uri.us.txt
+UVV,US9134561094,Universal Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uvv.us.txt
+UHT,US91359E1055,UNIVERSAL HEALTH REALTY USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uht.us.txt
+SONY,US8356993076,Sony Group Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sony.us.txt
+SR,US84857L1017,Spire USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sr.us.txt
+UHS,US9139031002,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uhs.us.txt
+UTI,US9139151040,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uti.us.txt
+VSH,US9282981086,Vishay Intertechnology Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vsh.us.txt
+EGY,US91851C2017,Vaalco Energy Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/egy.us.txt
+VTR,US92276F1003,Ventas Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vtr.us.txt
+SWX,US8448951025,Southwest Gas Holdings Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/swx.us.txt
+VMI,US9202531011,Valmont Industries Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vmi.us.txt
+SCCO,US84265V1052,Southern Copper Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/scco.us.txt
+MTN,US91879Q1094,Vail Resorts Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtn.us.txt
+VALE,US91912E1055,Vale S.A. ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vale.us.txt
+TSN,US9024941034,Tyson Foods Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tsn.us.txt
+UGI,US9026811052,UGI Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ugi.us.txt
+UDR,US9026531049,UDR INC USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/udr.us.txt
+TWI,US88830M1027,Titan International  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/twi.us.txt
+TKR,US8873891043,Timken Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tkr.us.txt
+TDW,US88642R1095,TIDEWATER INC NEW USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tdw.us.txt
+THO,US8851601018,"Thor Industries, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tho.us.txt
+TTI,US88162F1057,TETRA Technologies USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tti.us.txt
+TEX,US8807791038,Terex Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tex.us.txt
+TNC,US8803451033,Tennant Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tnc.us.txt
+SKT,US8754651060,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/skt.us.txt
+TS,US88031M1099,Tenaris SA  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ts.us.txt
+TPR,US8760301072,Tapestry USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tpr.us.txt
+HQH,US87911J1034,Tekla Healthcare Investors USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hqh.us.txt
+TDY,US8793601050,Teledyne Technologies Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tdy.us.txt
+SGI,US88023U1016,Somnigroup International Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sgi.us.txt
+TFX,US8793691069,Teleflex Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tfx.us.txt
+TDS,US8794338298,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tds.us.txt
+TOL,US8894781033,Toll Brothers Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tol.us.txt
+WPC,US92936U1097,W. P. Carey Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wpc.us.txt
+TTE,US89151E1091,Total Energies SE ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tte.us.txt
+RGR,US8641591081,Sturm Ruger & Co Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rgr.us.txt
+STC,US8603721015,Stewart Information Services USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/stc.us.txt
+TYL,US9022521051,"Tyler Technologies, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tyl.us.txt
+SF,US8606301021,Stifel Financial Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sf.us.txt
+TKC,US9001112047,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tkc.us.txt
+STM,US8610121027,STMicroelectronics NV USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/stm.us.txt
+SRI,US86183P1021,Stonebridge Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sri.us.txt
+TRN,US8965221091,Trinity Industries Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/trn.us.txt
+TSM,US8740391003,Taiwan Semi.Manufa.Ltd ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tsm.us.txt
+SUI,US8666741041,Sun Communities Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sui.us.txt
+SHO,US8678921011,SUNSTONE HOTEL INVESTORS INC  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sho.us.txt
+SNX,US87162W1009,SYNNEX Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/snx.us.txt
+TREX,US89531P1057,Trex Co. Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/trex.us.txt
+TRV,US89417E1091,"The Travelers Companies, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/trv.us.txt
+TM,US8923313071,Toyota Motor Corporation ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tm.us.txt
+TTC,US8910921084,The Toro Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ttc.us.txt
+WGO,US9746371007,"Winnebago Industries, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wgo.us.txt
+WNC,US9295661071,Wabash National Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wnc.us.txt
+AGO:US,BMG0585R1060,GUAR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ASSURED GUARANTY LTD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ago.us.txt
+BHC:US,CA0717341071,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BAUSCH HEALTH COMPANIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bhc.us.txt
+BNS:US,CA0641491075,NOVASCO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BANK OF NOVA SCOTIA,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bns.us.txt
+AXS:US,BMG0692U1099,CAPITAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AXIS CAPITAL HOLDINGS LTD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/axs.us.txt
+AVA:US,US05379B1070,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AVISTA CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ava.us.txt
+AVNT:US,US05368V1061,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AVIENT CORPORATION,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/avnt.us.txt
+AVB:US,US0534841012,CO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AVALONBAY COMMUN,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/avb.us.txt
+ALV:US,US0528001094,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AUTOLIV INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/alv.us.txt
+ASGN:US,US00191U1025,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ASGN INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/asgn.us.txt
+WAB,US9297401088,Wabtec Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wab.us.txt
+ABG:US,US0434361046,AUTO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ASBURY AUTOMOTIVE GROUP INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/abg.us.txt
+AJG:US,US3635761097,GAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ARTHUR J GALLAGH ARTHUR,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ajg.us.txt
+ARW:US,US0427351004,ELECTR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ARROW ELECTRONICS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/arw.us.txt
+MT:US,US03938L2034,MITT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ARCELOR MITTAL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mt.us.txt
+ABR:US,US0389231087,REALTY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ARBOR REALTY TRUST,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/abr.us.txt
+AIT:US,US03820C1053,INDU,NEW YORK STOCK EXCHANGE (USD) USA-NYSE APPLIED INDUSTRIAL TECHNOLOGIE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ait.us.txt
+AON:US,IE00BLP1HW54,PLC-A,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AON PLC-A,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aon.us.txt
+BDC:US,US0774541066,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BELDEN INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bdc.us.txt
+BIO:US,US0905722072,LABS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BIO-RAD LABORATORIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bio.us.txt
+BKH:US,US0921131092,HILLS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BLACK HILLS CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bkh.us.txt
+BXMT:US,US09257W1009,MORTG,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BLACKSTONE MORTGAGE TRUST INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bxmt.us.txt
+CNI:US,CA1363751027,RAILWAY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CANADIAN NATIONAL RAILWAY,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cni.us.txt
+CCJ:US,CA13321L1085,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CAMECO CORPORATION,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ccj.us.txt
+CPT:US,US1331311027,PROPE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CAMDEN PROPERTY TRUST,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cpt.us.txt
+CADE:US,US12740C1036,BANK,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CADENCE BANK,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cade.us.txt
+CACI:US,US1271903049,INTL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CACI INTERNATIONAL INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/caci.us.txt
+CBT:US,US1270551013,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CABOT CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cbt.us.txt
+BG:US,CH1300646267,GLOBAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BUNGE GLOBAL SA,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bg.us.txt
+BKE:US,US1184401065,BUCKLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BUCKLE INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bke.us.txt
+BRO:US,US1152361010,& BROWN INC BROWN&BROWN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bro.us.txt
+BN:US,CA11271J1075,BROOKFIELD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BROOKFIELD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bn.us.txt
+BYD:US,US1033041013,GAMING,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BOYD GAMING CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/byd.us.txt
+BXP:US,US1011211018,PROPE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BOSTON PROPERTIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bxp.us.txt
+SAM:US,US1005571070,BEER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BOSTON BEER CO INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sam.us.txt
+BWA:US,US0997241064,BORGWARNER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BORGWARNER,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bwa.us.txt
+BLK:US,US09247X1019,BLACKROCK,NEW YORK STOCK EXCHANGE (USD) USA-NYSE BLACKROCK,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/blk.us.txt
+NLY:US,US0357108390,M,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ANNALY CAPITAL MANAGEMENT ANNALY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nly.us.txt
+APH:US,US0320951017,AMPHENOL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMPHENOL,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aph.us.txt
+AMN:US,US0017441017,HEALTHCA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMN HEALTHCARE SERVICES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/amn.us.txt
+CAR.UN,CA1349211054,CAD,TSX,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/car.us.txt
+TGB,CA8765111064,Taseko Mines Ltd USD,NYSE-MKT,us,,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/tgb.us.txt
+IMO,CA4530384086,Imperial Oil Ltd USD,NYSE-MKT,us,,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/imo.us.txt
+WWW,US9780971035,Wolverine World Wide USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/www.us.txt
+WOLF,US9778521024,Wolfspeed USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wolf.us.txt
+SQM,US8336351056,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sqm.us.txt
+WSM,US9699041011,Williams-Sonoma Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wsm.us.txt
+WEX,US96208T1043,Wex Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wex.us.txt
+WLK,US9604131022,Westlake Chemical Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wlk.us.txt
+EMD,US95766A1016,Western Asset Em. Mkts. Debt USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/emd.us.txt
+WST,US9553061055,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wst.us.txt
+WCC,US95082P1057,Wesco International Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wcc.us.txt
+WELL,US95040Q1040,Welltower Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/well.us.txt
+WMK,US9488491047,Weis Markets Inc  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wmk.us.txt
+WSO,US9426222009,Watsco USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wso.us.txt
+WM,US94106L1098,Waste Management Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wm.us.txt
+APT,US0207721095,Alpha Pro Tech Ltd. USD,NYSE-MKT,us,,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/apt.us.txt
+INO.UN,CA45780E1007,Inovalis REIT CAD,TSX,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ino.us.txt
+AME:US,US0311001004,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMETEK INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ame.us.txt
+AD,NL0011794037,Ahold Del EUR,AMS,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ad.us.txt
+AMT:US,US03027X1000,TOWER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMERICAN TOWER CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/amt.us.txt
+AWR:US,US0298991011,STATES,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMERICAN STATES WATER CO,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/awr.us.txt
+AEO:US,US02553E1064,EAGLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AMERICAN EAGLE OUTFITTERS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aeo.us.txt
+LNT:US,US0188021085,ENER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ALLIANT ENERGY CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lnt.us.txt
+ALE:US,US0185223007,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ALLETE INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ale.us.txt
+ARE:US,US0152711091,ES,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ALEXANDRIA REAL ESTATE EQUITIES INC ALEX,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/are.us.txt
+ALB:US,US0126531013,ALBEMARLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ALBEMARLE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/alb.us.txt
+ALK:US,US0116591092,AIR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ALASKA AIR GROUP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/alk.us.txt
+ADC:US,US0084921008,REALTY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AGREE REALTY CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/adc.us.txt
+AGCO:US,US0010841023,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE AGCO CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/agco.us.txt
+AAP:US,US00751Y1064,AUTO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ADVANCE AUTO PARTS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aap.us.txt
+ATGE:US,US00737L1035,GLOB,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ADTALEM GLOBAL EDUCATION INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/atge.us.txt
+ACN:US,IE00B4BNMY34,ACCENTURE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ACCENTURE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/acn.us.txt
+ABM:US,US0009571003,INDUST,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ABM INDUSTRIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/abm.us.txt
+ANF:US,US0028962076,& FITCH CO ABERCROMBIE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/anf.us.txt
+SON,US8354951027,Sonoco Products USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/son.us.txt
+SBR,US7856881021,Sabine Royalty Trust USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sbr.us.txt
+SJM,US8326964058,The J. M. Smucker Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sjm.us.txt
+LXP,US5290431015,LEXINGTON REALTY TRUST USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lxp.us.txt
+MED,US58470H1014,MEDIFAST INC USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/med.us.txt
+MATX,US57686G1058,Matson Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/matx.us.txt
+MTZ,US5763231090,"MasTec, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtz.us.txt
+MLM,US5732841060,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mlm.us.txt
+MKL,US5705351048,Markel Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mkl.us.txt
+HZO,US5679081084,Marinemax Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hzo.us.txt
+M,US55616P1049,"Macy's, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/m.us.txt
+VRE,US5544891048,Veris Residential USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vre.us.txt
+MAC,US5543821012,The Macerich Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mac.us.txt
+MSM,US5535301064,MSC Industrial Direct Co. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/msm.us.txt
+MHO,US55305B1017,M/I Homes Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mho.us.txt
+MGM,US5529531015,MGM Resorts International USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mgm.us.txt
+MFA,US55272X6076,MFA Financial Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mfa.us.txt
+MDU,US5526901096,MDU Resources Group Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mdu.us.txt
+L,US5404241086,Loews Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/l.us.txt
+LYG,US5394391099,Lloyds Banking Group Plc ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lyg.us.txt
+RAMP,US53815P1084,LiveRamp Holdings USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ramp.us.txt
+MD,US58502B1061,Mednax Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/md.us.txt
+MCY,US5894001008,Mercury General Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mcy.us.txt
+MTH,US59001A1025,Meritage Homes Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mth.us.txt
+TAP,US60871R2094,Molson Coors Brewing Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tap.us.txt
+NRG,US6293775085,NRG Energy Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nrg.us.txt
+NL,US6291564077,"NL Industries, Inc  USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nl.us.txt
+MUR,US6267171022,Murphy Oil Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mur.us.txt
+MLI,US6247561029,Mueller Industries Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mli.us.txt
+MOV,US6245801062,Movado Group USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mov.us.txt
+MOS,US61945C1036,The Mosaic Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mos.us.txt
+MS,US6174464486,Morgan Stanley USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ms.us.txt
+MOH,US60855R1005,Molina Healthcare Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/moh.us.txt
+MSB,US5906721015,Mesabi Trust USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/msb.us.txt
+MHK,US6081901042,Mohawk Industries Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mhk.us.txt
+MOD,US6078281002,Modine Manufacturing Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mod.us.txt
+MUFG,US6068221042,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mufg.us.txt
+MTX,US6031581068,"Minerals Technologies, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtx.us.txt
+MAA,US59522J1034,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/maa.us.txt
+MTD,US5926881054,METTLER-TOLEDO INTL.INC  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtd.us.txt
+MEI,US5915202007,Methode Electronics USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mei.us.txt
+LAD,US5367971034,Lithia Motors Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lad.us.txt
+LEN,US5260571048,Lennar Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/len.us.txt
+AOS,US8318652091,AO Smith Corp.  USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aos.us.txt
+EL,US5184391044,Estee Lauder Companies Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/el.us.txt
+INVX,US4576511079,INNOVEX INTERNATIONAL INC  USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/invx.us.txt
+INGR,US4571871023,Ingredion Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ingr.us.txt
+ING,US4568371037,ING Groep ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ing.us.txt
+INFY,US4567881085,Infosys Ltd. - ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/infy.us.txt
+IFN,US4540891037,The India Fund Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ifn.us.txt
+IEX,US45167R1041,IDEX Corp USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/iex.us.txt
+IDA,US4511071064,Idacorp Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ida.us.txt
+IBN,US45104G1040,ICICI Bank Ltd. ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ibn.us.txt
+IRS,US4500473032,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/irs.us.txt
+IDT,US4489475073,IDT Corp - B USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/idt.us.txt
+HUN,US4470111075,Huntsman Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hun.us.txt
+HOV,US4424874018,Hovnanian Enterprises Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hov.us.txt
+HRL,US4404521001,Hormel Foods Corporation USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hrl.us.txt
+HMN,US4403271046,Horace Mann Educators Corp USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hmn.us.txt
+HMC,US4381283088,Honda Motor Company USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hmc.us.txt
+HIW,US4312841087,HIGHWOODS PROP. INC USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hiw.us.txt
+HXL,US4282911084,Hexcel Corporation USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hxl.us.txt
+IIM,US46132P1084,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/iim.us.txt
+IRM,US46284V1017,Iron Mountain Incorporated USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/irm.us.txt
+ITUB,US4655621062,Itau Unibanco Holding USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/itub.us.txt
+KEP,US5006311063,Korea Electric Power Corp ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kep.us.txt
+LVS,US5178341070,Las Vegas Sands Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lvs.us.txt
+LZB,US5053361078,La-Z-Boy USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/lzb.us.txt
+LH,US5049221055,Laboratory Corp USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lh.us.txt
+LHX,US5024311095,L3 Harris Technologies Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lhx.us.txt
+LTC,US5021751020,LTC Properties Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ltc.us.txt
+LCII,US50189K1034,LCI Industries USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lcii.us.txt
+LPL,US50186V1026,"LG Display Co., Ltd. ADR USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lpl.us.txt
+PHG,US5004723038,Koninklijke Philips ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/phg.us.txt
+J,US46982L1089,Jacobs Solutions Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/j.us.txt
+KEX,US4972661064,Kirby Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kex.us.txt
+KIM,US49446R1095,Kimco Realty Corporation USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kim.us.txt
+KRC,US49427F1084,Kilroy Realty Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/krc.us.txt
+KFRC,US4937321010,Kforce Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kfrc.us.txt
+KAI,US48282T1043,Kadant Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kai.us.txt
+JLL,US48020Q1076,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/jll.us.txt
+JEF,US47233W1099,Jefferies Financial Group Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/jef.us.txt
+NVR,US62944T1051,NVR Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nvr.us.txt
+NOV,US62955J1034,Nov inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nov.us.txt
+NFG,US6361801011,National Fuel Gas Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nfg.us.txt
+NGG,US6362744095,National Grid ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ngg.us.txt
+ROG,US7751331015,Rogers Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rog.us.txt
+RMD,US7611521078,ResMed Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rmd.us.txt
+RSG,US7607591002,Republic Services Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rsg.us.txt
+RELX,US7595301083,RELX Plc ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/relx.us.txt
+RS,US7595091023,Reliance Steel & Aluminum Co. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rs.us.txt
+RGA,US7593516047,Reinsurance Group of America USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rga.us.txt
+RRX,US7587501039,Regal Rexnord Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rrx.us.txt
+RWT,US7580754023,"Redwood Trust, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rwt.us.txt
+O,US7561091049,Realty Income Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/o.us.txt
+RYN,US7549071030,Rayonier USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ryn.us.txt
+RJF,US7547301090,Raymond James Financial Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rjf.us.txt
+RRC,US75281A1097,Range Resources Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rrc.us.txt
+RL,US7512121010,Ralph Lauren Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rl.us.txt
+RES,US7496601060,RPC Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/res.us.txt
+RLI,US7496071074,RLI Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rli.us.txt
+PWR,US74762E1029,Quanta Services Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pwr.us.txt
+KWR,US7473161070,Quaker Houghton USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kwr.us.txt
+ROL,US7757111049,Rollins Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rol.us.txt
+RHP,US78377T1079,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rhp.us.txt
+SLG,US78440X8873,SL Green Realty Corp USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/slg.us.txt
+MATV,US8085411069,Mativ Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/matv.us.txt
+SNN,US83175M2052,Smith & Nephew plc - ADR  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/snn.us.txt
+SKY,US8308301055,Skyline Champion Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sky.us.txt
+SSD,US8290731053,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ssd.us.txt
+SLGN,US8270481091,Silgan Holdings INC USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/slgn.us.txt
+SHG,US8245961003,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/shg.us.txt
+SCI,US8175651046,Service Corp. Int. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sci.us.txt
+SMG,US8101861065,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/smg.us.txt
+BFS,US8043951016,SAUL CENTERS INC USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/bfs.us.txt
+SM,US78454L1008,SM Energy Company USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sm.us.txt
+SSL,US8038663006,Sasol Ltd. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ssl.us.txt
+SAP,US8030542042,SAP SE ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sap.us.txt
+SJT,US7982411057,San Juan Basin Royalty Trust USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sjt.us.txt
+CRM,US79466L3024,Salesforce Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crm.us.txt
+JOE,US7901481009,The St Joe Company USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/joe.us.txt
+CSL:US,US1423391002,COS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CARLISLE COS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/csl.us.txt
+SPXC,US78473E1038,SPX Technologies Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/spxc.us.txt
+PSA,US74460D1090,Public Storage USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/psa.us.txt
+PFS,US74386T1051,Provident Financial Services USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pfs.us.txt
+PBH,US74112D1019,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pbh.us.txt
+NWN,US66765N1054,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nwn.us.txt
+ORI,US6802231042,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ori.us.txt
+OIS,US6780261052,Oil States International Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ois.us.txt
+OII,US6752321025,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oii.us.txt
+OI,US67098H1041,O-i Glass Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oi.us.txt
+NUS,US67018T1051,Nu Skin Enterprises Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nus.us.txt
+NVO,US6701002056,Novo-Nordisk A/S ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nvo.us.txt
+NVS,US66987V1098,Novartis AG USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nvs.us.txt
+NMR,US65535H2085,Nomura Holdings Inc ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nmr.us.txt
+OHI,US6819361006,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ohi.us.txt
+NOK,US6549022043,Nokia Corporation ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nok.us.txt
+NEE,US65339F1012,"NextEra Energy, Inc. USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nee.us.txt
+NPKI,US6517185046,NPK International Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/npki.us.txt
+FLG,US6494454001,Flagstar Financial Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/flg.us.txt
+NNI,US64031N1081,Nelnet Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nni.us.txt
+NNN,US6374171063,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nnn.us.txt
+NHI,US63633D1046,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nhi.us.txt
+OLN,US6806652052,Olin Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oln.us.txt
+OLP,US6824061039,ONE LIBERTY PROPERTIES INC USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/olp.us.txt
+PII,US7310681025,Polaris Industries Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pii.us.txt
+PVH,US6936561009,PVH Corp. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pvh.us.txt
+PIPR,US7240781002,Piper Sandler Companies USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pipr.us.txt
+PHD,US72369J1025,Pioneer Floating Rate Trust USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/phd.us.txt
+PBR,US71654V4086,Petroleo Brasileiro S.A. ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pbr.us.txt
+PBR.A,US71654V1017,Petroleo Brasileiro ADR  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pbr.us.txt
+TLK,US7156841063,Telkom Indonesia ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tlk.us.txt
+PBT,US7142361069,Permian Basin Royalty Trust USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pbt.us.txt
+PAG,US70959W1036,Penske Automotive Group USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pag.us.txt
+PKX,US6934831099,Posco ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pkx.us.txt
+OKE,US6826801036,ONEOK Inc. USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oke.us.txt
+PHI,US69344D4088,PLDT Inc ADR USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/phi.us.txt
+OXM,US6914973093,Oxford Industries Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oxm.us.txt
+OVV,US69047Q1022,Ovintiv Inc USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ovv.us.txt
+OSK,US6882392011,Oshkosh Corporation USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/osk.us.txt
+ORA,US6866881021,"Ormat Technologies, Inc.  USD",NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ora.us.txt
+IX,US6863301015,Orix Corporation ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ix.us.txt
+ONTO,US6833441057,Onto Innovation Inc.  USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/onto.us.txt
+CNQ:US,CA1363851017,NR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CANADIAN NATURAL RESOURCES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cnq.us.txt
+FIX:US,US1999081045,SYST,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COMFORT SYSTEMS USA INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fix.us.txt
+KMX:US,US1431301027,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CARMAX INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kmx.us.txt
+HWC:US,US4101201097,WHIT,NASDAQ (USD) USA-NASDAQ HANCOCK WHITNEY CORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hwc.us.txt
+COHR:US,US19247G1076,COR,NASDAQ (USD) USA-NASDAQ COHERENT CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cohr.us.txt
+CTSH:US,US1924461023,COGNIZANT,NASDAQ (USD) USA-NASDAQ COGNIZANT,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ctsh.us.txt
+CGNX:US,US1924221039,CORP,NASDAQ (USD) USA-NASDAQ COGNEX CORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cgnx.us.txt
+CCOI:US,US19239V3024,COMMU,NASDAQ (USD) USA-NASDAQ COGENT COMMUNICATIONS HOLDINGS,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ccoi.us.txt
+COKE:US,US1910981026,BO,NASDAQ (USD) USA-NASDAQ COCA-COLA BOTTLING CO,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/coke.us.txt
+CME:US,US12572Q1058,GROUP,NASDAQ (USD) USA-NASDAQ CME GROUP INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cme.us.txt
+CHDN:US,US1714841087,DO,NASDAQ (USD) USA-NASDAQ CHURCHILL DOWNS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/chdn.us.txt
+CAKE:US,US1630721017,CHEESECAKE,NASDAQ (USD) USA-NASDAQ CHEESECAKE FACTORY,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cake.us.txt
+CENX:US,US1564311082,ALUM,NASDAQ (USD) USA-NASDAQ CENTURY ALUMINUM CO,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cenx.us.txt
+CVCO:US,US1495681074,INDUST,NASDAQ (USD) USA-NASDAQ CAVCO INDUSTRIES INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cvco.us.txt
+CWST:US,US1474481041,CASELLAWASTE,NASDAQ (USD) USA-NASDAQ CASELLA WASTE SYSTEMS,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cwst.us.txt
+CDNS:US,US1273871087,DESI,NASDAQ (USD) USA-NASDAQ CADENCE DESIGN SYSTEMS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cdns.us.txt
+BRKS:US,US1143401024,AUTOM,NASDAQ (USD) USA-NASDAQ BROOKS AUTOMATION INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/azta.us.txt
+TECH:US,US09073M1045,BIO-TECHNE,NASDAQ (USD) USA-NASDAQ BIO-TECHNE,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tech.us.txt
+BCRX:US,US09058V1035,BIOCRYST,NASDAQ (USD) USA-NASDAQ BIOCRYST PHARMACEUTICALS,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bcrx.us.txt
+BGC:US,US0889291045,GROUP,NASDAQ (USD) USA-NASDAQ BGC GROUP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bgc.us.txt
+OZK:US,US06417N1037,OZK,NASDAQ (USD) USA-NASDAQ BANK OZK,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ozk.us.txt
+COLB:US,US1972361026,BAN,NASDAQ (USD) USA-NASDAQ COLUMBIA BANKING SYSTEM INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/colb.us.txt
+COLM:US,US1985161066,SPO,NASDAQ (USD) USA-NASDAQ COLUMBIA SPORTSWEAR COMPANY,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/colm.us.txt
+COO:US,US2166485019,CO,NASDAQ (USD) USA-NASDAQ COOPER COMPANIES INC THE,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/coo.us.txt
+EXEL:US,US30161Q1040,INC,NASDAQ (USD) USA-NASDAQ EXELIXIS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/exel.us.txt
+HAIN:US,US4052171000,CELESTI,NASDAQ (USD) USA-NASDAQ HAIN CELESTIAL GROUP INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hain.us.txt
+ROCK:US,US3746891072,GIBRALTARIND,NASDAQ (USD) USA-NASDAQ GIBRALTAR INDUSTRIES,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rock.us.txt
+FCEL:US,US35952H7008,ENE,NASDAQ (USD) USA-NASDAQ FUELCELL ENERGY INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fcel.us.txt
+FELE:US,US3535141028,ELEC,NASDAQ (USD) USA-NASDAQ FRANKLIN ELECTRIC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fele.us.txt
+FOSL:US,US34988V1061,GROUP,NASDAQ (USD) USA-NASDAQ FOSSIL GROUP INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fosl.us.txt
+FFIV:US,US3156161024,NETWORKS,NASDAQ (USD) USA-NASDAQ F5 NETWORKS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ffiv.us.txt
+EXPO:US,US30214U1025,INC,NASDAQ (USD) USA-NASDAQ EXPONENT INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/expo.us.txt
+EEFT:US,US2987361092,EURONETWORLD,NASDAQ (USD) USA-NASDAQ EURONET WORLDWIDE,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eeft.us.txt
+CPRT:US,US2172041061,INC,NASDAQ (USD) USA-NASDAQ COPART INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cprt.us.txt
+EPR:US,US26884U1097,PROPERTI,NASDAQ (USD) USA-NASDAQ EPR PROPERTIES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/epr.us.txt
+ENTG:US,US29362U1043,INC,NASDAQ (USD) USA-NASDAQ ENTEGRIS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/entg.us.txt
+ESLT:US,IL0010811243,SYSTEM,NASDAQ (USD) USA-NASDAQ ELBIT SYSTEMS LTD,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eslt.us.txt
+EWBC:US,US27579R1041,BN,NASDAQ (USD) USA-NASDAQ EAST WEST BANCORP INC EAST,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ewbc.us.txt
+DIOD:US,US2545431015,INC,NASDAQ (USD) USA-NASDAQ DIODES INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/diod.us.txt
+CBRL:US,US22410J1060,BARR,NASDAQ (USD) USA-NASDAQ,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cbrl.us.txt
+CSGP:US,US22160N1090,GROUP,NASDAQ (USD) USA-NASDAQ COSTAR GROUP INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/csgp.us.txt
+BCPC:US,CA0585861085,PS,NASDAQ (USD) USA-NASDAQ BALLARD POWER SYSTEMS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bcpc.us.txt
+ACLS:US,US0545402085,TECH,NASDAQ (USD) USA-NASDAQ AXCELIS TECHNOLOGIES INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/acls.us.txt
+AVT:US,US0538071038,INC,NASDAQ (USD) USA-NASDAQ AVNET INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/avt.us.txt
+URI:US,US9113631090,UNITEDRENTAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE UNITED,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uri.us.txt
+WSO:US,US9426222009,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WATSCO INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wso.us.txt
+WM:US,US94106L1098,MANAGE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WASTE MANAGEMENT,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wm.us.txt
+WAB:US,US9297401088,WABTEC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WABTEC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wab.us.txt
+VNO:US,US9290421091,RLTY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE VORNADO RLTY TST,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vno.us.txt
+VTR:US,US92276F1003,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE VENTAS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vtr.us.txt
+VLO:US,US91913Y1001,ENERG,NEW YORK STOCK EXCHANGE (USD) USA-NYSE VALERO ENERGY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vlo.us.txt
+UHS:US,US9139031002,HL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE UNIVERSAL HLTH-B,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/uhs.us.txt
+UGI:US,US9026811052,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE UGI CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ugi.us.txt
+WST:US,US9553061055,PHARMAC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WEST PHARMACEUTICAL SERVICES INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wst.us.txt
+UDR:US,US9026531049,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE UDR INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/udr.us.txt
+TSN:US,US9024941034,FOODS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TYSON FOODS-A,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tsn.us.txt
+TREX:US,US89531P1057,TREX,NEW YORK STOCK EXCHANGE (USD) USA-NYSE  TREX COMPANY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/trex.us.txt
+TRV:US,US89417E1091,TRAVELERS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TRAVELERS COMPANIES,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/trv.us.txt
+TD:US,CA8911605092,BANK,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TORONTO-DOMINION BANK,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/td.us.txt
+THO:US,US8851601018,INDUST,NEW YORK STOCK EXCHANGE (USD) USA-NYSE THOR INDUSTRIES INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tho.us.txt
+TEX:US,US8807791038,CORPOR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TEREX CORPORATION,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tex.us.txt
+WELL:US,US95040Q1040,WELLTOWER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WELLTOWER,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/well.us.txt
+WTM:US,BMG9618E1075,MOUNTA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wtm.us.txt
+CAR:US,US0537741052,BUDGET,NASDAQ (USD) USA-NASDAQ AVIS BUDGET GROUP INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/car.us.txt
+ALGN:US,US0162551016,TECHNO,NASDAQ (USD) USA-NASDAQ ALIGN TECHNOLOGY INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/algn.us.txt
+ASRT:US,US04546C2052,HOL,NASDAQ (USD) USA-NASDAQ ASSERTIO HOLDING,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/asrt.us.txt
+ASML:US,USN070592100,HOLDING,NASDAQ (USD) USA-NASDAQ ASML HOLDING,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/asml.us.txt
+ARCC:US,US04010L1035,CAPITAL,NASDAQ (USD) USA-NASDAQ ARES CAPITAL CORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/arcc.us.txt
+ACGL:US,BMG0450A1053,CAPITAL,NASDAQ (USD) USA-NASDAQ ARCH CAPITAL GROUP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/acgl.us.txt
+AMKR:US,US0316521006,TECH,NASDAQ (USD) USA-NASDAQ AMKOR TECHNOLOGY INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/amkr.us.txt
+ABCB:US,US03076K1088,BANCO,NASDAQ (USD) USA-NASDAQ AMERIS BANCORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/abcb.us.txt
+DOX:US,GB0022569080,LTD,NASDAQ (USD) USA-NASDAQ AMDOCS LTD,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dox.us.txt
+AKAM:US,US00971T1016,TECHN,NASDAQ (USD) USA-NASDAQ AKAMAI TECHNOLOGIES INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/akam.us.txt
+WSM:US,US9699041011,SON,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WILLIAMS-SONAMA INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wsm.us.txt
+AEIS:US,US0079731008,I,NASDAQ (USD) USA-NASDAQ ADVANCED ENERGY INDUSTRIES INC ADV,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aeis.us.txt
+ACIW:US,US0044981019,ACIWORLDWIDE,NASDAQ (USD) USA-NASDAQ ACI WORLDWIDE,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aciw.us.txt
+EGHT:US,US2829141009,INC,NASDAQ (USD) USA-NASDAQ 8X8 INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eght.us.txt
+FLWS:US,US68243Q1067,1-800-FLOWERS.COM INC 1-800FLOWERS,NASDAQ (USD),us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/flws.us.txt
+WRB:US,US0844231029,BERKLEY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WR BERKLEY CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wrb.us.txt
+WPC:US,US92936U1097,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WP CAREY INC WP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wpc.us.txt
+WOLF:US,US9778521024,WOLFSPEED,NEW YORK STOCK EXCHANGE (USD) USA-NYSE WOLFSPEED,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wolf.us.txt
+HALO:US,US40637H1095,THE,NASDAQ (USD) USA-NASDAQ HALOZYME THERAPEUTICS INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/halo.us.txt
+HELE:US,BMG4388N1065,TRO,NASDAQ (USD) USA-NASDAQ HELEN OF TROY LTD HELEN,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hele.us.txt
+TFX:US,US8793691069,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TELEFLEX INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tfx.us.txt
+HOLX:US,US4364401012,INC,NASDAQ (USD) USA-NASDAQ HOLOGIC INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/holx.us.txt
+STLD:US,US8581191009,STEELDYNAMIC,NASDAQ (USD) USA-NASDAQ STEEL DYNAMICS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stld.us.txt
+STAA:US,US8523123052,SURGIC,NASDAQ (USD) USA-NASDAQ STAAR SURGICAL COMPANY,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/staa.us.txt
+SSB:US,US8404411097,STATE,NASDAQ (USD) USA-NASDAQ SOUTH STATE CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ssb.us.txt
+SWKS:US,US83088M1027,SOL,NASDAQ (USD) USA-NASDAQ SKYWORKS SOLUTIONS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/swks.us.txt
+SKYW:US,US8308791024,INC,NASDAQ (USD) USA-NASDAQ SKYWEST INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/skyw.us.txt
+SLAB:US,US8269191024,LABS,NASDAQ (USD) USA-NASDAQ SILICON LABORATORIES INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/slab.us.txt
+SMTC:US,US8168501018,CORP,NASDAQ (USD) USA-NASDAQ SEMTECH CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/smtc.us.txt
+STX:US,IE00BKVD2N49,TECH,NASDAQ (USD) USA-NASDAQ SEAGATE TECHNOLOGY PLC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stx.us.txt
+SBAC:US,US78410G1040,SBACOMMUNIC,NASDAQ (USD) USA-NASDAQ SBA COMMUNICATIONS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sbac.us.txt
+SGMO:US,US8006771062,THER,NASDAQ (USD) USA-NASDAQ SANGAMO THERAPEUTICS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sgmo.us.txt
+SAIA:US,US78709Y1055,INC,NASDAQ (USD) USA-NASDAQ SAIA INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/saia.us.txt
+RUSHA:US,US7818462092,ENTER,NASDAQ (USD) USA-NASDAQ RUSH ENTERPRISES INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rusha.us.txt
+RGLD:US,US7802871084,GOLD,NASDAQ (USD) USA-NASDAQ ROYAL GOLD INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rgld.us.txt
+RGEN:US,US7599161095,COR,NASDAQ (USD) USA-NASDAQ REPLIGEN CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rgen.us.txt
+REG:US,US7588491032,CENT,NASDAQ (USD) USA-NASDAQ REGENCY CENTERS CORPORATION,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/reg.us.txt
+RMBS:US,US7509171069,INC,NASDAQ (USD) USA-NASDAQ RAMBUS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rmbs.us.txt
+QDEL:US,US2197981051,QUIDELORTHO,NASDAQ (USD) USA-NASDAQ QUIDELORTHO,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/qdel.us.txt
+SHOO:US,US5562691080,STEVENMADDEN,NASDAQ (USD) USA-NASDAQ STEVEN MADDEN,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/shoo.us.txt
+SSYS:US,IL0011267213,STRATASYS,NASDAQ (USD) USA-NASDAQ STRATASYS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ssys.us.txt
+STRA:US,US86272C1036,ED,NASDAQ (USD) USA-NASDAQ STRATEGIC EDUCATION INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stra.us.txt
+URBN:US,US9170471026,OUTFIT,NASDAQ (USD) USA-NASDAQ URBAN OUTFITTERS INC,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/urbn.us.txt
+WYNN:US,US9831341071,RESORTS,NASDAQ (USD) USA-NASDAQ WYNN RESORTS LTD,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wynn.us.txt
+WDC:US,US9581021055,WESTERNDIGIT,NASDAQ (USD) USA-NASDAQ WESTERN DIGITAL,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wdc.us.txt
+WERN:US,US9507551086,ENT,NASDAQ (USD) USA-NASDAQ WERNER ENTERPRISES INC,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wern.us.txt
+WDFC:US,US9292361071,CO,NASDAQ (USD) USA-NASDAQ WD-40 COMPANY,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wdfc.us.txt
+VSAT:US,US92552V1008,INC,NASDAQ (USD) USA-NASDAQ VIASAT INC,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vsat.us.txt
+VRNT:US,US92343X1000,VERINTSYSTEM,NASDAQ (USD) USA-NASDAQ VERINT SYSTEMS,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vrnt.us.txt
+VCEL:US,US92346J1088,CORP,NASDAQ (USD) USA-NASDAQ VERICEL CORP,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vcel.us.txt
+OLED:US,US91347P1057,DI,NASDAQ (USD) USA-NASDAQ UNIVERSAL DISPLAY CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/oled.us.txt
+TTWO:US,US8740541094,INT,NASDAQ (USD) USA-NASDAQ TAKE-TWO INTERACTIVE SOFTWARE,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttwo.us.txt
+UTHR:US,US91307C1027,THERA,NASDAQ (USD) USA-NASDAQ UNITED THERAPEUTICS CORP,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/uthr.us.txt
+UNFI:US,US9111631035,NATUR,NASDAQ (USD) USA-NASDAQ UNITED NATURAL FOODS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/unfi.us.txt
+UBSI:US,US9099071071,BANKS,NASDAQ (USD) USA-NASDAQ UNITED BANKSHARES INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ubsi.us.txt
+UFPI:US,US90278Q1085,INDUST,NASDAQ (USD) USA-NASDAQ UFP INDUSTRIES INC,us,USD,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/ufpi.us.txt
+TRMB:US,US8962391004,INC,NASDAQ (USD) USA-NASDAQ TRIMBLE INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/trmb.us.txt
+TSCO:US,US8923561067,SUPP,NASDAQ (USD) USA-NASDAQ TRACTOR SUPPLY COMPANY,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tsco.us.txt
+TTEK:US,US88162G1031,TECH,NASDAQ (USD) USA-NASDAQ TETRA TECH INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttek.us.txt
+PSEC:US,US74348T1025,CAP,NASDAQ (USD) USA-NASDAQ PROSPECT CAPITAL CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/psec.us.txt
+PRGS:US,US7433121008,PROGRESSSOFT,NASDAQ (USD) USA-NASDAQ PROGRESS SOFTWARE,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/prgs.us.txt
+POWI:US,US7392761034,INTEGR,NASDAQ (USD) USA-NASDAQ POWER INTEGRATIONS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/powi.us.txt
+JACK:US,US4663671091,BOX,NASDAQ (USD) USA-NASDAQ JACK IN THE BOX JACK,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jack.us.txt
+LFUS:US,US5370081045,LITTELFUSE,NASDAQ (USD) USA-NASDAQ LITTELFUSE,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lfus.us.txt
+LECO:US,US5339001068,ELEC,NASDAQ (USD) USA-NASDAQ LINCOLN ELECTRIC HOLDINGS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/leco.us.txt
+LSCC:US,US5184151042,SEMI,NASDAQ (USD) USA-NASDAQ LATTICE SEMICONDUCTOR CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lscc.us.txt
+KLIC:US,US5012421013,& SOFFA INDUSTRIES INC KULICKESOFFA,NASDAQ (USD) USA-NASDAQ,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/klic.us.txt
+KTOS:US,US50077B2079,& SECURITY  KRATOS DEFEN,NASDAQ (USD) USA-NASDAQ KRATOS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ktos.us.txt
+JBLU:US,US4771431016,JETBLUE,NASDAQ (USD) USA-NASDAQ JETBLUE AIRWAYS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jblu.us.txt
+JBHT:US,US4456581077,TRAN,NASDAQ (USD) USA-NASDAQ JB HUNT TRANSPORT SERVICES INC JB,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jbht.us.txt
+JKHY:US,US4262811015,HENRY,NASDAQ (USD) USA-NASDAQ JACK HENRY ASSOCIATES INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jkhy.us.txt
+LKQ:US,US5018892084,CORP,NASDAQ (USD) USA-NASDAQ LKQ CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lkq.us.txt
+ITRI:US,US4657411066,INC,NASDAQ (USD) USA-NASDAQ ITRON INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/itri.us.txt
+ISRG:US,US46120E6023,SU,NASDAQ (USD) USA-NASDAQ INTUITIVE SURGICAL INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/isrg.us.txt
+IART:US,US4579852082,LIFE,NASDAQ (USD) USA-NASDAQ INTEGRA LIFESCIENCES HOLDINGS CORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/iart.us.txt
+INCY:US,US45337C1027,CORP,NASDAQ (USD) USA-NASDAQ INCYTE CORP,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/incy.us.txt
+ILMN:US,US4523271090,INC,NASDAQ (USD) USA-NASDAQ ILLUMINA INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ilmn.us.txt
+ICUI:US,US44930G1076,MEDICAL,NASDAQ (USD) USA-NASDAQ ICU MEDICAL INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/icui.us.txt
+ICLR:US,IE0005711209,PLC,NASDAQ (USD) USA-NASDAQ ICON PLC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/iclr.us.txt
+LPSN:US,US5381461012,LIVEPERSON,NASDAQ (USD) USA-NASDAQ LIVEPERSON,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lpsn.us.txt
+LTC:US,US5021751020,PROPERTI,NASDAQ (USD) USA-NASDAQ LTC PROPERTIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ltc.us.txt
+POOL:US,US73278L1052,CORP,NASDAQ (USD) USA-NASDAQ POOL CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pool.us.txt
+NTGR:US,US64111Q1040,INC,NASDAQ (USD) USA-NASDAQ NETGEAR INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ntgr.us.txt
+PENN:US,US7075691094,GA,NASDAQ (USD) USA-NASDAQ PENN NATIONAL GAMING INC PENN,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/penn.us.txt
+PEGA:US,US7055731035,PEGASYSTEMS,NASDAQ (USD) USA-NASDAQ PEGASYSTEMS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pega.us.txt
+PAAS:US,CA6979001089,SIL,NASDAQ (USD) USA-NASDAQ PAN AMERICAN SILVER  CORP PAN,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/paas.us.txt
+OMCL:US,US68213N1090,INC,NASDAQ (USD) USA-NASDAQ OMNICELL INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/omcl.us.txt
+NVEC:US,US6294452064,CORP,NASDAQ (USD) USA-NASDAQ NVE CORPORATION,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nvec.us.txt
+NDSN:US,US6556631025,CORP,NASDAQ (USD) USA-NASDAQ NORDSON CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ndsn.us.txt
+NBIX:US,US64125C1099,NEUROCRINE,NASDAQ (USD) USA-NASDAQ NEUROCRINE BIOSCIENCES,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nbix.us.txt
+NEOG:US,US6404911066,CORP,NASDAQ (USD) USA-NASDAQ NEOGEN CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/neog.us.txt
+MKTX:US,US57060D1081,MARKETAXESS,NASDAQ (USD) USA-NASDAQ MARKETAXESS HOLDINGS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mktx.us.txt
+MYGN:US,US62855J1043,GENET,NASDAQ (USD) USA-NASDAQ MYRIAD GENETICS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mygn.us.txt
+MPWR:US,US6098391054,MONOLITHIC,NASDAQ (USD) USA-NASDAQ MONOLITHIC POWER SYSTEMS,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mpwr.us.txt
+MKSI:US,US55306N1046,INSTRUME,NASDAQ (USD) USA-NASDAQ MKS INSTRUMENTS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mksi.us.txt
+MVIS:US,US5949603048,MICROVISION,NASDAQ (USD) USA-NASDAQ MICROVISION,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mvis.us.txt
+MSTR:US,US5949724083,IN,NASDAQ (USD) USA-NASDAQ MICROSTRATEGY INCORPORATED  MICRO,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mstr.us.txt
+MMSI:US,US5898891040,MEDICA,NASDAQ (USD) USA-NASDAQ MERIT MEDICAL SYSTEMS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mmsi.us.txt
+MRCY:US,US5893781089,SYST,NASDAQ (USD) USA-NASDAQ MERCURY SYSTEMS INC,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mrcy.us.txt
+TU:US,CA87971M1032,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TELUS CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tu.us.txt
+TDY:US,US8793601050,TEC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tdy.us.txt
+CRS:US,US1442851036,TE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CARPENTER TECHNOLOGY CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crs.us.txt
+JEF:US,US47233W1099,JEFFERIESFIN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE JEFFERIES FINANCIAL GROUP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/jef.us.txt
+GPN:US,US37940X1028,PAYME,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GLOBAL PAYMENTS,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gpn.us.txt
+GNW:US,US37247D1063,FIN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GENWORTH FINANCIAL INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gnw.us.txt
+IT:US,US3666511072,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GARTNER INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/it.us.txt
+GME:US,US36467W1099,GAMESTOP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GAMESTOP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gme.us.txt
+FCN:US,US3029411093,CONSULTI,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FTI CONSULTING INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fcn.us.txt
+FMC:US,US3024913036,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FMC CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fmc.us.txt
+FLS:US,US34354P1057,FLOWSERVE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FLOWSERVE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fls.us.txt
+FLO:US,US3434981011,FOOD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FLOWERS FOODS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/flo.us.txt
+FIS:US,US31620M1062,INF,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fis.us.txt
+FRT:US,US3137451015,REALTY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FEDERAL REALTY INVESTMENTS TRUST,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/frt.us.txt
+FICO:US,US3032501047,ISAAC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FAIR ISAAC CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fico.us.txt
+FDS:US,US3030751057,RESE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE FACTSET RESEARCH SYSTEMS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fds.us.txt
+EXR:US,US30225T1025,SPACE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EXTRA SPACE STORAGE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/exr.us.txt
+ES:US,US30040W1080,EVERSOURCE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EVERSOURCE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/es.us.txt
+EVRG:US,US30034W1062,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EVERGY INC,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/evrg.us.txt
+EL:US,US5184391044,LAUDER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ESTEE LAUDER,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/el.us.txt
+ESS:US,US2971781057,PROPER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ESSEX PROPERTY,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ess.us.txt
+GGG:US,US3841091040,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GRACO INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ggg.us.txt
+GTN:US,US3893751061,TV,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GRAY TELEVISION INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gtn.us.txt
+GBX:US,US3936571013,GREENBRIER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GREENBRIER COMPANIES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gbx.us.txt
+HST:US,US44107P1049,& RE HOST HOTELS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HOST,us,USD,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hst.us.txt
+IRM:US,US46284V1017,IRONMOUNTAIN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE IRON,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/irm.us.txt
+IVZ:US,BMG491BT1088,LTD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE INVESCO LTD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ivz.us.txt
+ITGR:US,US45826H1095,HOLD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE INTEGER HOLDINGS CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/itgr.us.txt
+INGR:US,US4571871023,INGREDION,NEW YORK STOCK EXCHANGE (USD) USA-NYSE INGREDION,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ingr.us.txt
+IMO:US,CA4530384086,OIL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE IMPERIAL OIL,us,USD,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/imo.us.txt
+IEX:US,US45167R1041,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE IDEX CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/iex.us.txt
+HUN:US,US4470111075,HUNTSMAN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HUNTSMAN,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hun.us.txt
+HRL:US,US4404521001,FOODS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HORMEL FOODS CRP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hrl.us.txt
+GPI:US,US3989051095,AUTO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GROUP 1 AUTOMOTIVE INC GROUP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/gpi.us.txt
+HXL:US,US4282911084,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HEXCEL CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hxl.us.txt
+HLF:US,KYG4412G1010,NU,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HERBALIFE NUTRITION LTD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hlf.us.txt
+HP:US,US4234521015,& PAYNE HELMERICH,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hp.us.txt
+HEI:US,US4228061093,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HEICO CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hei.us.txt
+HE:US,US4198701009,ELE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE HAWAIIAN ELECTRIC INDUSTRIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/he.us.txt
+HOG:US,US4128221086,HARLEY-DAVID,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hog.us.txt
+GES:US,US4016171054,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE GUESS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ges.us.txt
+WTRG:US,US29670G1022,UT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ESSENTIAL UTILITIES INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/wtrg.us.txt
+EQT:US,US26884L1098,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EQT CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/eqt.us.txt
+ENS:US,US29275Y1029,ENERSYS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ens.us.txt
+CLH:US,US1844961078,HARBOR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CLEAN HARBORS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/clh.us.txt
+CMC:US,US2017231034,METALS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COMMERCIAL METALS CO,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cmc.us.txt
+HLX,US42330P1075,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hlx.us.txt
+CDE:US,US1921085049,MINING,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COEUR MINING INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cde.us.txt
+CNX:US,US12653C1080,RESOURCE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CNX RESOURCES CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cnx.us.txt
+CNO:US,US12621E1038,CNOFINANCIAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CNO FINANCIAL GROUP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cno.us.txt
+CNA:US,US1261171003,COR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CNA FINANCIAL CORP CNA,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cna.us.txt
+CLF:US,US1858991011,CLEVELAND,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CLEVELAND-CLIFFS,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/clf.us.txt
+CHD:US,US1713401024,& DWIGHT CHURCHDWIGHT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/chd.us.txt
+CRK:US,US2057683029,RES,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COMSTOCK RESOURCES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crk.us.txt
+CHH:US,US1699051066,HOTEL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CHOICE HOTELS INTERNATIONAL IN,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/chh.us.txt
+LNG:US,US16411R2085,ENE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CHENIERE ENERGY INC,us,USD,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/lng.us.txt
+CHE:US,US16359R1032,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CHEMED CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/che.us.txt
+CRL:US,US1598641074,RIVE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crl.us.txt
+CNC:US,US15135B1017,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CENTENE CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cnc.us.txt
+CE:US,US1508701034,COR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CELANESE CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ce.us.txt
+CBRE:US,US12504L1098,GROUP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CBRE GROUP INC-A,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cbre.us.txt
+CMP:US,US20451N1019,MINE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COMPASS MINERALS INTERNATIONAL,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cmp.us.txt
+STZ:US,US21036P1084,CONSTELLATIO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/stz.us.txt
+ENR:US,US29272W1099,HO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ENERGIZER HOLDINGS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/enr.us.txt
+DLB:US,US25659T1079,LABORA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DOLBY LABORATORIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dlb.us.txt
+ENB:US,CA29250N1050,ENBRIDGE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ENBRIDGE,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/enb.us.txt
+EME:US,US29084Q1004,GROUP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EMCOR GROUP INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/eme.us.txt
+EGO:US,CA2849025093,ELDORADOGOLD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ELDORADO GOLD,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ego.us.txt
+EW:US,US28176E1082,LIFE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EDWARDS LIFESCIENCES CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ew.us.txt
+EXP:US,US26969P1084,MATERI,NEW YORK STOCK EXCHANGE (USD) USA-NYSE EAGLE MATERIALS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/exp.us.txt
+DY:US,US2674751019,INDS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DYCOM INDUSTRIES INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dy.us.txt
+DHI:US,US23331A1097,HORTON,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DR HORTON INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dhi.us.txt
+DLR:US,US2538681030,REAL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DIGITAL REALTY,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dlr.us.txt
+CTRA:US,US1270971039,ENER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE COTERRA ENERGY INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ctra.us.txt
+DB:US,DE0005140008,BANK-RG,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DEUTSCHE BANK-RG,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/db.us.txt
+DECK:US,US2435371073,OUTD,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DECKERS OUTDOOR CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/deck.us.txt
+DVA:US,US23918K1088,DAVITAHEALTH,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DAVITA,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dva.us.txt
+DAR:US,US2372661015,INGR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE DARLING INGREDIENTS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dar.us.txt
+CW:US,US2315611010,CURTISS-WRIG,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CURTISS-WRIGHT,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cw.us.txt
+CCK:US,US2283681060,HOLDIN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CROWN HOLDINGS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cck.us.txt
+CCI:US,US22822V1017,CASTLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE CROWN CASTLE INT,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cci.us.txt
+J:US,US46982L1089,SOLUT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE JACOBS SOLUTIONS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/j.us.txt
+SJM:US,US8326964058,SMUCKER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE JM SMUCKER CO,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sjm.us.txt
+SKT:US,US8754651060,FACTO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE TANGER FACTORY OUTLET CENTERS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/skt.us.txt
+JLL:US,US48020Q1076,L,NEW YORK STOCK EXCHANGE (USD) USA-NYSE JONES LANG LASALLE INC JONES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/jll.us.txt
+RL:US,US7512121010,LAUREN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RALPH LAUREN CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rl.us.txt
+PWR:US,US74762E1029,SERVI,NEW YORK STOCK EXCHANGE (USD) USA-NYSE QUANTA SERVICES,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pwr.us.txt
+QGEN:US,NL0015002CX3,NV,NEW YORK STOCK EXCHANGE (USD) USA-NYSE QIAGEN NV,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/qgen.us.txt
+PVH:US,US6936561009,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PVH CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pvh.us.txt
+PSA:US,US74460D1090,STORA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PUBLIC STORAGE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/psa.us.txt
+PRG:US,US74319R1014,HOLDING,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PROG HOLDINGS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/prg.us.txt
+PII:US,US7310681025,POLARIS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE POLARIS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pii.us.txt
+PRGO:US,IE00BGH1M568,CO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PERRIGO CO PLC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/prgo.us.txt
+PNR:US,IE00BLS09M33,PLC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PENTAIR PLC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pnr.us.txt
+PAG:US,US70959W1036,AUTOM,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PENSKE AUTOMOTIVE GROUP INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pag.us.txt
+PKG:US,US6951561090,CO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE PACKAGING CORP OF AMERICA,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/pkg.us.txt
+OMI:US,US6907321029,& MINOR INC OWENS&MINOR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/omi.us.txt
+ON:US,US6821891057,SEMICONDU,NASDAQ (USD) USA-NASDAQ ON SEMICONDUCTOR CORP,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/on.us.txt
+ORA:US,US6866881021,TECHNO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ORMAT TECHNOLOGIES INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ora.us.txt
+OKE:US,US6826801036,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ONEOK INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oke.us.txt
+OHI:US,US6819361006,HEALTH,NEW YORK STOCK EXCHANGE (USD) USA-NYSE OMEGA HEALTHCARE INVESTORS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ohi.us.txt
+OLN:US,US6806652052,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE OLIN CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oln.us.txt
+RRC:US,US75281A1097,RESOUR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RANGE RESOURCES,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rrc.us.txt
+O:US,US7561091049,REALTYINCOME,NEW YORK STOCK EXCHANGE (USD) USA-NYSE REALTY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/o.us.txt
+RS:US,US7595091023,& ALUMINUM RELIANCE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RELIANCE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rs.us.txt
+SIG:US,BMG812761002,JEWEL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SIGNET JEWELERS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sig.us.txt
+SNX:US,US87162W1009,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SYNNEX CORPORATION,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/snx.us.txt
+SLF:US,CA8667961053,FIN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SUN LIFE FINANCIAL INC SUN,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/slf.us.txt
+STM:US,US8610121027,N.V.  STMICROELECT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/stm.us.txt
+SON:US,US8354951027,SONOCO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SONOCO PRODUCTS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/son.us.txt
+AOS:US,US8318652091,AO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SMITH AO CORPORATION,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/aos.us.txt
+SLG:US,US78440X8873,REA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SL GREEN REALTY SL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/slg.us.txt
+SSD:US,US8290731053,MANU,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SIMPSON MANUFACTURING CO INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ssd.us.txt
+SFL:US,BMG7738W1064,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE SFL CORPORATION LTD,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sfl.us.txt
+RNR:US,BMG7496G1033,RENAISSANCER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RENAISSANCERE HOLDINGS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rnr.us.txt
+CRM:US,US79466L3024,SALESFORCE.COM SALESFORCE,NEW YORK STOCK EXCHANGE (USD),us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crm.us.txt
+RHP:US,US78377T1079,HOSPI,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RYMAN HOSPITALITY PROPERTIES,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rhp.us.txt
+RCL:US,LR0008862868,CARIBB,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ROYAL CARIBBEAN,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rcl.us.txt
+ROP:US,US7766961061,TECHNO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ROPER TECHNOLOGI,us,USD,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rop.us.txt
+ROL:US,US7757111049,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE ROLLINS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rol.us.txt
+RMD:US,US7611521078,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE RESMED INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rmd.us.txt
+RSG:US,US7607591002,SVC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE REPUBLIC SERVICES,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rsg.us.txt
+ORI:US,US6802231042,REPUB,NEW YORK STOCK EXCHANGE (USD) USA-NYSE OLD REPUBLIC INTERNATIONAL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ori.us.txt
+OIS:US,US6780261052,STATES,NEW YORK STOCK EXCHANGE (USD) USA-NYSE OIL STATES INTERNATIONAL INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ois.us.txt
+OGE:US,US6708371033,ENERGY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE OGE ENERGY CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oge.us.txt
+LAD:US,US5367971034,MOTOR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LITHIA MOTORS INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lad.us.txt
+MLM:US,US5732841060,M,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MARTIN MARIETTA MATERIALS MARTIN,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mlm.us.txt
+MKL:US,US5705351048,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MARKEL CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mkl.us.txt
+MFC:US,CA56501R1064,MANULIFE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MANULIFE FINANCIAL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mfc.us.txt
+MAN:US,US56418H1005,MANPOWERGROU,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MANPOWERGROUP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/man.us.txt
+MGA:US,CA5592224011,INTL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MAGNA INTERNATIONAL INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mga.us.txt
+MAC:US,US5543821012,CO,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MACERICH CO,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mac.us.txt
+L:US,US5404241086,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LOEWS CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/l.us.txt
+LII:US,US5261071071,INTL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LENNOX INTERNATIONAL INC,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lii.us.txt
+MDU:US,US5526901096,GROU,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MDU RESOURCES GROUP INC MDU,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mdu.us.txt
+LEN:US,US5260571048,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LENNAR CORP-A,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/len.us.txt
+LCII:US,US50189K1034,INDUSTRI,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LCI INDUSTRIES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lcii.us.txt
+LVS:US,US5178341070,SA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE LAS VEGAS SANDS CORP LAS,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lvs.us.txt
+LHX:US,US5024311095,L3HARRISTECH,NEW YORK STOCK EXCHANGE (USD) USA-NYSE L3 HARRIS TECHNOLOGIES,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/lhx.us.txt
+KFY:US,US5006432000,KORN/FERRY INTERNATIONAL KORN FERRY,NEW YORK STOCK EXCHANGE (USD),us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kfy.us.txt
+KEX:US,US4972661064,CORP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE KIRBY CORP,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kex.us.txt
+KIM:US,US49446R1095,REALTY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE KIMCO REALTY,us,USD,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kim.us.txt
+MTZ:US,US5763231090,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MASTEC INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtz.us.txt
+MED:US,US58470H1014,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MEDIFAST INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/med.us.txt
+OI:US,US67098H1041,GLASS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE O-I GLASS INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/oi.us.txt
+MOV:US,US6245801062,GROUP,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOVADO GROUP INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mov.us.txt
+NVR:US,US62944T1051,INC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE NVR INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nvr.us.txt
+NRG:US,US6293775085,ENERGY,NEW YORK STOCK EXCHANGE (USD) USA-NYSE NRG ENERGY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nrg.us.txt
+NNN:US,US6374171063,REIT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE NNN REIT,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nnn.us.txt
+NEE:US,US65339F1012,ENER,NEW YORK STOCK EXCHANGE (USD) USA-NYSE NEXTERA ENERGY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nee.us.txt
+NFG:US,US6361801011,GA,NEW YORK STOCK EXCHANGE (USD) USA-NYSE NATIONAL FUEL GAS CO NATL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/nfg.us.txt
+MUR:US,US6267171022,OIL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MURPHY OIL CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mur.us.txt
+MSM:US,US5535301064,DIR,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MSC INDUSTRIAL DIRECT CO INC MSC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/msm.us.txt
+MOS:US,US61945C1036,MOSAIC,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOSAIC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mos.us.txt
+MCY:US,US5894001008,GEN,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MERCURY GENERAL CORP,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mcy.us.txt
+MS:US,US6174464486,STANL,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MORGAN STANLEY,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/ms.us.txt
+TAP:US,US60871R2094,COORS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOLSON COORS-B,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/tap.us.txt
+MOH:US,US60855R1005,HEALT,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOLINA HEALTHCARE INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/moh.us.txt
+MHK:US,US6081901042,INDS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MOHAWK INDS,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mhk.us.txt
+MAA:US,US59522J1034,MIDAMERICA,NEW YORK STOCK EXCHANGE (USD),us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/maa.us.txt
+MGM:US,US5529531015,RESORTS,NEW YORK STOCK EXCHANGE (USD) USA-NYSE MGM RESORTS INTERNATIONAL,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mgm.us.txt
+MTD:US,US5926881054,TOLE,NEW YORK STOCK EXCHANGE (USD) USA-NYSE METTLER-TOLEDO INTERNATIONAL INC,us,USD,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/mtd.us.txt
+HP,US4234521015,"Helmerich & Payne, Inc. USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hp.us.txt
+VLT,US46131F1012,Invesco High Income Trust II USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/vlt.us.txt
+HLIO,US42328H1095,"Helios Technologies, Inc. USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/hlio.us.txt
+NEOG,US6404911066,Neogen Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/neog.us.txt
+NICE,US6536561086,Nice Ltd ADR USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nice.us.txt
+NBIX,US64125C1099,Neurocrine Biosciences Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nbix.us.txt
+NTCT,US64115T1043,NETSCOUT SYSTEMS USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ntct.us.txt
+NTGR,US64111Q1040,"NETGEAR, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ntgr.us.txt
+NTES,US64110W1027,"NetEase, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ntes.us.txt
+NFLX,US64110L1061,"Netflix, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nflx.us.txt
+NVEC,US6294452064,NVE Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nvec.us.txt
+NWPX,US6677461013,Northwest Pipe Company USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nwpx.us.txt
+MYGN,US62855J1043,Myriad Genetics Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mygn.us.txt
+MPWR,US6098391054,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mpwr.us.txt
+MLKN,US6005441000,MillerKnoll Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mlkn.us.txt
+MSEX,US5966801087,Middlesex Water Company USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/msex.us.txt
+MIDD,US5962781010,Middleby Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/midd.us.txt
+MSTR,US5949724083,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mstr.us.txt
+NDSN,US6556631025,Nordson Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ndsn.us.txt
+NWE,US6680743050,Northwestern Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nwe.us.txt
+MMSI,US5898891040,Merit Medical Systems Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mmsi.us.txt
+OXSQ,US69181V1070,Oxford Square Capital Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/oxsq.us.txt
+PETS,US7163821066,"PetMed Express, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pets.us.txt
+PENN,US7075691094,Penn Entertainment Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/penn.us.txt
+PEGA,US7055731035,Pegasystems Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pega.us.txt
+PZZA,US6988131024,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pzza.us.txt
+PRAA,US69354N1063,PRA Group USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/praa.us.txt
+PDFS,US6932821050,PDF Solutions USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pdfs.us.txt
+OTTR,US6896481032,Otter Tail Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ottr.us.txt
+ORLY,US67103H1077,"O'Reilly Automotive, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/orly.us.txt
+OPCH,US68404L2016,Option Care Health Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/opch.us.txt
+OSPN,US68287N1000,OneSpan USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ospn.us.txt
+FLWS,US68243Q1067,1-800-FLOWERS.COM USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/flws.us.txt
+ON,US6821891057,ON Semiconductor Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/on.us.txt
+ZEUS,US68162K1060,"Olympic Steel, Inc. USD",NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/zeus.us.txt
+OMEX,US6761182012,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/omex.us.txt
+MVIS,US5949603048,Microvision Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mvis.us.txt
+MRCY,US5893781089,Mercury Systems Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mrcy.us.txt
+PPC,US72147K1088,Pilgrim's Pride Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ppc.us.txt
+JAKK,US47012E4035,JAKKS Pacific USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jakk.us.txt
+KTOS,US50077B2079,Kratos Defense&Secutrity USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ktos.us.txt
+KOPN,US5006001011,Kopin Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/kopn.us.txt
+KRNY,US48716P1084,Kearny Financial Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/krny.us.txt
+KVHI,US4827381017,KVH Industries Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/kvhi.us.txt
+ZD,US48123V1026,Ziff Davis USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/zd.us.txt
+JBLU,US4771431016,JetBlue Airways Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jblu.us.txt
+JJSF,US4660321096,J&J Snack Foods Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jjsf.us.txt
+LKQ,US5018892084,LKQ Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lkq.us.txt
+ISRG,US46120E6023,"Intuitive Surgical, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/isrg.us.txt
+IPAR,US4583341098,Inter Perfums Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ipar.us.txt
+IART,US4579852082,Integra Lifesciences Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/iart.us.txt
+INSG,US45782B3024,Inseego Corp.  USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/insg.us.txt
+INO,US45773H4092,Inovio Pharmaceuticals Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ino.us.txt
+IOSP,US45768S1050,Innospec USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/iosp.us.txt
+KLIC,US5012421013,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/klic.us.txt
+LKFN,US5116561003,Lakeland Financial Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lkfn.us.txt
+MERC,US5880561015,Mercer International Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/merc.us.txt
+MANH,US5627501092,"Manhattan Associates, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/manh.us.txt
+MFIN,US5839281061,Medallion Financial Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mfin.us.txt
+MGRC,US5805891091,McGrath RentCorp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mgrc.us.txt
+MATW,US5771281012,Matthews International Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/matw.us.txt
+MTRX,US5768531056,Matrix Service Company USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mtrx.us.txt
+MRTN,US5730751089,Marten Transport USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mrtn.us.txt
+MKTX,US57060D1081,MarketAxess Holdings Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mktx.us.txt
+MKSI,US55306N1046,"MKS Instruments, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mksi.us.txt
+LSCC,US5184151042,Lattice Semiconductor USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lscc.us.txt
+MGPI,US55303J1060,MGP Ingredients Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mgpi.us.txt
+MGEE,US55277P1049,"MGE Energy, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mgee.us.txt
+LPSN,US5381461012,LivePerson Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lpsn.us.txt
+LFUS,US5370081045,"Littelfuse, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lfus.us.txt
+LECO,US5339001068,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/leco.us.txt
+LTBR,US53224K3023,Lightbridge Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ltbr.us.txt
+PLAB,US7194051022,Photronics Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/plab.us.txt
+PNFP,US72346Q1040,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pnfp.us.txt
+INOD,US4576422053,Innodata USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/inod.us.txt
+TTEK,US88162G1031,Tetra Tech Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttek.us.txt
+TTEC,US89854H1023,"TTEC Holdings, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttec.us.txt
+TRMK,US8984021027,Trustmark Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/trmk.us.txt
+TCOM,US89677Q1076,Trip Com Group Ltd ADR USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tcom.us.txt
+TRMB,US8962391004,"Trimble, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/trmb.us.txt
+TSCO,US8923561067,Tractor Supply Company USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tsco.us.txt
+TCBI,US88224Q1076,Texas Capital BancShares Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tcbi.us.txt
+TTWO,US8740541094,Take-Two Interactive Software USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttwo.us.txt
+UBSI,US9099071071,United Bankshares USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ubsi.us.txt
+TTMI,US87305R1095,TTM Technologies Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ttmi.us.txt
+SYNA,US87157D1090,Synaptics Incorporated USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/syna.us.txt
+STRA,US86272C1036,"Strategic Education, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stra.us.txt
+STRL,US8592411016,Sterling Construction Co USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/strl.us.txt
+STLD,US8581191009,Steel Dynamics USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stld.us.txt
+STGW,US85256A1097,Stagwell USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stgw.us.txt
+UFPI,US90278Q1085,UFP Industries Inc USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/ufpi.us.txt
+UTHR,US91307C1027,USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/uthr.us.txt
+SPOK,US84863T1060,Spok Holdings Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/spok.us.txt
+VICR,US9258151029,Vicor Corporation USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vicr.us.txt
+WRLD,US9814191048,World Acceptance Corp. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wrld.us.txt
+WTFC,US97650W1080,Wintrust Financial Corp USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wtfc.us.txt
+WDC,US9581021055,Western Digital Corporation USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wdc.us.txt
+WERN,US9507551086,Werner Enterprises Inc USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wern.us.txt
+WDFC,US9292361071,WD-40 Company USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wdfc.us.txt
+VOD,US92857W3088,Vodafone Group Plc ADR USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vod.us.txt
+VSAT,US92552V1008,Viasat Inc. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vsat.us.txt
+OLED,US91347P1057,Universal Display Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/oled.us.txt
+VCEL,US92346J1088,Vericel Corporation USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vcel.us.txt
+VRNT,US92343X1000,Verint Systems Inc. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vrnt.us.txt
+VECO,US9224171002,Veeco Instruments Inc. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/veco.us.txt
+VLY,US9197941076,Valley National Bancorp USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/vly.us.txt
+URBN,US9170471026,Urban Outfitters Inc. USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/urbn.us.txt
+ULH,US91388P1057,Universal Logistics Holdings USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/ulh.us.txt
+STAA,US8523123052,STAAR Surgical USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/staa.us.txt
+SOHU,US83410S1087,Sohu.com Ltd ADR USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sohu.us.txt
+PLXS,US7291321005,Plexus Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/plxs.us.txt
+RMBS,US7509171069,Rambus Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rmbs.us.txt
+RIGL,US7665597024,Rigel Pharmaceuticals Inc.  USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rigl.us.txt
+RELL,US7631651079,Richardson Electronics Ltd USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rell.us.txt
+RBBN,US7625441040,RIBBON COMMUNICATIONS INC USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rbbn.us.txt
+RGP,US76122Q1058,Resources Connection USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rgp.us.txt
+RGEN,US7599161095,Repligen Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rgen.us.txt
+REG,US7588491032,Regency Centers Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/reg.us.txt
+RICK,US74934Q1085,RCI Hospitality Holdings USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rick.us.txt
+RGLD,US7802871084,"Royal Gold, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rgld.us.txt
+QUIK,US74837P4054,Quicklogic Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/quik.us.txt
+PSEC,US74348T1025,Prospect Capital Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/psec.us.txt
+PRGS,US7433121008,Progress Software Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/prgs.us.txt
+POWL,US7391281067,"Powell Industries, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/powl.us.txt
+PCH,US7376301039,Potlatch Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pch.us.txt
+POOL,US73278L1052,Pool Corp. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/pool.us.txt
+ROP,US7766961061,Roper Technologies Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rop.us.txt
+SEIC,US7841171033,SEI Investments Co USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/seic.us.txt
+SWBI,US8317541063,Smith And Wesson Brands Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/swbi.us.txt
+SSP,US8110544025,The E.W. Scripps Company USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ssp.us.txt
+SNBR,US83125X1037,Sleep Number Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/snbr.us.txt
+SWKS,US83088M1027,Skyworks Solutions Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/swks.us.txt
+SIRI,US8299331004,Sirius XM Holding USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/siri.us.txt
+SBGI,US8292421067,Sinclair Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sbgi.us.txt
+SLAB,US8269191024,Silicon Laboratories Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/slab.us.txt
+SMTC,US8168501018,Semtech Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/smtc.us.txt
+LNW,US80874P1093,Light & Wonder USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lnw.us.txt
+HTO,US7843051043,H20 America USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hto.us.txt
+SCHL,US8070661058,Scholastic Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/schl.us.txt
+SVRA,US8051111016,"Savara, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/svra.us.txt
+SNY,US80105N1054,Sanofi ADR USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sny.us.txt
+SGMO,US8006771062,"Sangamo Therapeutics, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sgmo.us.txt
+SAIA,US78709Y1055,Saia Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/saia.us.txt
+SAFT,US78648T1007,Safety Insurance Group Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/saft.us.txt
+NSIT,US45765U1034,"Insight Enterprises, Inc. USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/nsit.us.txt
+IMKTA,US4570301048,Ingles Markets INC USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/imkta.us.txt
+ZBRA,US9892071054,USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/zbra.us.txt
+AVT,US0538071038,Avnet USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/avt.us.txt
+OZK,US06417N1037,Bank OZK USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ozk.us.txt
+TBBK,US05969A1051,Bancorp Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tbbk.us.txt
+BANF,US05945F1030,BancFirst Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/banf.us.txt
+BCPC,US0576652004,Balchem Corp. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bcpc.us.txt
+AXON,US05464C1018,Axon Enterprise Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/axon.us.txt
+ACLS,US0545402085,"Axcelis Technologies, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/acls.us.txt
+CAR,US0537741052,"Avis Budget Group, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/car.us.txt
+BELFB,US0773473006,Bel Fuse Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/belfb.us.txt
+AZN,US0463531089,Astrazeneca USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/azn.us.txt
+AROW,US0427441029,Arrow Financial Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/arow.us.txt
+ARCC,US04010L1035,Ares Capital Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/arcc.us.txt
+ARCB,US03937C1053,ArcBest Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/arcb.us.txt
+MFIC,US03761U5020,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/mfic.us.txt
+APOG,US0375981091,Apogee Enterpreses Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/apog.us.txt
+BBSI,US0684631080,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bbsi.us.txt
+BCRX,US09058V1035,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bcrx.us.txt
+ANGO,US03475V1017,AngioDynamics Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ango.us.txt
+CVBF,US1266001056,CVB Financial Corp. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cvbf.us.txt
+CLDX,US15117B2025,Celldex Therapeutics Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cldx.us.txt
+CASY,US1475281036,"Casey's General Stores, Inc.  USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/casy.us.txt
+CWST,US1474481041,Casella Waste Systems Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cwst.us.txt
+CHY,US12811P1084,Calamos Convert&High Income USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/chy.us.txt
+CALM,US1280302027,"Cal-Maine Foods, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/calm.us.txt
+CDNS,US1273871087,Cadence Design Systems Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cdns.us.txt
+CSGS,US1263491094,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/csgs.us.txt
+TECH,US09073M1045,Bio-Techne Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/tech.us.txt
+CME,US12572Q1058,CME Group Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cme.us.txt
+CECO,US1251411013,CECO Environmental Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ceco.us.txt
+BRKR,US1167941087,Bruker Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/brkr.us.txt
+AZTA,US1143401024,Azenta Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/azta.us.txt
+BKNG,US09857L1089,Booking Holdings Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bkng.us.txt
+BJRI,US09180C1062,BJ's Restaurants Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bjri.us.txt
+ANIK,US0352551081,Anika Therapeutics Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/anik.us.txt
+ANDE,US0341641035,"The Andersons, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ande.us.txt
+CNTY,US1564921005,Century Casinos Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cnty.us.txt
+ICLR,IE0005711209,Icon Plc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/iclr.us.txt
+RDWR,IL0010834765,Radware Ltd. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rdwr.us.txt
+AUDC,IL0010829658,AudioCodes Ltd USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/audc.us.txt
+ESLT,IL0010811243,Elbit Systems Ltd. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eslt.us.txt
+STX,IE00BKVD2N49,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/stx.us.txt
+AVDL,IE00BDGMC594,Avadel Pharmaceuticals Plc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/avdl.us.txt
+WTW,IE00BDB6Q211,Willis Tower Watson Plc USD,NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wtw.us.txt
+DOX,GB0022569080,Amdocs Limited USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dox.us.txt
+SSYS,IL0011267213,Stratasys Inc. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ssys.us.txt
+SSRM,CA7847301032,SSR MINING INC. USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/ssrm.us.txt
+OTEX,CA6837151068,Open Text Corporation USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/otex.us.txt
+BLDP,CA0585861085,Ballard Power Systems Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bldp.us.txt
+GLNG,BMG9456A1009,Golar LNG LTD USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/glng.us.txt
+HELE,BMG4388N1065,Helen Of Troy Ltd USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hele.us.txt
+ACGL,BMG0450A1053,Arch Capital Group Ltd. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/acgl.us.txt
+CRNT,IL0010851660,Ceragon Networks Ltd. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/crnt.us.txt
+CWCO,KYG237731073,Consolidated Water Co. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cwco.us.txt
+AMKR,US0316521006,Amkor Technology USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/amkr.us.txt
+AGEN,US00847G8042,Agenus Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/agen.us.txt
+CRMT,US03062T1051,"America's Car-Mart, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/crmt.us.txt
+AMSC,US0301112076,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/amsc.us.txt
+LNT,US0188021085,Alliant Energy Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/lnt.us.txt
+ALGN,US0162551016,Align Technology Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/algn.us.txt
+AKAM,US00971T1016,"Akamai Technologies, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/akam.us.txt
+AGYS,US00847J1051,Agilysys USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/agys.us.txt
+AEIS,US0079731008,Advanced Energy Industries USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aeis.us.txt
+BPOP,PR7331747001,Popular Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/bpop.us.txt
+ADTN,US00486H1059,Adtran Holdings Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/adtn.us.txt
+ACIW,US0044981019,ACI Worldwide Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aciw.us.txt
+ACTG,US0038813079,Acacia Research Corporation  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/actg.us.txt
+AXTI,US00246W1036,AXT Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/axti.us.txt
+ANIP,US00182C1036,ANI Pharmaceuticals USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/anip.us.txt
+AAON,US0003602069,Aaon Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/aaon.us.txt
+CENX,US1564311082,Century Aluminum Company USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cenx.us.txt
+CERS,US1570851014,Cerus Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cers.us.txt
+INDB,US4538361084,Independent Bank Corp. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/indb.us.txt
+FOSL,US34988V1061,"FOSSIL GROUP, INC. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fosl.us.txt
+GOOD,US3765361080,Gladstone Commercial Corp. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/good.us.txt
+GLAD,US3765358789,Gladstone Capital Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/glad.us.txt
+ROCK,US3746891072,"Gibraltar Industries, Inc.  USD",NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/rock.us.txt
+FCEL,US35952H7008,FuelCell Energy Inc.  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fcel.us.txt
+FTEK,US3595231073,Fuel Tech Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ftek.us.txt
+FELE,US3535141028,Franklin Electric Co USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fele.us.txt
+FWRD,US34986A1043,Forward Air Corp.  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fwrd.us.txt
+GIFI,US4023071024,Gulf Island Fabrication USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/gifi.us.txt
+FORM,US3463751087,Formfactor Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/form.us.txt
+FCFS,US33768G1076,FirstCash Holdings Inc.  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fcfs.us.txt
+FRME,US3208171096,First Merchants Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/frme.us.txt
+FBNC,US3189101062,First BanCorp NC USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/fbnc.us.txt
+FFIV,US3156161024,"F5 Networks, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ffiv.us.txt
+EZPW,US3023011063,Ezcorp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ezpw.us.txt
+GGAL,US3999091008,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ggal.us.txt
+HCKT,US4046091090,Hackett Group USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hckt.us.txt
+EXPO,US30214U1025,Exponent Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/expo.us.txt
+HURC,US4473241044,Hurco Companies USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hurc.us.txt
+INCY,US45337C1027,Incyte Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/incy.us.txt
+IMMR,US4525211078,Immersion Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/immr.us.txt
+ILMN,US4523271090,Illumina Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ilmn.us.txt
+IDXX,US45168D1046,"IDEXX Laboratories, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/idxx.us.txt
+ICUI,US44930G1076,"ICU Medical, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/icui.us.txt
+HURN,US4474621020,Huron Consulting Group  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hurn.us.txt
+JBHT,US4456581077,USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jbht.us.txt
+HAIN,US4052171000,The Hain Celestial Group Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hain.us.txt
+HUBG,US4433201062,Hub Group USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hubg.us.txt
+HST,US44107P1049,Host Hotels & Resorts Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hst.us.txt
+HOLX,US4364401012,Hologic Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/holx.us.txt
+JKHY,US4262811015,Henry Jack & Associates Inc USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/jkhy.us.txt
+HLIT,US4131601027,Harmonic Inc.  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/hlit.us.txt
+HALO,US40637H1095,Halozyme Therapeutics USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/halo.us.txt
+EXTR,US30226D1063,Extreme Networks Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/extr.us.txt
+EXEL,US30161Q1040,"Exelixis, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/exel.us.txt
+CAKE,US1630721017,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cake.us.txt
+CBSH,US2005251036,"Commerce Bancshares, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cbsh.us.txt
+CSGP,US22160N1090,"CoStar Group, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/csgp.us.txt
+QDEL,US2197981051,Quidelortho Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/qdel.us.txt
+CPRT,US2172041061,Copart Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cprt.us.txt
+CMTL,US2058262096,Comtech Telecommunications USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cmtl.us.txt
+CTBI,US2041491083,Community Trust Bancorp Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ctbi.us.txt
+CVGI,US2026081057,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cvgi.us.txt
+COHU,US1925761066,COHU INC USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cohu.us.txt
+CRESY,US2264061068,Cresud SA ADR USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cresy.us.txt
+CTSH,US1924461023,Solutions Corporation - Class USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ctsh.us.txt
+CGNX,US1924221039,Cognex Corporation USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cgnx.us.txt
+CCOI,US19239V3024,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ccoi.us.txt
+COKE,US1910981026,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/coke.us.txt
+CRUS,US1727551004,Cirrus Logic Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/crus.us.txt
+CHDN,US1714841087,Churchill Downs Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/chdn.us.txt
+CBRL,US22410J1060,Cracker Barrel Old Country USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/cbrl.us.txt
+CCRN,US2274831047,Cross Country Healthcare Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ccrn.us.txt
+EVRG,US30034W1062,Evergy Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/evrg.us.txt
+EGHT,US2829141009,8x8 Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eght.us.txt
+EEFT,US2987361092,"Euronet Worldwide, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eeft.us.txt
+ERIE,US29530P1021,Erie Indemnity Company USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/erie.us.txt
+ERIC,US2948216088,Ericsson ADS USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eric.us.txt
+EQIX,US29444U7000,"Equinix, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/eqix.us.txt
+ENTG,US29362U1043,"Entegris, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/entg.us.txt
+ECPG,US2925541029,Encore Capital Group Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ecpg.us.txt
+EWBC,US27579R1041,East West Bancorp Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/ewbc.us.txt
+BOOM,US23291C1036,DMC Global Inc USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/boom.us.txt
+DPZ,US25754A2015,"Domino's Pizza, Inc. USD",NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dpz.us.txt
+DHC,US25525P1075,USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dhc.us.txt
+DIOD,US2545431015,Diodes Incorporated USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/diod.us.txt
+DGII,US2537981027,Digi International  USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dgii.us.txt
+DENN,US24869P1049,Denny's Corp USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/denn.us.txt
+DAKT,US2342641097,Daktronics Inc. USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/dakt.us.txt
+WYNN,US9831341071,"Wynn Resorts, Limited USD",NSQ,us,,nasdaq stocks/3,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/3/wynn.us.txt
+SBAC,US78410G1040,SBA Communications Corp USD,NSQ,us,,nasdaq stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/2/sbac.us.txt
+LNG,US16411R2085,"Cheniere Energy, Inc. USD",NYSE,us,,nysemkt stocks,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nysemkt stocks/lng.us.txt
+KOF,US1912411089,Coca-Cola Demsa SA ADR USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/kof.us.txt
+CYH,US2036681086,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cyh.us.txt
+CMC,US2017231034,Commercial Metals Co. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cmc.us.txt
+FIX,US1999081045,Comfort Systems USA USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/fix.us.txt
+RNP,US19247X1000,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/rnp.us.txt
+COHR,US19247G1076,Coherent Corp USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cohr.us.txt
+CNS,US19247A1007,Cohen & Steers Inc USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cns.us.txt
+CDE,US1921085049,"Coeur Mining, Inc.  USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cde.us.txt
+CLF,US1858991011,Cleveland-Cliffs Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/clf.us.txt
+CRI,US1462291097,"Carter's, Inc. USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cri.us.txt
+CLH,US1844961078,Clean Harbors USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/clh.us.txt
+CHD,US1713401024,Church & Dwight Co. Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/chd.us.txt
+CPK,US1653031088,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cpk.us.txt
+ASML,USN070592100,ASML Holding NV USD,NSQ,us,,nasdaq stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nasdaq stocks/1/asml.us.txt
+CHE,US16359R1032,Chemed Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/che.us.txt
+CRL,US1598641074,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crl.us.txt
+CNC,US15135B1017,Centene Corp. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cnc.us.txt
+CIG,US2044096012,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cig.us.txt
+SID,US20440W1053,USD,NYSE,us,,nyse stocks/2,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/2/sid.us.txt
+ELP,US20441B6056,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/elp.us.txt
+CCU,US2044291043,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/ccu.us.txt
+DHI,US23331A1097,DR Horton Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/dhi.us.txt
+CW,US2315611010,Curtiss-Wright Corp USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cw.us.txt
+CFR,US2298991090,"Cullen/Frost Bankers, Inc. USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cfr.us.txt
+CTO,US22948Q1013,"CTO Realty Growth, Inc. USD",NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cto.us.txt
+CCI,US22822V1017,USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cci.us.txt
+CRT,US22757R1095,Cross Timbers Royalty Trust USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/crt.us.txt
+CUZ,US2227955026,COUSINS PROPERTIES INC REIT USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cuz.us.txt
+CDP,US22002T1088,COPT Defense Properties USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cdp.us.txt
+CXW,US21871N1019,CoreCivic Inc. USD,NYSE,us,,nyse stocks/1,2005-02-25,2025-10-03,5184,ok,,d_us_txt/data/daily/us/nyse stocks/1/cxw.us.txt

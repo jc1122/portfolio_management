@@ -11,6 +11,12 @@
 **Repository State:** 🧹 Clean and organized
 **Status:** 🎉 **MODULAR MONOLITH REFACTORING COMPLETE + DOCUMENTATION CLEANUP DONE!**
 
+### 2025-10-21 Update – Large-Universe Backtest Hardening
+
+- Documented the risk parity inverse-volatility fallback and mean-variance analytic tangency guard rails that keep 1,000-asset universes stable.
+- Refreshed backtesting docs to highlight the normalised visualization exports (`viz_equity_curve.csv`, `viz_drawdown.csv`, `viz_rolling_metrics.csv`) so chart generation no longer produces blank plots.
+- Logged the `long_history_1000` universe refresh (long-gap tickers removed, 2005-02-25 start) and captured where the derived prices/returns live under `outputs/long_history_1000/` (returns published as `long_history_1000_returns_daily.csv.gz`).
+
 ### 2025-10-19 Update – Synthetic Workflow Integration Tests
 
 - Implemented deterministic synthetic market generator (`tests/synthetic_data.py`) producing 50-year Stooq-style data for 40 assets with embedded validation scenarios (missing files, sparse histories, zero volume, negative prices, gaps, late starts).

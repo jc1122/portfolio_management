@@ -31,6 +31,7 @@ Examples:
 import argparse
 import json
 import sys
+from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -42,8 +43,6 @@ from portfolio_management.backtesting import (
     BacktestConfig,
     BacktestEngine,
     RebalanceFrequency,
-    RebalanceTrigger,
-    TransactionCostModel,
 )
 from portfolio_management.core.exceptions import (
     BacktestError,
@@ -146,12 +145,6 @@ def create_parser() -> argparse.ArgumentParser:
         choices=["daily", "weekly", "monthly", "quarterly", "annual"],
         default="monthly",
         help="Rebalancing frequency. Default: monthly",
-    )
-    parser.add_argument(
-        "--rebalance-trigger",
-        choices=["scheduled", "opportunistic", "forced"],
-        default="scheduled",
-        help="Rebalancing trigger type. Default: scheduled",
     )
     parser.add_argument(
         "--drift-threshold",
@@ -319,8 +312,19 @@ def save_results(
         pass
 
     # Convert equity curve to DataFrame
-    equity_df = pd.DataFrame(equity_curve, columns=["date", "equity"])
-    equity_df = equity_df.set_index("date")
+    if isinstance(equity_curve, pd.DataFrame):
+        equity_df = equity_curve.copy()
+        if "equity" not in equity_df.columns:
+            raise ValueError("Equity curve DataFrame must contain an 'equity' column.")
+        equity_df.index = pd.to_datetime(equity_df.index)
+        equity_df = equity_df.sort_index()
+    else:
+        equity_df = pd.DataFrame(equity_curve, columns=["date", "equity"])
+        if equity_df.empty:
+            raise ValueError("Equity curve is empty; cannot save results.")
+        equity_df["date"] = pd.to_datetime(equity_df["date"])
+        equity_df = equity_df.set_index("date").sort_index()
+    equity_df.index.name = "date"
 
     # Save configuration
     config_dict = {
@@ -328,11 +332,11 @@ def save_results(
         "end_date": config.end_date.isoformat(),
         "initial_capital": float(config.initial_capital),
         "rebalance_frequency": config.rebalance_frequency.name,
-        "rebalance_trigger": config.rebalance_trigger.name,
-        "commission_rate": float(config.commission_rate),
-        "slippage_rate": float(config.slippage_rate),
-        "min_commission": float(config.min_commission),
-        "drift_threshold": float(config.drift_threshold),
+        "rebalance_threshold": float(config.rebalance_threshold),
+        "commission_pct": float(config.commission_pct),
+        "commission_min": float(config.commission_min),
+        "slippage_bps": float(config.slippage_bps),
+        "cash_reserve_pct": float(config.cash_reserve_pct),
     }
     with open(output_dir / "config.json", "w") as f:
         json.dump(config_dict, f, indent=2)
@@ -340,13 +344,15 @@ def save_results(
         pass
 
     # Save metrics
+    metrics_dict = asdict(metrics)
+    metrics_dict["total_costs"] = float(metrics.total_costs)
     with open(output_dir / "metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
+        json.dump(metrics_dict, f, indent=2)
     if verbose:
         pass
 
     # Save equity curve
-    equity_df.to_csv(output_dir / "equity_curve.csv")
+    equity_df.to_csv(output_dir / "equity_curve.csv", index_label="date")
     if verbose:
         pass
 
@@ -375,24 +381,34 @@ def save_results(
     # Generate visualization data
     if generate_viz:
         # Equity curve with normalized values
-        viz_equity = prepare_equity_curve(equity_df)
-        viz_equity.to_csv(output_dir / "viz_equity_curve.csv")
+        viz_equity = prepare_equity_curve(equity_df).reset_index()
+        if "index" in viz_equity.columns:
+            viz_equity = viz_equity.rename(columns={"index": "date"})
+        viz_equity.to_csv(output_dir / "viz_equity_curve.csv", index=False)
 
         # Drawdown series
-        viz_drawdown = prepare_drawdown_series(equity_df)
-        viz_drawdown.to_csv(output_dir / "viz_drawdown.csv")
+        viz_drawdown = prepare_drawdown_series(equity_df).reset_index()
+        if "index" in viz_drawdown.columns:
+            viz_drawdown = viz_drawdown.rename(columns={"index": "date"})
+        viz_drawdown.to_csv(output_dir / "viz_drawdown.csv", index=False)
 
         # Rolling metrics
-        viz_rolling = prepare_rolling_metrics(equity_df)
-        viz_rolling.to_csv(output_dir / "viz_rolling_metrics.csv")
+        viz_rolling = prepare_rolling_metrics(equity_df).reset_index()
+        if "index" in viz_rolling.columns:
+            viz_rolling = viz_rolling.rename(columns={"index": "date"})
+        viz_rolling.to_csv(output_dir / "viz_rolling_metrics.csv", index=False)
 
         # Transaction costs summary
         if rebalance_events:
-            viz_costs = prepare_transaction_costs_summary(rebalance_events)
-            viz_costs.to_csv(output_dir / "viz_transaction_costs.csv")
+            viz_costs = prepare_transaction_costs_summary(
+                rebalance_events,
+            ).reset_index()
+            if "index" in viz_costs.columns:
+                viz_costs = viz_costs.rename(columns={"index": "date"})
+            viz_costs.to_csv(output_dir / "viz_transaction_costs.csv", index=False)
 
         # Summary report
-        summary = create_summary_report(metrics, rebalance_events, equity_df)
+        summary = create_summary_report(equity_df, metrics, rebalance_events)
         with open(output_dir / "summary_report.json", "w") as f:
             json.dump(summary, f, indent=2)
 
@@ -400,10 +416,17 @@ def save_results(
             pass
 
 
-def print_results(metrics: dict[str, float], verbose: bool) -> None:
+def print_results(metrics, verbose: bool) -> None:
     """Print backtest results to console."""
-    if verbose:
-        pass
+    if not verbose:
+        return
+
+    metrics_dict = asdict(metrics)
+    metrics_dict["total_costs"] = float(metrics.total_costs)
+
+    print("Backtest metrics:")
+    for key, value in metrics_dict.items():
+        print(f"- {key}: {value}")
 
 
 def main() -> int:
@@ -441,13 +464,6 @@ def main() -> int:
         if args.verbose:
             pass
 
-        # Create transaction cost model
-        cost_model = TransactionCostModel(
-            commission_rate=args.commission,
-            slippage_rate=args.slippage,
-            min_commission=args.min_commission,
-        )
-
         # Parse rebalance frequency and trigger
         freq_map = {
             "daily": RebalanceFrequency.DAILY,
@@ -456,11 +472,6 @@ def main() -> int:
             "quarterly": RebalanceFrequency.QUARTERLY,
             "annual": RebalanceFrequency.ANNUAL,
         }
-        trigger_map = {
-            "scheduled": RebalanceTrigger.SCHEDULED,
-            "opportunistic": RebalanceTrigger.OPPORTUNISTIC,
-            "forced": RebalanceTrigger.FORCED,
-        }
 
         # Create backtest configuration
         config = BacktestConfig(
@@ -468,11 +479,10 @@ def main() -> int:
             end_date=args.end_date,
             initial_capital=args.initial_capital,
             rebalance_frequency=freq_map[args.rebalance_frequency],
-            rebalance_trigger=trigger_map[args.rebalance_trigger],
-            commission_rate=args.commission,
-            slippage_rate=args.slippage,
-            min_commission=args.min_commission,
-            drift_threshold=args.drift_threshold,
+            rebalance_threshold=float(args.drift_threshold),
+            commission_pct=float(args.commission),
+            commission_min=float(args.min_commission),
+            slippage_bps=float(args.slippage) * 10000,
         )
 
         # Run backtest
@@ -481,11 +491,10 @@ def main() -> int:
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
-            cost_model=cost_model,
             prices=prices,
             returns=returns,
         )
-        equity_curve, rebalance_events, metrics = engine.run()
+        equity_curve, metrics, rebalance_events = engine.run()
         if args.verbose:
             pass
 
@@ -511,6 +520,10 @@ def main() -> int:
         InvalidBacktestConfigError,
         InsufficientHistoryError,
     ):
+        if args.verbose:
+            import traceback
+
+            traceback.print_exc()
         return 1
     except FileNotFoundError:
         return 1

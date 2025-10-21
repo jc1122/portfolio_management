@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+LARGE_UNIVERSE_THRESHOLD = 300
+
 
 class MeanVarianceStrategy(PortfolioStrategy):
     """Mean-variance optimization strategy powered by PyPortfolioOpt."""
@@ -75,11 +77,36 @@ class MeanVarianceStrategy(PortfolioStrategy):
         self._validate_returns(returns)
         prepared_returns = self._prepare_returns(returns)
         self._validate_returns(prepared_returns)
+        n_assets = prepared_returns.shape[1]
+
+        if n_assets > LARGE_UNIVERSE_THRESHOLD:
+            mu = prepared_returns.mean() * 252
+            cov_matrix = prepared_returns.cov() * 252
+            from .risk_parity import RiskParityStrategy
+
+            weights, performance = self._analytic_tangency_fallback(
+                mu,
+                cov_matrix,
+                constraints,
+            )
+            RiskParityStrategy.validate_constraints(weights, constraints, asset_classes)
+            return Portfolio(
+                weights=weights,
+                strategy=self.name,
+                metadata={
+                    "n_assets": int(weights.size),
+                    **performance,
+                    "objective": self._objective,
+                    "method": "analytic_tangency_fallback",
+                },
+            )
+
         mu, cov_matrix = self._estimate_moments(
             prepared_returns,
             expected_returns,
             risk_models,
         )
+        from .risk_parity import RiskParityStrategy
 
         attempts = [
             {
@@ -164,9 +191,6 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
         weights = self._enforce_weight_bounds(final_weights, constraints)
         ef = final_ef
-        # Import at runtime to avoid circular dependency
-        from .risk_parity import RiskParityStrategy
-
         RiskParityStrategy.validate_constraints(weights, constraints, asset_classes)
         performance = self._summarise_portfolio(ef)
 
@@ -281,6 +305,54 @@ class MeanVarianceStrategy(PortfolioStrategy):
             index=cov_matrix.index,
             columns=cov_matrix.columns,
         )
+
+    def _analytic_tangency_fallback(
+        self,
+        mu: pd.Series,
+        cov_matrix: pd.DataFrame,
+        constraints,
+    ) -> tuple[pd.Series, dict[str, float]]:
+        """Compute a long-only tangency portfolio using a closed-form approximation."""
+        subset = min(200, len(mu))
+        diag = np.sqrt(np.diag(cov_matrix.to_numpy()))
+        scores = mu.to_numpy() / np.where(diag > 0, diag, np.nan)
+        order = np.argsort(np.nan_to_num(scores, nan=-np.inf))
+        selected_indices = order[-subset:]
+        selected_tickers = mu.index[selected_indices]
+        mu_work = mu.loc[selected_tickers]
+        cov_work = cov_matrix.loc[selected_tickers, selected_tickers]
+
+        cov_array = cov_work.to_numpy()
+        mu_vec = mu_work.to_numpy()
+        inv_cov = np.linalg.pinv(cov_array)
+        raw = inv_cov @ mu_vec
+        raw = np.clip(raw, 0.0, None)
+        if not np.any(raw):
+            raw = np.ones_like(raw)
+        weights = raw / raw.sum()
+        series = pd.Series(0.0, index=mu.index)
+        series.loc[mu_work.index] = weights
+        series = self._enforce_weight_bounds(series, constraints)
+        total = float(series.sum())
+        if not np.isfinite(total) or total <= 0:
+            series = pd.Series(
+                np.full(len(series), 1.0 / len(series)),
+                index=series.index,
+            )
+        else:
+            series = series / total
+        series = series.fillna(0.0)
+        weights_array = series.to_numpy()
+        full_mu = mu.to_numpy()
+        full_cov = cov_matrix.to_numpy()
+        exp_return = float(weights_array @ full_mu)
+        volatility = float(np.sqrt(weights_array @ full_cov @ weights_array))
+        sharpe = exp_return / volatility if volatility > 0 else 0.0
+        return series, {
+            "expected_return": exp_return,
+            "volatility": volatility,
+            "sharpe_ratio": sharpe,
+        }
 
     def _initialise_frontier(
         self,

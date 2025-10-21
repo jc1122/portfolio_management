@@ -65,13 +65,16 @@ class TestRiskParityStrategy:
             strategy.construct(sample_returns, constraints)
 
     def test_singular_covariance(self, sample_returns):
-        """Test that a singular covariance matrix raises an error."""
+        """Singular covariance matrices are regularised instead of failing."""
         strategy = RiskParityStrategy()
         constraints = PortfolioConstraints()
         sample_returns["AAPL"] = 0.0  # Make covariance matrix singular
 
-        with pytest.raises(OptimizationError):
-            strategy.construct(sample_returns, constraints)
+        portfolio = strategy.construct(sample_returns, constraints)
+
+        assert len(portfolio.weights) == 4
+        assert np.isclose(portfolio.weights.sum(), 1.0)
+        assert portfolio.metadata.get("n_assets") == 4
 
     def test_missing_library(self, monkeypatch):
         """Test that a missing library raises a DependencyError."""

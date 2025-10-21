@@ -54,6 +54,7 @@ If not disabled with `--no-visualize`, these files are generated for easy charti
 - **`viz_drawdown.csv`**: Tracks the percentage loss of the portfolio from its previous all-time high. Essential for understanding risk.
 - **`viz_rolling_metrics.csv`**: Shows how key metrics like volatility and Sharpe ratio evolved over rolling time windows during the backtest.
 - **`viz_transaction_costs.csv`**: Summarizes the commissions and slippage costs incurred over time.
+- **`viz_equity_curve.csv`**: Normalised equity series suitable for plotting without additional data munging.
 
 ## Features in Detail
 
@@ -61,6 +62,10 @@ If not disabled with `--no-visualize`, these files are generated for easy charti
 - **Custom Date Range**: You can define the exact historical period for the simulation with `--start-date` and `--end-date`.
 - **Transaction Cost Modeling**: Realistically models trading frictions by allowing you to specify a `--commission` rate, a `--slippage` rate, and a `--min-commission` per trade.
 - **Flexible Rebalancing**: You can control *when* the portfolio is rebalanced using `--rebalance-frequency` (e.g., `monthly`, `quarterly`) and *how* it's triggered (e.g., on a fixed schedule or when the portfolio drifts too far from its targets).
+
+### Hardened Output Exports
+
+The CLI now guards against silent blank charts by coercing every equity curve into a sorted `DataFrame`, validating that the data is non-empty, and emitting normalised chart-ready CSVs (`viz_equity_curve.csv`, `viz_drawdown.csv`, `viz_rolling_metrics.csv`). These enhancements were exercised during the 1,000-asset (`long_history_1000`) regression runs, ensuring downstream notebooks receive consistent inputs even when risk parity optimisation falls back to a defensive solution.
 
 ## Usage Example
 

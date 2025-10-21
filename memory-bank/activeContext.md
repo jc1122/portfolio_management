@@ -10,6 +10,13 @@
 **Current Focus:** System ready for production deployment or future enhancements
 **Next Options:** Production deployment, additional features, or new capabilities
 
+### Latest Update – 2025-10-21 (Long-History Universe Hardening)
+
+- Hardened the risk parity strategy for 300+ asset universes with an inverse-volatility fallback and covariance jitter, preventing singular matrix failures during large-scale runs.
+- Documented the large-universe safeguards for both risk parity and mean-variance strategies, referencing the newly refreshed `long_history_1000` dataset.
+- Confirmed the `long_history_1000` roster now excludes long-gap tickers and delivers clean daily prices/returns (2005-02-25 onward) under `outputs/long_history_1000/` (returns stored as the compressed `long_history_1000_returns_daily.csv.gz`).
+- Updated the backtest CLI guidance to note the normalised visualization exports that keep equity and drawdown charts populated.
+
 ### Latest Update – 2025-10-19 (Synthetic Workflow Validation)
 
 - Added deterministic synthetic Stooq dataset generator `tests/synthetic_data.py` covering 40 assets across equities, bonds, REITs, and alternatives with embedded data-quality edge cases (missing files, sparse histories, zero volume, negative prices, gaps).

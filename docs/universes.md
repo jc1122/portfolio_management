@@ -6,6 +6,10 @@ The `config/universes.yaml` file is the central blueprint for the entire portfol
 
 Instead of running each script manually with many command-line arguments, you can define a universe once in this file. Then, you can use the `scripts/manage_universes.py` script to `validate`, `load`, or `compare` your defined universes, making your workflow repeatable and easy to manage.
 
+## Long-History Reference Universes
+
+For large scale regression tests we maintain `config/universes_long_history.yaml`, which stores precomputed ticker rosters derived from the Stooq archive. The `long_history_1000` entry now covers 1,000 assets with continuous daily prices from 2005-02-25 onward, excluding the previously gap-prone tickers (`BT.A`, `SANM`, `SANM:US`, `AXGN`, `AXGN:US`). The corresponding price and return matrices live under `outputs/long_history_1000/` (with returns published as the compressed `long_history_1000_returns_daily.csv.gz`) and align with the metadata exported by the asset selection pipeline.
+
 ## Role in the Workflow
 
 This configuration file is the heart of the **Managed Workflow**. The intended end-to-end process is as follows:

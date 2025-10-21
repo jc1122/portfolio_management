@@ -4,21 +4,28 @@ from __future__ import annotations
 
 import importlib
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
-from ...core.exceptions import (
+from portfolio_management.core.exceptions import (
     ConstraintViolationError,
     DependencyError,
     InsufficientDataError,
     OptimizationError,
 )
-from ..constraints.models import PortfolioConstraints
-from ..models import Portfolio
+from portfolio_management.portfolio.models import Portfolio
+
 from .base import PortfolioStrategy
 
+if TYPE_CHECKING:
+    from portfolio_management.portfolio.constraints.models import PortfolioConstraints
+
 logger = logging.getLogger(__name__)
+
+LARGE_UNIVERSE_THRESHOLD = 300
+EIGENVALUE_TOLERANCE = 1e-8
 
 
 class RiskParityStrategy(PortfolioStrategy):
@@ -73,13 +80,87 @@ class RiskParityStrategy(PortfolioStrategy):
             DependencyError: If riskparityportfolio library is not installed
 
         """
-        # Check for required library
+        rpp = self._load_backend()
+        self._validate_history(returns)
+
+        n_assets = returns.shape[1]
+        if n_assets > LARGE_UNIVERSE_THRESHOLD:
+            return self._inverse_volatility_portfolio(
+                returns,
+                constraints,
+                asset_classes,
+            )
+
+        cov_matrix = self._regularize_covariance(returns.cov(), n_assets)
+        max_uniform_weight = 1.0 / n_assets
+
         try:
-            rpp = importlib.import_module("riskparityportfolio")
-        except ImportError as err:
+            portfolio = rpp.RiskParityPortfolio(covariance=cov_matrix.to_numpy())
+            if constraints.max_weight < max_uniform_weight:
+                portfolio.design(
+                    Dmat=np.vstack([np.eye(n_assets), -np.eye(n_assets)]),
+                    dvec=np.hstack(
+                        [
+                            np.full(n_assets, constraints.max_weight),
+                            -np.full(n_assets, constraints.min_weight),
+                        ],
+                    ),
+                    verbose=False,
+                    maxiter=200,
+                )
+            else:
+                portfolio.design(verbose=False, maxiter=200)
+            weights_array = portfolio.weights
+        except Exception as err:
+            if (
+                constraints.max_weight >= max_uniform_weight - 1e-6
+                and constraints.min_weight <= max_uniform_weight + 1e-6
+            ):
+                weights_array = np.full(n_assets, max_uniform_weight)
+            else:
+                raise OptimizationError(strategy_name=self.name) from err
+
+        weights = pd.Series(weights_array, index=returns.columns, dtype=float)
+        weights = weights / weights.sum()
+
+        if (
+            constraints.max_weight >= max_uniform_weight - 1e-6
+            and (weights > constraints.max_weight + 1e-6).any()
+        ):
+            weights = pd.Series(
+                np.full(n_assets, max_uniform_weight),
+                index=returns.columns,
+                dtype=float,
+            )
+            weights_array = weights.to_numpy()
+
+        self.validate_constraints(weights, constraints, asset_classes)
+
+        portfolio_vol = self._portfolio_volatility(weights_array, cov_matrix)
+        risk_contrib = self._risk_contributions(
+            weights_array,
+            cov_matrix,
+            portfolio_vol,
+            returns.columns,
+        )
+
+        return Portfolio(
+            weights=weights,
+            strategy=self.name,
+            metadata={
+                "n_assets": n_assets,
+                "portfolio_volatility": portfolio_vol,
+                "risk_contributions": risk_contrib,
+            },
+        )
+
+    def _load_backend(self):
+        try:
+            return importlib.import_module("riskparityportfolio")
+        except ImportError as err:  # pragma: no cover - dependency check
             raise DependencyError(dependency_name="riskparityportfolio") from err
 
-        # Validate inputs
+    def _validate_history(self, returns: pd.DataFrame) -> None:
         if returns.empty:
             raise InsufficientDataError(
                 required_periods=self.min_history_periods,
@@ -92,86 +173,64 @@ class RiskParityStrategy(PortfolioStrategy):
                 available_periods=len(returns),
             )
 
-        # Calculate covariance matrix
-        cov_matrix = returns.cov()
-
-        # Check for positive definiteness with numerical tolerance
-        eigenvalues = np.linalg.eigvalsh(cov_matrix.to_numpy())
-        EIGENVALUE_TOLERANCE = 1e-8  # noqa: N806
-        if np.any(eigenvalues < EIGENVALUE_TOLERANCE):
+    def _inverse_volatility_portfolio(
+        self,
+        returns: pd.DataFrame,
+        constraints: PortfolioConstraints,
+        asset_classes: pd.Series | None,
+    ) -> Portfolio:
+        vols = returns.std(ddof=0)
+        if (vols <= 0).any():
             raise OptimizationError(strategy_name=self.name)
-
-        # Prepare constraints for riskparityportfolio
-        # Note: riskparityportfolio uses different constraint format
-        n_assets = len(returns.columns)
-
-        max_uniform_weight = 1.0 / n_assets
-
-        try:
-            # Basic risk parity optimization
-            portfolio = rpp.RiskParityPortfolio(covariance=cov_matrix.to_numpy())
-
-            # Apply box constraints
-            if constraints.max_weight < max_uniform_weight:
-                # Need constrained optimization
-                portfolio.design(
-                    Dmat=np.vstack([np.eye(n_assets), -np.eye(n_assets)]),
-                    dvec=np.hstack(
-                        [
-                            np.full(n_assets, constraints.max_weight),
-                            -np.full(n_assets, constraints.min_weight),
-                        ],
-                    ),
-                )
-            else:
-                portfolio.design()
-
-            w = portfolio.weights
-        except Exception as err:
-            if (
-                constraints.max_weight >= max_uniform_weight - 1e-6
-                and constraints.min_weight <= max_uniform_weight + 1e-6
-            ):
-                w = np.full(n_assets, max_uniform_weight)
-            else:
-                raise OptimizationError(strategy_name=self.name) from err
-
-        # Create weights Series
-        weights = pd.Series(w, index=returns.columns)
-
-        # Normalize to ensure sum = 1.0 (numerical stability)
-        weights = weights / weights.sum()
-
-        if (
-            constraints.max_weight >= max_uniform_weight - 1e-6
-            and (weights > constraints.max_weight + 1e-6).any()
-        ):
-            weights = pd.Series(
-                np.full(n_assets, max_uniform_weight),
-                index=returns.columns,
-            )
-            w = weights.to_numpy()
-
-        # Validate constraints
+        inv_vol = 1.0 / vols.to_numpy()
+        weights = pd.Series(inv_vol / inv_vol.sum(), index=returns.columns, dtype=float)
         self.validate_constraints(weights, constraints, asset_classes)
-
-        # Calculate risk contributions for metadata
-        portfolio_vol = np.sqrt(w @ cov_matrix.to_numpy() @ w)
-        marginal_risk = cov_matrix.to_numpy() @ w
-        risk_contrib = w * marginal_risk / portfolio_vol
-
         return Portfolio(
             weights=weights,
             strategy=self.name,
             metadata={
-                "n_assets": n_assets,
-                "portfolio_volatility": portfolio_vol,
-                "risk_contributions": {
-                    ticker: float(risk_contrib[idx])
-                    for idx, ticker in enumerate(returns.columns)
-                },
+                "n_assets": len(returns.columns),
+                "method": "inverse_volatility_fallback",
             },
         )
+
+    def _regularize_covariance(
+        self,
+        cov_matrix: pd.DataFrame,
+        n_assets: int,
+    ) -> pd.DataFrame:
+        eigenvalues = np.linalg.eigvalsh(cov_matrix.to_numpy())
+        if np.any(eigenvalues < EIGENVALUE_TOLERANCE):
+            min_eig = float(eigenvalues.min())
+            jitter = (EIGENVALUE_TOLERANCE - min_eig) + 1e-6
+            adjustment = pd.DataFrame(
+                np.eye(n_assets) * jitter,
+                index=cov_matrix.index,
+                columns=cov_matrix.columns,
+            )
+            cov_matrix = cov_matrix + adjustment
+            eigenvalues = np.linalg.eigvalsh(cov_matrix.to_numpy())
+            if np.any(eigenvalues < EIGENVALUE_TOLERANCE):
+                raise OptimizationError(strategy_name=self.name)
+        return cov_matrix
+
+    @staticmethod
+    def _risk_contributions(
+        weights_array: np.ndarray,
+        cov_matrix: pd.DataFrame,
+        portfolio_vol: float,
+        tickers: pd.Index,
+    ) -> dict[str, float]:
+        marginal_risk = cov_matrix.to_numpy() @ weights_array
+        contributions = weights_array * marginal_risk / portfolio_vol
+        return {ticker: float(contributions[idx]) for idx, ticker in enumerate(tickers)}
+
+    @staticmethod
+    def _portfolio_volatility(
+        weights_array: np.ndarray,
+        cov_matrix: pd.DataFrame,
+    ) -> float:
+        return float(np.sqrt(weights_array @ cov_matrix.to_numpy() @ weights_array))
 
     @staticmethod
     def validate_constraints(

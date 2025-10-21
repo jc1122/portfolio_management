@@ -47,6 +47,15 @@ The core feature of the script is its ability to build a portfolio using differe
 - `mean_variance_min_volatility`: An MPT strategy that finds the portfolio with the lowest possible risk (volatility), regardless of return.
 - `risk_parity`: An advanced strategy that allocates capital so that each asset contributes equally to the overall portfolio risk.
 
+### Large-Universe Hardening
+
+Running the optimiser across hundreds of tickers can surface numerical edge cases. The strategies now include guard rails so 1,000-name universes stay tractable without hand-tuning:
+
+- `risk_parity` automatically falls back to an inverse-volatility solution when more than 300 assets are present, while still enforcing all portfolio constraints, and it stabilises the covariance matrix with a light diagonal “jitter” whenever the inputs are nearly singular.
+- `mean_variance_*` sanitises return inputs, applies shrinkage to the covariance matrix, and will switch to a closed-form tangency approximation when the universe is extremely large or PyPortfolioOpt struggles to converge. The resulting weights are normalised and validated against the same constraint set as the main optimiser.
+
+These safeguards match the configuration used for the `long_history_1000` runs and remove the need for ad-hoc ticker pruning when scaling up experiments.
+
 ### Portfolio Constraints
 
 Constraints are rules that the final portfolio must obey. They allow you to enforce your own views or risk limits on top of the chosen strategy.
