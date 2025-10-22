@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import pandas as pd
-from pypfopt import objective_functions
 
 from portfolio_management.core.exceptions import (
     DependencyError,
@@ -22,6 +21,9 @@ from .base import PortfolioStrategy
 
 if TYPE_CHECKING:
     from portfolio_management.portfolio.constraints.models import PortfolioConstraints
+    from portfolio_management.portfolio.statistics.rolling_statistics import (
+        RollingStatistics,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +44,17 @@ class MeanVarianceStrategy(PortfolioStrategy):
         objective: str = "max_sharpe",
         risk_free_rate: float = 0.02,
         min_periods: int = 252,
+        statistics_cache: RollingStatistics | None = None,
     ) -> None:
-        """Initialise the strategy configuration."""
+        """Initialise the strategy configuration.
+
+        Args:
+            objective: Optimization objective
+            risk_free_rate: Risk-free rate for Sharpe ratio calculation
+            min_periods: Minimum periods for estimation
+            statistics_cache: Optional statistics cache to avoid redundant calculations
+
+        """
         if objective not in self._VALID_OBJECTIVES:
             msg = (
                 f"Invalid objective '{objective}'. Expected one of "
@@ -54,6 +65,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
         self._objective = objective
         self._risk_free_rate = risk_free_rate
         self._min_periods = min_periods
+        self._statistics_cache = statistics_cache
 
     @property
     def name(self) -> str:
@@ -80,8 +92,15 @@ class MeanVarianceStrategy(PortfolioStrategy):
         n_assets = prepared_returns.shape[1]
 
         if n_assets > LARGE_UNIVERSE_THRESHOLD:
-            mu = prepared_returns.mean() * 252
-            cov_matrix = prepared_returns.cov() * 252
+            # Use cached statistics if available for large universes
+            if self._statistics_cache is not None:
+                mu, cov_matrix = self._statistics_cache.get_statistics(
+                    prepared_returns,
+                    annualize=True,
+                )
+            else:
+                mu = prepared_returns.mean() * 252
+                cov_matrix = prepared_returns.cov() * 252
             from .risk_parity import RiskParityStrategy
 
             weights, performance = self._analytic_tangency_fallback(
@@ -157,6 +176,8 @@ class MeanVarianceStrategy(PortfolioStrategy):
                     asset_classes,
                 )
                 if attempt["l2_gamma"]:
+                    # Import objective_functions only when needed
+                    objective_functions = importlib.import_module("pypfopt.objective_functions")
                     candidate_ef.add_objective(
                         objective_functions.L2_reg,
                         gamma=attempt["l2_gamma"],
@@ -255,6 +276,30 @@ class MeanVarianceStrategy(PortfolioStrategy):
             )
 
     def _estimate_moments(self, returns: pd.DataFrame, expected_returns, risk_models):
+        # Use cached statistics if available
+        if self._statistics_cache is not None:
+            mu, cov_matrix = self._statistics_cache.get_statistics(
+                returns,
+                annualize=True,
+            )
+            # Apply shrinkage to cached covariance if needed for stability
+            cov_array = cov_matrix.to_numpy()
+            eigvals = np.linalg.eigvalsh(cov_array)
+            if np.any(eigvals < 0):
+                adjustment = np.eye(len(cov_matrix), dtype=float) * (
+                    abs(eigvals.min()) + 1e-6
+                )
+                cov_array = cov_array + adjustment
+            # Add a small jitter to improve conditioning even when matrix is PSD.
+            cov_array = cov_array + np.eye(len(cov_matrix), dtype=float) * 1e-6
+            cov_matrix = pd.DataFrame(
+                cov_array,
+                index=cov_matrix.index,
+                columns=cov_matrix.columns,
+            )
+            return mu, cov_matrix
+        
+        # Original implementation without cache
         mu = expected_returns.mean_historical_return(returns, frequency=252)
         if hasattr(risk_models, "CovarianceShrinkage"):
             try:
