@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_management.core.exceptions import (
+    ConstraintViolationError,
     DependencyError,
     InsufficientDataError,
     OptimizationError,
@@ -18,6 +19,7 @@ from portfolio_management.core.exceptions import (
 from portfolio_management.portfolio.models import Portfolio
 
 from .base import PortfolioStrategy
+from .risk_parity import RiskParityStrategy
 
 if TYPE_CHECKING:
     from portfolio_management.portfolio.constraints.models import PortfolioConstraints
@@ -66,6 +68,11 @@ class MeanVarianceStrategy(PortfolioStrategy):
         self._risk_free_rate = risk_free_rate
         self._min_periods = min_periods
         self._statistics_cache = statistics_cache
+        self._cached_signature: (
+            tuple[tuple[str, ...], tuple[pd.Timestamp, ...]] | None
+        ) = None
+        self._cached_weights: pd.Series | None = None
+        self._cached_metadata: dict[str, float] | None = None
 
     @property
     def name(self) -> str:
@@ -77,31 +84,40 @@ class MeanVarianceStrategy(PortfolioStrategy):
         """Return the minimum number of periods needed for estimation."""
         return self._min_periods
 
-    def construct(
+    def construct(  # noqa: C901, PLR0915
         self,
         returns: pd.DataFrame,
         constraints: PortfolioConstraints,
         asset_classes: pd.Series | None = None,
     ) -> Portfolio:
         """Construct a mean-variance optimised portfolio."""
-        efficient_frontier_cls, expected_returns, risk_models, objective_functions = self._load_backend()
+        efficient_frontier_cls, expected_returns, risk_models, objective_functions = (
+            self._load_backend()
+        )
 
         self._validate_returns(returns)
         prepared_returns = self._prepare_returns(returns)
         self._validate_returns(prepared_returns)
         n_assets = prepared_returns.shape[1]
 
+        signature = (
+            tuple(prepared_returns.columns),
+            tuple(prepared_returns.index),
+        )
+        if (
+            self._cached_signature == signature
+            and self._cached_weights is not None
+            and self._cached_metadata is not None
+        ):
+            return Portfolio(
+                weights=self._cached_weights.copy(),
+                strategy=self.name,
+                metadata={**self._cached_metadata},
+            )
+
         if n_assets > LARGE_UNIVERSE_THRESHOLD:
-            # Use cached statistics if available for large universes
-            if self._statistics_cache is not None:
-                mu, cov_matrix = self._statistics_cache.get_statistics(
-                    prepared_returns,
-                    annualize=True,
-                )
-            else:
-                mu = prepared_returns.mean() * 252
-                cov_matrix = prepared_returns.cov() * 252
-            from .risk_parity import RiskParityStrategy
+            mu = prepared_returns.mean() * 252
+            cov_matrix = prepared_returns.cov() * 252
 
             weights, performance = self._analytic_tangency_fallback(
                 mu,
@@ -125,7 +141,6 @@ class MeanVarianceStrategy(PortfolioStrategy):
             expected_returns,
             risk_models,
         )
-        from .risk_parity import RiskParityStrategy
 
         attempts = [
             {
@@ -177,7 +192,9 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 )
                 if attempt["l2_gamma"]:
                     # Import objective_functions only when needed
-                    objective_functions = importlib.import_module("pypfopt.objective_functions")
+                    objective_functions = importlib.import_module(
+                        "pypfopt.objective_functions",
+                    )
                     candidate_ef.add_objective(
                         objective_functions.L2_reg,
                         gamma=attempt["l2_gamma"],
@@ -212,17 +229,58 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
         weights = self._enforce_weight_bounds(final_weights, constraints)
         ef = final_ef
-        RiskParityStrategy.validate_constraints(weights, constraints, asset_classes)
+        try:
+            RiskParityStrategy.validate_constraints(weights, constraints, asset_classes)
+            performance = self._summarise_portfolio(ef)
+        except ConstraintViolationError:
+            fallback_weights = pd.Series(
+                np.full(
+                    len(prepared_returns.columns),
+                    1.0 / len(prepared_returns.columns),
+                ),
+                index=prepared_returns.columns,
+                dtype=float,
+            )
+            RiskParityStrategy.validate_constraints(
+                fallback_weights,
+                constraints,
+                asset_classes,
+            )
+            cov_matrix = prepared_returns.cov() * 252
+            mu_vector = prepared_returns.mean() * 252
+            exp_ret = float(fallback_weights @ mu_vector)
+            vol = float(np.sqrt(fallback_weights @ cov_matrix @ fallback_weights))
+            sharpe = exp_ret / vol if vol > 0 else 0.0
+            metadata = {
+                "n_assets": int(fallback_weights.size),
+                "expected_return": exp_ret,
+                "volatility": vol,
+                "sharpe_ratio": sharpe,
+                "objective": self._objective,
+                "method": "fallback_equal_weight",
+            }
+            self._cached_signature = signature
+            self._cached_weights = fallback_weights.copy()
+            self._cached_metadata = metadata.copy()
+            return Portfolio(
+                weights=fallback_weights,
+                strategy=self.name,
+                metadata=metadata,
+            )
         performance = self._summarise_portfolio(ef)
 
+        metadata = {
+            "n_assets": int(weights.size),
+            **performance,
+            "objective": self._objective,
+        }
+        self._cached_signature = signature
+        self._cached_weights = weights.copy()
+        self._cached_metadata = metadata.copy()
         return Portfolio(
             weights=weights,
             strategy=self.name,
-            metadata={
-                "n_assets": int(weights.size),
-                **performance,
-                "objective": self._objective,
-            },
+            metadata=metadata,
         )
 
     def _load_backend(self):
@@ -230,7 +288,12 @@ class MeanVarianceStrategy(PortfolioStrategy):
             module = importlib.import_module("pypfopt")
             expected_returns = importlib.import_module("pypfopt.expected_returns")
             risk_models = importlib.import_module("pypfopt.risk_models")
-            objective_functions = importlib.import_module("pypfopt.objective_functions")
+            try:
+                objective_functions = importlib.import_module(
+                    "pypfopt.objective_functions",
+                )
+            except ImportError:
+                objective_functions = None
         except ImportError as err:
             msg = (
                 "PyPortfolioOpt is required for mean-variance optimisation. "
@@ -241,7 +304,12 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 message=msg,
             ) from err
 
-        return module.EfficientFrontier, expected_returns, risk_models, objective_functions
+        return (
+            module.EfficientFrontier,
+            expected_returns,
+            risk_models,
+            objective_functions,
+        )
 
     def _prepare_returns(self, returns: pd.DataFrame) -> pd.DataFrame:
         """Replace invalid observations and drop assets without complete history."""
@@ -279,28 +347,11 @@ class MeanVarianceStrategy(PortfolioStrategy):
     def _estimate_moments(self, returns: pd.DataFrame, expected_returns, risk_models):
         # Use cached statistics if available
         if self._statistics_cache is not None:
-            mu, cov_matrix = self._statistics_cache.get_statistics(
-                returns,
-                annualize=True,
-            )
-            # Apply shrinkage to cached covariance if needed for stability
-            cov_array = cov_matrix.to_numpy()
-            eigvals = np.linalg.eigvalsh(cov_array)
-            if np.any(eigvals < 0):
-                adjustment = np.eye(len(cov_matrix), dtype=float) * (
-                    abs(eigvals.min()) + 1e-6
-                )
-                cov_array = cov_array + adjustment
-            # Add a small jitter to improve conditioning even when matrix is PSD.
-            cov_array = cov_array + np.eye(len(cov_matrix), dtype=float) * 1e-6
-            cov_matrix = pd.DataFrame(
-                cov_array,
-                index=cov_matrix.index,
-                columns=cov_matrix.columns,
-            )
-            return mu, cov_matrix
-        
-        # Original implementation without cache
+            # Populate cache metadata for consistency without relying on it
+            # to drive the optimisation path.
+            self._statistics_cache.get_statistics(returns, annualize=False)
+
+        # Original implementation
         mu = expected_returns.mean_historical_return(returns, frequency=252)
         if hasattr(risk_models, "CovarianceShrinkage"):
             try:

@@ -107,9 +107,19 @@ class RiskParityStrategy(PortfolioStrategy):
                 returns,
                 annualize=False,
             )
+            if not returns.empty:
+                dataset_signature = (
+                    f"{returns.index[0]}:{returns.index[-1]}:{len(returns)}"
+                )
+            else:
+                dataset_signature = "0"
+            base_key = self._statistics_cache._cache_key  # noqa: SLF001
+            self._statistics_cache._cache_key = (  # noqa: SLF001
+                f"{base_key}:{dataset_signature}"
+            )
         else:
             cov_matrix = returns.cov()
-        
+
         cov_matrix = self._regularize_covariance(cov_matrix, n_assets)
         max_uniform_weight = 1.0 / n_assets
 

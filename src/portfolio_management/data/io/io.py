@@ -20,8 +20,8 @@ from __future__ import annotations
 import collections
 import logging
 import pathlib
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Sequence
 
 from portfolio_management.core.config import STOOQ_COLUMNS
 from portfolio_management.core.exceptions import DependencyNotInstalledError
@@ -212,19 +212,21 @@ def _prepare_match_report_data(
 
     unique_matches = _deduplicate_matches(matches)
     if export_config is None:
+        worker_count = max(max_workers or 1, 1)
         diagnostics_results = _run_in_parallel(
             _summarize_match_for_report,
             [(match, data_dir) for match in unique_matches],
-            max_workers,
+            worker_count,
             preserve_order=False,
         )
         diagnostics_cache.update(dict(diagnostics_results))
     else:
         tasks = [(match, data_dir, export_config) for match in unique_matches]
+        worker_count = max(max_workers or 1, 1)
         results = _run_in_parallel(
             _summarize_and_export_match,
             tasks,
-            max_workers,
+            worker_count,
             preserve_order=False,
         )
         for ticker_key, diagnostics, outcome in results:
@@ -580,10 +582,11 @@ def export_tradeable_prices(
     config.dest_dir.mkdir(parents=True, exist_ok=True)
     unique_matches = _deduplicate_matches(matches)
 
+    worker_count = max(config.max_workers or 1, 1)
     outcomes = _run_in_parallel(
         _export_match,
         [(match, config) for match in unique_matches],
-        config.max_workers,
+        worker_count,
     )
 
     exported = sum(1 for outcome in outcomes if outcome.exported)
