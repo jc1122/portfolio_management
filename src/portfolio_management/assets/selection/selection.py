@@ -295,6 +295,7 @@ class AssetSelector:
 
         Returns:
             Series of severity levels (str or None).
+
         """
         # Replace NaN and empty strings with None
         flags = data_flags_series.fillna("").astype(str)
@@ -435,6 +436,7 @@ class AssetSelector:
 
         Returns:
             Series of history days (int), with 0 for invalid dates.
+
         """
         # Convert to datetime, setting errors to NaT
         start_dates = pd.to_datetime(price_start_series, errors="coerce")
