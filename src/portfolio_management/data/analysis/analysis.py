@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import logging
 import pathlib
-from typing import TYPE_CHECKING, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from portfolio_management.core.config import REGION_CURRENCY_MAP, STOOQ_COLUMNS
 from portfolio_management.core.exceptions import DependencyNotInstalledError
@@ -58,6 +59,183 @@ def _read_stooq_csv(
     if columns is not None:
         read_kwargs["usecols"] = list(columns)
     return pd.read_csv(file_path, **read_kwargs)
+
+
+def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
+    file_path: pathlib.Path,
+) -> tuple[dict[str, str], str]:
+    """Stream through a Stooq file to compute diagnostics without loading entire file.
+
+    This function reads the file in chunks and accumulates statistics incrementally,
+    significantly reducing memory usage compared to loading the full DataFrame.
+
+    Returns:
+        Tuple of (diagnostics dict, status string)
+
+    """
+    if not file_path.exists():
+        return _initialize_diagnostics(), "missing_file"
+
+    # Statistics to accumulate
+    valid_row_count = 0
+    invalid_row_count = 0
+    non_numeric_prices = 0
+    non_positive_close = 0
+    missing_volume = 0
+    zero_volume = 0
+    first_valid_date = None
+    last_valid_date = None
+    previous_date = None
+    has_duplicate_dates = False
+    has_non_monotonic_dates = False
+
+    # Read file in chunks
+    chunk_size = 10000
+    try:
+        # Try fast C engine first
+        try:
+            chunks = pd.read_csv(
+                file_path,
+                header=None,
+                names=STOOQ_COLUMNS,
+                comment="<",
+                dtype=str,
+                engine="c",
+                encoding="utf-8",
+                keep_default_na=False,
+                na_filter=False,
+                usecols=list(SUMMARY_COLUMNS),
+                chunksize=chunk_size,
+            )
+        except (ValueError, pd.errors.ParserError):
+            # Fall back to Python engine
+            chunks = pd.read_csv(
+                file_path,
+                header=None,
+                names=STOOQ_COLUMNS,
+                comment="<",
+                dtype=str,
+                engine="python",
+                encoding="utf-8",
+                keep_default_na=False,
+                na_filter=False,
+                usecols=list(SUMMARY_COLUMNS),
+                chunksize=chunk_size,
+            )
+
+        first_chunk = True
+        for raw_chunk in chunks:
+            # Strip whitespace from all columns
+            chunk = raw_chunk.apply(lambda col: col.str.strip())
+
+            # Skip header row if present (only in first chunk)
+            if first_chunk:
+                first_row = chunk.iloc[0] if not chunk.empty else None
+                if first_row is not None and all(
+                    isinstance(first_row[column], str)
+                    and first_row[column].lower() == column
+                    for column in chunk.columns
+                ):
+                    chunk = chunk.iloc[1:]
+                first_chunk = False
+
+            if chunk.empty:
+                continue
+
+            # Parse dates
+            date_series = pd.to_datetime(
+                chunk["date"],
+                format="%Y%m%d",
+                errors="coerce",
+            )
+            invalid_in_chunk = int(date_series.isna().sum())
+            invalid_row_count += invalid_in_chunk
+
+            # Filter to valid dates
+            valid_mask = date_series.notna()
+            valid_dates_in_chunk = date_series[valid_mask]
+            chunk_valid = chunk[valid_mask]
+
+            if valid_dates_in_chunk.empty:
+                continue
+
+            valid_row_count += len(chunk_valid)
+
+            # Track date range
+            chunk_first_date = valid_dates_in_chunk.iloc[0]
+            chunk_last_date = valid_dates_in_chunk.iloc[-1]
+
+            if first_valid_date is None:
+                first_valid_date = chunk_first_date
+            last_valid_date = chunk_last_date
+
+            # Check for duplicate dates within chunk
+            if not has_duplicate_dates:
+                has_duplicate_dates = bool(valid_dates_in_chunk.duplicated().any())
+
+            # Check for non-monotonic dates (between chunks and within chunk)
+            if previous_date is not None and chunk_first_date < previous_date:
+                has_non_monotonic_dates = True
+            if not has_non_monotonic_dates and not valid_dates_in_chunk.is_monotonic_increasing:
+                has_non_monotonic_dates = True
+
+            previous_date = chunk_last_date
+
+            # Parse close prices
+            close_numeric = pd.to_numeric(chunk_valid["close"], errors="coerce")
+            non_numeric_prices += int(close_numeric.isna().sum())
+            non_positive_close += int((close_numeric[close_numeric.notna()] <= 0).sum())
+
+            # Parse volume
+            volume_numeric = pd.to_numeric(chunk_valid["volume"], errors="coerce")
+            missing_volume += int(volume_numeric.isna().sum())
+            zero_volume += int((volume_numeric == 0).sum())
+
+    except (pd.errors.EmptyDataError, UnicodeDecodeError) as exc:
+        return _initialize_diagnostics(), f"error:{exc.__class__.__name__}"
+    except OSError as exc:
+        return _initialize_diagnostics(), f"error:{exc.__class__.__name__}"
+
+    # Build diagnostics
+    diagnostics = _initialize_diagnostics()
+
+    if valid_row_count == 0:
+        diagnostics["data_status"] = "empty"
+        return diagnostics, "empty"
+
+    # Calculate zero volume ratio
+    zero_volume_ratio = (zero_volume / valid_row_count) if valid_row_count else 0.0
+
+    # Determine severity
+    zero_volume_severity = (
+        _determine_zero_volume_severity(zero_volume_ratio) if zero_volume else None
+    )
+
+    # Generate flags
+    flags = _generate_flags(
+        invalid_rows=invalid_row_count,
+        non_numeric_prices=non_numeric_prices,
+        non_positive_close=non_positive_close,
+        missing_volume=missing_volume,
+        zero_volume=zero_volume,
+        zero_volume_ratio=zero_volume_ratio,
+        zero_volume_severity=zero_volume_severity,
+        duplicate_dates=has_duplicate_dates,
+        non_monotonic_dates=has_non_monotonic_dates,
+    )
+
+    # Populate diagnostics
+    diagnostics["price_start"] = first_valid_date.date().isoformat()
+    diagnostics["price_end"] = last_valid_date.date().isoformat()
+    diagnostics["price_rows"] = str(valid_row_count)
+    diagnostics["data_status"] = _determine_data_status(
+        valid_row_count,
+        zero_volume_severity,
+        has_flags=bool(flags),
+    )
+    diagnostics["data_flags"] = ";".join(flags)
+
+    return diagnostics, "ok"
 
 
 def _read_and_clean_stooq_csv(
@@ -268,23 +446,29 @@ def summarize_price_file(
 ) -> dict[str, str]:
     """Extract diagnostics and validation flags from a Stooq price file.
 
+    This function uses a streaming approach to minimize memory usage by reading
+    the file in chunks and accumulating statistics incrementally, rather than
+    loading the entire file into a DataFrame.
+
     Pipeline:
-    1. Read and clean the CSV file
-    2. Validate dates and extract valid rows
-    3. Calculate data quality metrics
+    1. Stream through the CSV file in chunks
+    2. Validate dates and extract valid rows incrementally
+    3. Accumulate data quality metrics
     4. Generate diagnostic flags
     5. Determine overall data status
+
+    Returns:
+        Dictionary with keys: price_start, price_end, price_rows, data_status, data_flags
+
     """
     file_path = base_dir / stooq_file.rel_path
-    diagnostics = _initialize_diagnostics()
+    diagnostics, status = _stream_stooq_file_for_diagnostics(file_path)
 
-    raw_price_frame, status = _read_and_clean_stooq_csv(file_path)
-    if raw_price_frame is None:
+    # If status is not "ok", update data_status accordingly
+    if status != "ok":
         diagnostics["data_status"] = status
-        return diagnostics
 
-    valid_price_frame, valid_dates, invalid_rows = _validate_dates(raw_price_frame)
-    return _summarize_valid_frame(valid_price_frame, valid_dates, invalid_rows)
+    return diagnostics
 
 
 def summarize_clean_price_frame(price_frame: pd.DataFrame) -> dict[str, str]:
