@@ -151,6 +151,34 @@ TEST,D,20200102,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert "duplicate_dates" in diagnostics["data_flags"]
 
 
+def test_stream_stooq_file_duplicate_dates_across_chunks():
+    """Ensure duplicate dates are detected when they span chunk boundaries."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_file = pathlib.Path(tmpdir) / "chunk_duplicate.txt"
+
+        lines = []
+        import datetime
+
+        start_date = datetime.date(2000, 1, 1)
+        # Generate 10,001 rows so the chunk boundary falls between index 9999 and 10000
+        for i in range(10001):
+            current_date = start_date + datetime.timedelta(days=i)
+            date_str = current_date.strftime("%Y%m%d")
+            lines.append(f"TEST,D,{date_str},000000,100.0,105.0,95.0,102.0,10000,0")
+
+        # Make the first row of the second chunk share a date with the last row of the first chunk
+        duplicate_date = start_date + datetime.timedelta(days=9999)
+        duplicate_date_str = duplicate_date.strftime("%Y%m%d")
+        lines[10000] = f"TEST,D,{duplicate_date_str},000000,101.0,106.0,96.0,103.0,11000,0"
+
+        create_test_file(test_file, "\n".join(lines))
+
+        diagnostics, status = _stream_stooq_file_for_diagnostics(test_file)
+
+        assert status == "ok"
+        assert "duplicate_dates" in diagnostics["data_flags"]
+
+
 def test_stream_stooq_file_non_monotonic_dates():
     """Test detection of non-monotonic dates."""
     with tempfile.TemporaryDirectory() as tmpdir:

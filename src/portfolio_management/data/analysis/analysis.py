@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 import pathlib
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from portfolio_management.core.config import REGION_CURRENCY_MAP, STOOQ_COLUMNS
 from portfolio_management.core.exceptions import DependencyNotInstalledError
@@ -101,6 +101,7 @@ def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
     previous_date = None
     has_duplicate_dates = False
     has_non_monotonic_dates = False
+    seen_date_ints: Optional[set[int]] = set()
 
     # Read file in chunks
     chunk_size = 10000
@@ -182,9 +183,20 @@ def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
                 first_valid_date = chunk_first_date
             last_valid_date = chunk_last_date
 
-            # Check for duplicate dates within chunk
+            # Check for duplicate dates within and across chunks
             if not has_duplicate_dates:
-                has_duplicate_dates = bool(valid_dates_in_chunk.duplicated().any())
+                if bool(valid_dates_in_chunk.duplicated().any()):
+                    has_duplicate_dates = True
+                    seen_date_ints = None
+                elif seen_date_ints is not None:
+                    date_int_values = valid_dates_in_chunk.astype("int64", copy=False)
+                    for date_value in date_int_values:
+                        if date_value in seen_date_ints:
+                            has_duplicate_dates = True
+                            seen_date_ints = None
+                            break
+                    else:
+                        seen_date_ints.update(int(value) for value in date_int_values)
 
             # Check for non-monotonic dates (between chunks and within chunk)
             if previous_date is not None and chunk_first_date < previous_date:
