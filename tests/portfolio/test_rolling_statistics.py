@@ -133,39 +133,44 @@ class TestRollingStatistics:
         # Verify cache was invalidated (different key)
         assert cache_key1 != cache_key2
 
-    def test_cache_invalidation_different_shape(self, sample_returns):
-        """Test that cache is invalidated when shape changes."""
+    def test_cache_updates_when_shape_changes(self, sample_returns):
+        """The cache should adapt when the window size changes."""
         stats = RollingStatistics()
-        
-        # First computation
-        _ = stats.get_covariance_matrix(sample_returns, annualize=False)
-        cache_key1 = stats._cache_key
-        
-        # Second computation with different number of rows
-        different_returns = sample_returns.iloc[:200]
-        _ = stats.get_covariance_matrix(different_returns, annualize=False)
-        cache_key2 = stats._cache_key
-        
-        # Verify cache was invalidated (different key)
-        assert cache_key1 != cache_key2
 
-    def test_cache_invalidation_different_dates(self, sample_returns):
-        """Test that cache is invalidated when date range changes."""
-        stats = RollingStatistics()
-        
-        # First computation
+        # Populate cache with the full window
         _ = stats.get_covariance_matrix(sample_returns, annualize=False)
         cache_key1 = stats._cache_key
-        
-        # Second computation with different date range (shift forward)
+
+        # Provide a shorter window and ensure statistics reflect the new data
+        different_returns = sample_returns.iloc[:200]
+        updated_cov = stats.get_covariance_matrix(different_returns, annualize=False)
+
+        pd.testing.assert_frame_equal(updated_cov, different_returns.cov())
+        assert stats._cached_data is not None
+        assert stats._cached_data.equals(different_returns)
+        assert stats._count == len(different_returns)
+        # Cache key stays stable because the asset universe is unchanged.
+        assert cache_key1 == stats._cache_key
+
+    def test_cache_updates_when_dates_shift(self, sample_returns):
+        """The cache should reuse statistics when the window slides forward."""
+        stats = RollingStatistics()
+
+        # Populate cache with the initial window
+        _ = stats.get_covariance_matrix(sample_returns, annualize=False)
+        cache_key1 = stats._cache_key
+
+        # Shift the window forward by one month worth of data
         different_dates = pd.date_range("2020-02-01", periods=252, freq="D")
         different_returns = sample_returns.copy()
         different_returns.index = different_dates
-        _ = stats.get_covariance_matrix(different_returns, annualize=False)
-        cache_key2 = stats._cache_key
-        
-        # Verify cache was invalidated (different key)
-        assert cache_key1 != cache_key2
+        updated_cov = stats.get_covariance_matrix(different_returns, annualize=False)
+
+        pd.testing.assert_frame_equal(updated_cov, different_returns.cov())
+        assert stats._cached_data is not None
+        assert stats._cached_data.equals(different_returns)
+        assert stats._count == len(different_returns)
+        assert cache_key1 == stats._cache_key
 
     def test_manual_invalidate_cache(self, sample_returns):
         """Test manual cache invalidation."""
