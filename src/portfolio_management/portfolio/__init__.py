@@ -7,6 +7,7 @@ from .builder import PortfolioConstructor
 from .constraints import PortfolioConstraints
 from .models import Portfolio, StrategyType
 from .rebalancing import RebalanceConfig
+from .statistics import RollingStatistics
 from .strategies import (
     EqualWeightStrategy,
     MeanVarianceStrategy,
@@ -22,6 +23,8 @@ __all__ = [
     "PortfolioConstraints",
     # Rebalancing
     "RebalanceConfig",
+    # Statistics
+    "RollingStatistics",
     # Strategies
     "PortfolioStrategy",
     "EqualWeightStrategy",
