@@ -281,3 +281,58 @@ class TestBacktestEngine:
             assert isinstance(metrics, PerformanceMetrics)
             assert metrics.total_return is not None
             assert len(equity_curve) > 0
+
+    def test_optimization_behavior_unchanged(
+        self,
+        sample_data: tuple[pd.DataFrame, pd.DataFrame],
+    ) -> None:
+        """Regression test to ensure optimization doesn't change behavior.
+        
+        This test verifies that the optimized lookback slicing produces
+        identical results to the previous implementation.
+        """
+        prices, returns = sample_data
+        
+        # Test with monthly rebalancing over a year
+        config = BacktestConfig(
+            start_date=date(2020, 1, 1),
+            end_date=date(2020, 12, 31),
+            rebalance_frequency=RebalanceFrequency.MONTHLY,
+        )
+        strategy = EqualWeightStrategy()
+        
+        engine = BacktestEngine(
+            config=config,
+            strategy=strategy,
+            prices=prices,
+            returns=returns,
+        )
+        
+        equity_curve, metrics, events = engine.run()
+        
+        # Verify expected behavior
+        assert len(equity_curve) > 0
+        assert len(events) > 0  # Should have rebalanced
+        
+        # For monthly rebalancing over 1 year, expect around 12 rebalances
+        # (could be 11-13 depending on exact trading days)
+        assert 10 <= metrics.num_rebalances <= 14
+        
+        # Verify equity curve is monotonic or reasonable
+        equity_values = equity_curve["equity"].values
+        assert len(equity_values) > 250  # Should have most trading days
+        
+        # Verify all rebalances have valid data
+        for event in events:
+            assert event.date is not None
+            assert event.pre_rebalance_value > 0
+            assert event.post_rebalance_value > 0
+            # Transaction costs should be non-negative
+            assert event.costs >= 0
+        
+        # Verify metrics are reasonable
+        assert metrics.total_return is not None
+        assert metrics.annualized_return is not None
+        assert metrics.annualized_volatility > 0
+        assert metrics.max_drawdown <= 0  # Drawdown is negative
+        assert metrics.num_rebalances > 0

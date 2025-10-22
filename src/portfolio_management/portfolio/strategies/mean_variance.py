@@ -84,7 +84,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
         asset_classes: pd.Series | None = None,
     ) -> Portfolio:
         """Construct a mean-variance optimised portfolio."""
-        efficient_frontier_cls, expected_returns, risk_models = self._load_backend()
+        efficient_frontier_cls, expected_returns, risk_models, objective_functions = self._load_backend()
 
         self._validate_returns(returns)
         prepared_returns = self._prepare_returns(returns)
@@ -230,6 +230,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             module = importlib.import_module("pypfopt")
             expected_returns = importlib.import_module("pypfopt.expected_returns")
             risk_models = importlib.import_module("pypfopt.risk_models")
+            objective_functions = importlib.import_module("pypfopt.objective_functions")
         except ImportError as err:
             msg = (
                 "PyPortfolioOpt is required for mean-variance optimisation. "
@@ -240,7 +241,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 message=msg,
             ) from err
 
-        return module.EfficientFrontier, expected_returns, risk_models
+        return module.EfficientFrontier, expected_returns, risk_models, objective_functions
 
     def _prepare_returns(self, returns: pd.DataFrame) -> pd.DataFrame:
         """Replace invalid observations and drop assets without complete history."""
