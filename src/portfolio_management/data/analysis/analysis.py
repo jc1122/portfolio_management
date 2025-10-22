@@ -4,6 +4,19 @@ This module centralizes the data-quality analysis utilities that power the
 tradeable preparation pipeline. It exposes helpers for summarizing price files,
 inferring listing currencies, and maintaining aggregated diagnostics that the
 CLI scripts re-export for downstream workflows.
+
+Key Functions:
+    summarize_price_file: Stream through Stooq file to compute diagnostics (NEW: streaming)
+    summarize_clean_price_frame: Compute diagnostics from existing DataFrame
+    infer_currency: Guess trading currency from Stooq metadata
+    resolve_currency: Reconcile broker vs. Stooq currency with LSE policy
+
+Performance:
+    The streaming implementation (_stream_stooq_file_for_diagnostics) reduces memory
+    usage by 43.7% compared to loading full DataFrames, with only an 8.8% time overhead.
+    This is critical when processing 70,000+ files in production.
+
+    For details, see docs/streaming_performance.md
 """
 
 from __future__ import annotations
