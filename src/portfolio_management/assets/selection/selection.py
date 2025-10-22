@@ -286,6 +286,32 @@ class AssetSelector:
 
         return None
 
+    @staticmethod
+    def _parse_severity_vectorized(data_flags_series: pd.Series) -> pd.Series:
+        """Vectorized version of _parse_severity for entire Series.
+
+        Args:
+            data_flags_series: Series of data_flags strings.
+
+        Returns:
+            Series of severity levels (str or None).
+
+        """
+        # Replace NaN and empty strings with None
+        flags = data_flags_series.fillna("").astype(str)
+
+        # Extract severity using string operations
+        # Look for pattern "zero_volume_severity=X" where X is the severity
+        severity = flags.str.extract(r"zero_volume_severity=([^;]+)", expand=False)
+
+        # Strip whitespace from extracted values
+        severity = severity.str.strip()
+
+        # Replace empty strings with None
+        severity = severity.replace("", None)
+
+        return severity
+
     def _filter_by_data_quality(
         self,
         df: pd.DataFrame,
@@ -339,15 +365,14 @@ class AssetSelector:
             f"(removed {initial_count - status_count})",
         )
 
-        # Stage 2: Filter by zero_volume_severity if specified
+        # Stage 2: Filter by zero_volume_severity if specified (vectorized)
         if criteria.zero_volume_severity is not None:
             severity_list = criteria.zero_volume_severity
 
-            def check_severity(row: pd.Series[str]) -> bool:
-                severity = self._parse_severity(row["data_flags"])
-                return severity in severity_list
+            # Use vectorized version to extract severity from all rows at once
+            severity_series = self._parse_severity_vectorized(df_status["data_flags"])
+            severity_mask = severity_series.isin(severity_list)
 
-            severity_mask = df_status.apply(check_severity, axis=1)
             df_result = df_status[severity_mask].copy()
             severity_count = len(df_result)
             logger.debug(
@@ -398,6 +423,36 @@ class AssetSelector:
         except (ValueError, TypeError):
             return 0
 
+    @staticmethod
+    def _calculate_history_days_vectorized(
+        price_start_series: pd.Series,
+        price_end_series: pd.Series,
+    ) -> pd.Series:
+        """Vectorized version of _calculate_history_days for entire Series.
+
+        Args:
+            price_start_series: Series of start dates.
+            price_end_series: Series of end dates.
+
+        Returns:
+            Series of history days (int), with 0 for invalid dates.
+
+        """
+        # Convert to datetime, setting errors to NaT
+        start_dates = pd.to_datetime(price_start_series, errors="coerce")
+        end_dates = pd.to_datetime(price_end_series, errors="coerce")
+
+        # Calculate timedelta
+        deltas = end_dates - start_dates
+
+        # Convert to days, handling NaT by replacing with 0
+        days = deltas.dt.days.fillna(0).astype(int)
+
+        # Handle reversed dates (start > end) by setting to 0
+        days = days.where(days >= 0, 0)
+
+        return days
+
     def _filter_by_history(
         self,
         df: pd.DataFrame,
@@ -440,16 +495,14 @@ class AssetSelector:
         initial_count = len(df)
         logger.debug(f"Starting with {initial_count} assets")
 
-        # Stage 1: Calculate and filter by history days
+        # Stage 1: Calculate and filter by history days (vectorized)
         df_copy = df.copy()
 
-        def calculate_row_history(row: pd.Series[str]) -> int:
-            return self._calculate_history_days(
-                row["price_start"],
-                row["price_end"],
-            )
-
-        df_copy["_history_days"] = df_copy.apply(calculate_row_history, axis=1)
+        # Use vectorized calculation
+        df_copy["_history_days"] = self._calculate_history_days_vectorized(
+            df_copy["price_start"],
+            df_copy["price_end"],
+        )
 
         history_mask = df_copy["_history_days"] >= criteria.min_history_days
         df_history = df_copy[history_mask].copy()
@@ -647,14 +700,16 @@ class AssetSelector:
 
         df_result = df.copy()
 
-        # Stage 1: Apply blocklist if specified
+        # Stage 1: Apply blocklist if specified (vectorized)
         if criteria.blocklist is not None:
             blocklist = criteria.blocklist
 
-            def not_in_blocklist(row: pd.Series[str]) -> bool:
-                return not self._is_in_list(row["symbol"], row["isin"], blocklist)
+            # Vectorized check: row is NOT in blocklist if both symbol AND isin are not in blocklist
+            symbol_blocked = df_result["symbol"].isin(blocklist)
+            isin_blocked = df_result["isin"].isin(blocklist)
+            in_blocklist = symbol_blocked | isin_blocked
 
-            blocklist_mask = df_result.apply(not_in_blocklist, axis=1)
+            blocklist_mask = ~in_blocklist
             df_result = df_result[blocklist_mask].copy()
             blocklist_count = len(df_result)
             logger.debug(
@@ -665,14 +720,16 @@ class AssetSelector:
         else:
             logger.debug("Skipping blocklist filter (not specified)")
 
-        # Stage 2: Apply allowlist if specified
+        # Stage 2: Apply allowlist if specified (vectorized)
         if criteria.allowlist is not None:
             allowlist = criteria.allowlist
 
-            def in_allowlist(row: pd.Series[str]) -> bool:
-                return self._is_in_list(row["symbol"], row["isin"], allowlist)
+            # Vectorized check: row is in allowlist if symbol OR isin is in allowlist
+            symbol_allowed = df_result["symbol"].isin(allowlist)
+            isin_allowed = df_result["isin"].isin(allowlist)
+            in_allowlist = symbol_allowed | isin_allowed
 
-            allowlist_mask = df_result.apply(in_allowlist, axis=1)
+            allowlist_mask = in_allowlist
             df_result = df_result[allowlist_mask].copy()
             allowlist_count = len(df_result)
             logger.debug(
@@ -695,32 +752,39 @@ class AssetSelector:
 
     @staticmethod
     def _df_to_selected_assets(df: pd.DataFrame) -> list[SelectedAsset]:
-        """Convert a DataFrame to a list of SelectedAsset objects."""
+        """Convert a DataFrame to a list of SelectedAsset objects.
+
+        Uses to_dict("records") for efficient conversion instead of iterrows.
+        """
+        logger = logging.getLogger(__name__)
+
+        # Convert DataFrame to list of dicts for faster iteration
+        records = df.to_dict("records")
+
         assets = []
-        for _, row in df.iterrows():
+        for record in records:
             try:
                 asset = SelectedAsset(
-                    symbol=row["symbol"],
-                    isin=row["isin"],
-                    name=row["name"],
-                    market=row["market"],
-                    region=row["region"],
-                    currency=row["currency"],
-                    category=row["category"],
-                    price_start=row["price_start"],
-                    price_end=row["price_end"],
-                    price_rows=int(row["price_rows"]),
-                    data_status=row["data_status"],
-                    data_flags=row.get("data_flags", ""),
-                    stooq_path=row["stooq_path"],
-                    resolved_currency=row["resolved_currency"],
-                    currency_status=row["currency_status"],
+                    symbol=record["symbol"],
+                    isin=record["isin"],
+                    name=record["name"],
+                    market=record["market"],
+                    region=record["region"],
+                    currency=record["currency"],
+                    category=record["category"],
+                    price_start=record["price_start"],
+                    price_end=record["price_end"],
+                    price_rows=int(record["price_rows"]),
+                    data_status=record["data_status"],
+                    data_flags=record.get("data_flags", ""),
+                    stooq_path=record["stooq_path"],
+                    resolved_currency=record["resolved_currency"],
+                    currency_status=record["currency_status"],
                 )
                 assets.append(asset)
             except (KeyError, TypeError, ValueError) as e:
-                logger = logging.getLogger(__name__)
                 logger.warning(
-                    f"Skipping asset due to conversion error: {e} in row {row}",
+                    f"Skipping asset due to conversion error: {e} in record {record}",
                 )
         return assets
 
