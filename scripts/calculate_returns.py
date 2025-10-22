@@ -90,6 +90,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum worker threads for price loading (default: auto)",
     )
     parser.add_argument(
+        "--cache-size",
+        type=int,
+        default=1000,
+        help="Maximum number of price series to cache (default: 1000, 0 to disable)",
+    )
+    parser.add_argument(
         "--align-method",
         choices=["outer", "inner"],
         default="outer",
@@ -229,7 +235,10 @@ def run_cli(args: argparse.Namespace) -> int:
 
     config = _build_config(args)
 
-    price_loader = PriceLoader(max_workers=args.loader_workers)
+    price_loader = PriceLoader(
+        max_workers=args.loader_workers,
+        cache_size=args.cache_size,
+    )
     calculator = ReturnCalculator(price_loader=price_loader)
     try:
         returns_df = calculator.load_and_prepare(assets, args.prices_dir, config)
