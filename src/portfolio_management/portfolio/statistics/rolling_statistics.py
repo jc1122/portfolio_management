@@ -336,6 +336,5 @@ class RollingStatistics:
         self._cached_cov = cov_matrix
 
         # Ensure the cache count matches the new window length for correctness.
-        self._count = len(returns)
 
         return mean_returns, cov_matrix
