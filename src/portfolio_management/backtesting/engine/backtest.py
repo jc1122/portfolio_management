@@ -141,8 +141,11 @@ class BacktestEngine:
 
             if should_rebalance_forced or should_rebalance_scheduled:
                 # Create lookback window only when needed
-                lookback_returns = period_returns.iloc[: i + 1]
-                lookback_prices = period_prices.iloc[: i + 1]
+                # Use rolling window for parameter estimation (standard practice in quant finance)
+                lookback_window = min(self.config.lookback_periods, i + 1)
+                start_idx = max(0, i + 1 - lookback_window)
+                lookback_returns = period_returns.iloc[start_idx : i + 1]
+                lookback_prices = period_prices.iloc[start_idx : i + 1]
 
                 trigger = (
                     RebalanceTrigger.FORCED

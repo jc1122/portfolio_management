@@ -57,6 +57,9 @@ class BacktestConfig:
     commission_min: float = 0.0
     slippage_bps: float = 5.0  # 5 bps
     cash_reserve_pct: float = 0.01  # 1%
+    lookback_periods: int = (
+        252  # Rolling window for parameter estimation (252 = 1 year)
+    )
 
     def __post_init__(self) -> None:
         """Validate configuration values."""

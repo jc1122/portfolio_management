@@ -35,6 +35,7 @@ from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import yaml
@@ -152,6 +153,12 @@ def create_parser() -> argparse.ArgumentParser:
         default=Decimal("0.05"),
         help="Drift threshold for opportunistic rebalancing (e.g., 0.05 = 5%%). Default: 0.05",
     )
+    parser.add_argument(
+        "--lookback-periods",
+        type=int,
+        default=252,
+        help="Rolling lookback window for parameter estimation (days). Default: 252 (1 year)",
+    )
 
     # Data sources
     parser.add_argument(
@@ -260,8 +267,8 @@ def load_data(
     prices_file: Path,
     returns_file: Path,
     assets: list[str],
-    start_date: date | None = None,
-    end_date: date | None = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load prices and returns data for specified assets and date range.
 
@@ -548,6 +555,7 @@ def main() -> int:
             commission_pct=float(args.commission),
             commission_min=float(args.min_commission),
             slippage_bps=float(args.slippage) * 10000,
+            lookback_periods=args.lookback_periods,
         )
 
         # Run backtest

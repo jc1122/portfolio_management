@@ -91,7 +91,18 @@ ignore = ["E501"]
   "PLR0912",
   "PLR0915",
 ]
-
+"src/portfolio_management/backtesting/models.py" = [
+  "TCH003",
+]
+"src/portfolio_management/portfolio/builder.py" = [
+  "TCH003",
+  "TID252",
+  "TCH001",
+  "UP007",
+]
+"src/portfolio_management/portfolio/models.py" = [
+  "UP007",
+]
 "src/portfolio_management/portfolio/strategies/mean_variance.py" = [
   "SLF001",
 ]
