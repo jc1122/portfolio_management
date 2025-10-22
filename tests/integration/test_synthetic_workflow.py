@@ -20,7 +20,6 @@ from portfolio_management.core.exceptions import InsufficientDataError
 from portfolio_management.data.analysis import collect_available_extensions
 from portfolio_management.data.ingestion import build_stooq_index
 from portfolio_management.data.io.io import (
-    export_tradeable_prices,
     load_tradeable_instruments,
     write_match_report,
     write_stooq_index,
@@ -71,11 +70,26 @@ def synthetic_workflow(
         tradeables, by_ticker, by_stem, by_base, max_workers=4
     )
 
-    diagnostics, _, _, _, _ = write_match_report(
+    (
+        diagnostics,
+        _,
+        _,
+        _,
+        _,
+        exported_count,
+        skipped_count,
+    ) = write_match_report(
         matches,
         dataset.metadata_dir / "tradeable_matches.csv",
         dataset.stooq_dir,
         lse_currency_policy="broker",
+        export_config=ExportConfig(
+            data_dir=dataset.stooq_dir,
+            dest_dir=dataset.prices_output_dir,
+            overwrite=True,
+            max_workers=4,
+            include_empty=True,
+        ),
     )
     annotated_unmatched = annotate_unmatched_instruments(
         unmatched,
@@ -87,16 +101,8 @@ def synthetic_workflow(
         dataset.metadata_dir / "tradeable_unmatched.csv",
     )
 
-    export_tradeable_prices(
-        matches,
-        ExportConfig(
-            data_dir=dataset.stooq_dir,
-            dest_dir=dataset.prices_output_dir,
-            overwrite=True,
-            max_workers=4,
-            diagnostics=diagnostics,
-        ),
-    )
+    assert exported_count == len(matches)
+    assert skipped_count == 0
 
     match_df = pd.read_csv(dataset.metadata_dir / "tradeable_matches.csv")
     unmatched_df = pd.read_csv(dataset.metadata_dir / "tradeable_unmatched.csv")

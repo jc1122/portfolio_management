@@ -8,7 +8,18 @@ and three CSV files describing the tradeable universes. It performs the followin
 3. Match tradeable instruments to Stooq tickers using heuristic symbol mapping.
 4. Export matched price histories and emit reports for matched/unmatched assets.
 
+Incremental Resume Feature:
+    The --incremental flag enables smart caching to skip redundant processing when
+    inputs haven't changed. The script tracks:
+    - Stooq index file hash
+    - Tradeable CSV directory hash (file names and modification times)
+    
+    When both inputs are unchanged and output files exist, processing is skipped
+    entirely, completing in seconds instead of minutes. Use --force-reindex to
+    override the cache.
+
 Example usage:
+    # First run - builds everything
     python scripts/prepare_tradeable_data.py \
         --data-dir data/stooq \
         --metadata-output data/metadata/stooq_index.csv \
@@ -17,7 +28,15 @@ Example usage:
         --unmatched-report data/metadata/tradeable_unmatched.csv \
         --prices-output data/processed/tradeable_prices \
         --max-workers 8 \
-        --overwrite-prices
+        --incremental
+    
+    # Second run - skips if unchanged (completes in seconds)
+    python scripts/prepare_tradeable_data.py \
+        --incremental
+    
+    # Force full rebuild
+    python scripts/prepare_tradeable_data.py \
+        --force-reindex
 """
 
 from __future__ import annotations
@@ -27,6 +46,7 @@ import importlib.util
 import logging
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 if (
@@ -44,6 +64,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from portfolio_management.core.utils import log_duration
+from portfolio_management.data import cache
 from portfolio_management.data.analysis import (
     collect_available_extensions,
     infer_currency,
@@ -96,8 +117,8 @@ __all__ = [
 ]
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
+def build_parser() -> argparse.ArgumentParser:
+    """Create the CLI argument parser."""
     parser = argparse.ArgumentParser(description="Prepare tradeable Stooq datasets.")
     parser.add_argument(
         "--data-dir",
@@ -175,7 +196,23 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Number of threads for directory indexing (0 falls back to --max-workers).",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Enable incremental resume: skip processing if inputs unchanged and outputs exist.",
+    )
+    parser.add_argument(
+        "--cache-metadata",
+        type=Path,
+        default=Path("data/metadata/.prepare_cache.json"),
+        help="Path to cache metadata file for incremental resume.",
+    )
+    return parser
+
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments."""
+    return build_parser().parse_args(argv)
 
 
 def configure_logging(level: str) -> None:
@@ -220,7 +257,15 @@ def _load_and_match_tradeables(stooq_index, args, max_workers):
     return matches, unmatched
 
 
-def _generate_reports(matches, unmatched, args, data_dir):
+def _generate_reports(matches, unmatched, args, data_dir, max_workers):
+    export_config = ExportConfig(
+        data_dir=args.data_dir,
+        dest_dir=args.prices_output,
+        overwrite=args.overwrite_prices,
+        max_workers=max_workers,
+        include_empty=args.include_empty_prices,
+    )
+    export_config.dest_dir.mkdir(parents=True, exist_ok=True)
     with log_duration("tradeable_match_report"):
         (
             diagnostics_cache,
@@ -228,11 +273,15 @@ def _generate_reports(matches, unmatched, args, data_dir):
             data_status_counts,
             empty_tickers,
             flagged_samples,
+            exported_count,
+            skipped_count,
         ) = write_match_report(
             matches,
             args.match_report,
             data_dir,
             lse_currency_policy=args.lse_currency_policy,
+            max_workers=max_workers,
+            export_config=export_config,
         )
     log_summary_counts(currency_counts, data_status_counts)
     if empty_tickers:
@@ -254,27 +303,14 @@ def _generate_reports(matches, unmatched, args, data_dir):
         )
     with log_duration("tradeable_unmatched_report"):
         write_unmatched_report(unmatched, args.unmatched_report)
+    LOGGER.info("Exported %s price files to %s", exported_count, export_config.dest_dir)
+    if skipped_count:
+        LOGGER.warning("Skipped %s price files without usable data", skipped_count)
     return diagnostics_cache
 
 
-def _export_prices(matches, args, diagnostics_cache, max_workers):
-    with log_duration("tradeable_export"):
-        config = ExportConfig(
-            data_dir=args.data_dir,
-            dest_dir=args.prices_output,
-            overwrite=args.overwrite_prices,
-            max_workers=max_workers,
-            diagnostics=diagnostics_cache,
-            include_empty=args.include_empty_prices,
-        )
-        export_tradeable_prices(matches, config)
-
-
-def main() -> None:
+def prepare_tradeable_data(args: argparse.Namespace) -> None:
     """Run the end-to-end tradeable data preparation workflow."""
-    args = parse_args()
-    configure_logging(args.log_level)
-
     data_dir = args.data_dir
     cpu_count = os.cpu_count() or 1
     auto_workers = max(1, (cpu_count - 1) or 1)
@@ -295,11 +331,61 @@ def main() -> None:
         cpu_count,
     )
 
+    # Check for incremental resume opportunity
+    if args.incremental:
+        cache_metadata = cache.load_cache_metadata(args.cache_metadata)
+        
+        # Check if we can skip processing
+        if (
+            cache.inputs_unchanged(
+                args.tradeable_dir,
+                args.metadata_output,
+                cache_metadata,
+            )
+            and cache.outputs_exist(args.match_report, args.unmatched_report)
+        ):
+            LOGGER.info(
+                "Incremental resume: inputs unchanged and outputs exist - skipping processing"
+            )
+            LOGGER.info("Match report: %s", args.match_report)
+            LOGGER.info("Unmatched report: %s", args.unmatched_report)
+            LOGGER.info(
+                "To force full rebuild, use --force-reindex or omit --incremental"
+            )
+            return
+        
+        LOGGER.info("Incremental resume: inputs changed or outputs missing - running full pipeline")
+
     stooq_index = _handle_stooq_index(args, index_workers)
     matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
-    diagnostics_cache = _generate_reports(matches, unmatched, args, data_dir)
-    _export_prices(matches, args, diagnostics_cache, max_workers)
+    _generate_reports(matches, unmatched, args, data_dir, max_workers)
+    
+    # Save cache metadata for next run if incremental mode enabled
+    if args.incremental:
+        new_cache_metadata = cache.create_cache_metadata(
+            args.tradeable_dir,
+            args.metadata_output,
+        )
+        cache.save_cache_metadata(args.cache_metadata, new_cache_metadata)
+        LOGGER.debug("Saved cache metadata for future incremental resumes")
 
 
-if __name__ == "__main__":
+def run_cli(args: argparse.Namespace) -> int:
+    """Execute the CLI workflow with logging and error handling."""
+    configure_logging(args.log_level)
+    try:
+        prepare_tradeable_data(args)
+    except Exception:  # pragma: no cover - defensive
+        LOGGER.exception("Tradeable data preparation failed")
+        return 1
+    return 0
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    """CLI entry point."""
+    args = parse_args(argv)
+    sys.exit(run_cli(args))
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry point
     main()

@@ -35,6 +35,7 @@ from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import yaml
@@ -152,6 +153,12 @@ def create_parser() -> argparse.ArgumentParser:
         default=Decimal("0.05"),
         help="Drift threshold for opportunistic rebalancing (e.g., 0.05 = 5%%). Default: 0.05",
     )
+    parser.add_argument(
+        "--lookback-periods",
+        type=int,
+        default=252,
+        help="Rolling lookback window for parameter estimation (days). Default: 252 (1 year)",
+    )
 
     # Data sources
     parser.add_argument(
@@ -260,26 +267,85 @@ def load_data(
     prices_file: Path,
     returns_file: Path,
     assets: list[str],
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Load prices and returns data for specified assets."""
+    """Load prices and returns data for specified assets and date range.
+
+    This function optimizes memory usage by only loading the required asset
+    columns and filtering to the requested date range during the read operation.
+
+    Args:
+        prices_file: Path to prices CSV file
+        returns_file: Path to returns CSV file
+        assets: List of asset tickers to load
+        start_date: Optional start date for filtering (inclusive)
+        end_date: Optional end date for filtering (inclusive)
+
+    Returns:
+        Tuple of (prices DataFrame, returns DataFrame) filtered to requested
+        assets and date range
+
+    Raises:
+        FileNotFoundError: If prices or returns file doesn't exist
+        ValueError: If any requested assets are missing from the data files
+
+    """
     if not prices_file.exists():
         raise FileNotFoundError(f"Prices file not found: {prices_file}")
     if not returns_file.exists():
         raise FileNotFoundError(f"Returns file not found: {returns_file}")
 
-    # Load prices
-    prices = pd.read_csv(prices_file, index_col=0, parse_dates=True)
-    if not all(asset in prices.columns for asset in assets):
-        missing = [a for a in assets if a not in prices.columns]
-        raise ValueError(f"Missing assets in prices file: {missing}")
-    prices = prices[assets]
+    # First, peek at the header to validate all requested assets exist
+    # This provides early error detection before loading the full data
+    try:
+        prices_header = pd.read_csv(prices_file, nrows=0, index_col=0)
+        returns_header = pd.read_csv(returns_file, nrows=0, index_col=0)
+    except Exception as e:
+        raise ValueError(f"Failed to read CSV headers: {e}") from e
 
-    # Load returns
-    returns = pd.read_csv(returns_file, index_col=0, parse_dates=True)
-    if not all(asset in returns.columns for asset in assets):
-        missing = [a for a in assets if a not in returns.columns]
-        raise ValueError(f"Missing assets in returns file: {missing}")
-    returns = returns[assets]
+    # Check for missing assets in prices
+    missing_prices = [a for a in assets if a not in prices_header.columns]
+    if missing_prices:
+        raise ValueError(
+            f"Missing assets in prices file {prices_file}: {missing_prices}",
+        )
+
+    # Check for missing assets in returns
+    missing_returns = [a for a in assets if a not in returns_header.columns]
+    if missing_returns:
+        raise ValueError(
+            f"Missing assets in returns file {returns_file}: {missing_returns}",
+        )
+
+    # Load only the required columns (index + requested assets)
+    # This significantly reduces memory usage for large universes
+    usecols = [prices_header.index.name or 0, *assets]
+
+    # Load prices with column filtering
+    prices = pd.read_csv(
+        prices_file,
+        index_col=0,
+        parse_dates=True,
+        usecols=usecols,
+    )
+
+    # Load returns with column filtering
+    returns = pd.read_csv(
+        returns_file,
+        index_col=0,
+        parse_dates=True,
+        usecols=usecols,
+    )
+
+    # Filter by date range if specified
+    if start_date is not None:
+        prices = prices[prices.index >= pd.Timestamp(start_date)]
+        returns = returns[returns.index >= pd.Timestamp(start_date)]
+
+    if end_date is not None:
+        prices = prices[prices.index <= pd.Timestamp(end_date)]
+        returns = returns[returns.index <= pd.Timestamp(end_date)]
 
     return prices, returns
 
@@ -450,10 +516,16 @@ def main() -> int:
         if args.verbose:
             pass
 
-        # Load data
+        # Load data (optimized to only load required columns and date range)
         if args.verbose:
             pass
-        prices, returns = load_data(args.prices_file, args.returns_file, assets)
+        prices, returns = load_data(
+            args.prices_file,
+            args.returns_file,
+            assets,
+            start_date=args.start_date,
+            end_date=args.end_date,
+        )
         if args.verbose:
             pass
 
@@ -483,6 +555,7 @@ def main() -> int:
             commission_pct=float(args.commission),
             commission_min=float(args.min_commission),
             slippage_bps=float(args.slippage) * 10000,
+            lookback_periods=args.lookback_periods,
         )
 
         # Run backtest

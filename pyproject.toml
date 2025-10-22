@@ -72,6 +72,9 @@ ignore = ["E501"]
 "src/portfolio_management/returns.py" = ["D", "RUF002", "TCH001", "TRY003", "C901", "PD002", "PD901", "PLR2004", "COM812", "BLE001", "TRY400", "RET504"]
 "src/portfolio_management/selection.py" = ["D", "TRY003", "G004", "PERF203", "PLR2004", "PLC0415", "PD901"]
 "src/portfolio_management/utils.py" = ["D", "TCH003", "C901", "PLR0912", "PERF203", "G201", "TRY003", "PGH003"]
+"src/portfolio_management/data/io/io.py" = ["PLR0913", "TCH003"]
+"src/portfolio_management/data/analysis/analysis.py" = ["TCH003"]
+"src/portfolio_management/data/cache.py" = ["TCH003"]
 "tests/integration/*.py" = ["D"]
 "tests/scripts/*.py" = ["D", "TCH003"]
 "tests/test_classification.py" = ["D"]
@@ -88,7 +91,18 @@ ignore = ["E501"]
   "PLR0912",
   "PLR0915",
 ]
-
+"src/portfolio_management/backtesting/models.py" = [
+  "TCH003",
+]
+"src/portfolio_management/portfolio/builder.py" = [
+  "TCH003",
+  "TID252",
+  "TCH001",
+  "UP007",
+]
+"src/portfolio_management/portfolio/models.py" = [
+  "UP007",
+]
 "src/portfolio_management/portfolio/strategies/mean_variance.py" = [
   "SLF001",
 ]

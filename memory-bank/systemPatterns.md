@@ -15,6 +15,53 @@
 - **Extension Hooks**: Reserve interfaces for advanced overlays (trend filters, volatility targeting, sentiment-based views) to be layered on post-MVP without rewriting core modules.
 - **Cached Data Indexing**: Stooq file discovery is front-loaded into a reusable metadata index, with multicore directory traversal and export to keep subsequent runs fast and deterministic.
 
+## Performance Optimization Patterns (Oct 22)
+
+**Vectorization Pattern:** Replace row-wise pandas operations with vectorized operations
+
+- **Problem:** `.apply()` and `.iterrows()` operations cause quadratic complexity
+- **Solution:** Replace with pandas' native vectorized methods (`Series.str.extract()`, `Series.dt.*`, `Series.isin()`, `to_dict("records")`)
+- **Example:** AssetSelector vectorization achieved **45-206x speedup** by replacing row-wise filtering with pandas boolean masks
+- **Lesson:** Always prefer vectorized operations for numeric/string operations over row iteration
+
+**Bounded Caching Pattern:** Prevent unbounded memory growth with LRU eviction
+
+- **Problem:** Unbounded caches grow indefinitely during long runs
+- **Solution:** Use `OrderedDict` with configurable size limit and LRU eviction
+- **Implementation:** Track access order; remove least recently used when full
+- **Example:** PriceLoader cache achieved **70-90% memory savings** with bounded size (default 1000 entries)
+- **Lesson:** All caches must have size bounds; make them configurable
+
+**Rolling Statistics Cache Pattern:** Cache intermediate calculations across overlapping windows
+
+- **Problem:** Covariance/returns recalculated for overlapping data windows
+- **Solution:** Cache statistics across rolling windows; invalidate only when data changes
+- **Implementation:** Cache key is (start_date, end_date, asset_list); auto-invalidate on new data
+- **Example:** Statistics caching eliminates redundant calculations during monthly rebalancing with overlapping data
+- **Lesson:** For time-series operations, cache intermediate results when windows overlap
+
+**Streaming Diagnostics Pattern:** Process large datasets incrementally
+
+- **Problem:** Loading gigabyte-scale datasets into memory is inefficient
+- **Solution:** Process data in chunks; maintain state across chunks for aggregation
+- **Implementation:** Chunk-based iteration with context preservation between chunks
+- **Lesson:** For large data volumes, stream processing prevents memory spikes
+
+**Algorithmic Optimization Pattern:** Reduce unnecessary computation by changing algorithm structure
+
+- **Problem:** Certain operations performed repeatedly when not necessary (e.g., slicing on every day)
+- **Solution:** Restructure algorithm to only perform expensive operations when needed
+- **Example:** BacktestEngine optimization reduced from O(n²) to O(rebalances) by only slicing on rebalance days
+- **Lesson:** Profile first; look for operations that execute more often than necessary
+
+**Incremental Computation Pattern:** Cache results of expensive operations and reuse when possible
+
+- **Problem:** Reprocessing everything even when inputs unchanged
+- **Solution:** Hash inputs; compare to cached state; skip processing if unchanged
+- **Implementation:** SHA256 hashing for change detection; metadata cache for state
+- **Example:** Incremental resume reduced prepare_tradeable_data runtime from 3-5 minutes to seconds
+- **Lesson:** Always consider caching for expensive batch operations
+
 ## Component Relationships
 
 - `DataFetcher` feeds `DataSanitizer`, which outputs aligned price frames consumed by `AssetSelector` and strategy modules.

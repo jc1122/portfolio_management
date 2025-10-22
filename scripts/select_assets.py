@@ -4,12 +4,35 @@
 This script provides a command-line interface for filtering and selecting assets
 from a tradeable matches report based on specified criteria.
 
-Example:
+The script supports two modes of operation:
+
+1. **Eager Loading (Default)**: Loads the entire CSV file into memory at once.
+   Best for small to medium-sized files or when memory is not a constraint.
+
+2. **Streaming Mode**: Processes the CSV in configurable chunks to reduce memory
+   usage. Enable with --chunk-size parameter. Best for large files (tens of
+   thousands of rows) or memory-constrained environments.
+
+Example (Eager Loading):
     python scripts/select_assets.py \
         --match-report data/metadata/tradeable_matches.csv \
         --output /tmp/selected_assets.csv \
         --min-history-days 365 \
         --markets UK,US
+
+Example (Streaming Mode):
+    python scripts/select_assets.py \
+        --match-report data/metadata/tradeable_matches.csv \
+        --output /tmp/selected_assets.csv \
+        --min-history-days 365 \
+        --markets UK,US \
+        --chunk-size 5000
+
+Note on Streaming Mode:
+    - Results are identical to eager loading mode
+    - Memory usage is bounded by chunk_size (e.g., 5000 rows at a time)
+    - Allowlist validation ensures all required symbols are found across all chunks
+    - Blocklist is applied to each chunk independently
 
 """
 
@@ -26,7 +49,113 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from portfolio_management.assets.selection import AssetSelector, FilterCriteria
-from portfolio_management.core.exceptions import PortfolioManagementError
+from portfolio_management.core.exceptions import (
+    AssetSelectionError,
+    PortfolioManagementError,
+)
+
+
+def process_chunked(
+    match_report_path: Path,
+    criteria: FilterCriteria,
+    chunk_size: int,
+) -> list:
+    """Process match report in chunks to reduce memory usage.
+
+    Args:
+        match_report_path: Path to the CSV file.
+        criteria: Filtering criteria including allowlist/blocklist.
+        chunk_size: Number of rows to process at a time.
+
+    Returns:
+        List of selected assets from all chunks.
+
+    Raises:
+        AssetSelectionError: If allowlist items are not found.
+
+    """
+    selector = AssetSelector()
+    all_selected = []
+    found_allowlist_items = set()
+
+    logger = logging.getLogger(__name__)
+    chunk_num = 0
+
+    # Track which allowlist items we need to find
+    required_allowlist = criteria.allowlist.copy() if criteria.allowlist else None
+
+    logger.info(
+        "Starting chunked processing with chunk_size=%s from %s",
+        chunk_size,
+        match_report_path,
+    )
+
+    # Read and process CSV in chunks
+    for chunk_df in pd.read_csv(match_report_path, chunksize=chunk_size):
+        chunk_num += 1
+        logger.debug("Processing chunk %s with %s rows", chunk_num, len(chunk_df))
+
+        # Process this chunk through the selector
+        # Note: When using allowlist in chunked mode, we need to handle chunks
+        # that don't contain any allowlist items (AssetSelectionError)
+        try:
+            selected_assets = selector.select_assets(chunk_df, criteria)
+        except AssetSelectionError as e:
+            # If this chunk had no matching allowlist items, that's OK in chunked mode
+            # We'll validate the complete allowlist at the end
+            if (
+                required_allowlist
+                and "No assets matched the provided allowlist"
+                in str(
+                    e,
+                )
+            ):
+                logger.debug(
+                    "Chunk %s contained no allowlist items (expected in streaming mode)",
+                    chunk_num,
+                )
+                selected_assets = []
+            else:
+                # Re-raise other AssetSelectionError cases
+                raise
+
+        # Track found allowlist items
+        if required_allowlist:
+            for asset in selected_assets:
+                if (
+                    asset.symbol in required_allowlist
+                    or asset.isin in required_allowlist
+                ):
+                    found_allowlist_items.add(asset.symbol)
+                    found_allowlist_items.add(asset.isin)
+
+        all_selected.extend(selected_assets)
+
+        logger.debug(
+            "Chunk %s yielded %s selected assets (total so far: %s)",
+            chunk_num,
+            len(selected_assets),
+            len(all_selected),
+        )
+
+    logger.info(
+        "Chunked processing complete. Processed %s chunks, selected %s total assets.",
+        chunk_num,
+        len(all_selected),
+    )
+
+    # Validate allowlist: ensure all required items were found
+    if required_allowlist:
+        missing_items = required_allowlist - found_allowlist_items
+        if missing_items:
+            msg = (
+                f"Allowlist items not found in any chunk: {missing_items}. "
+                f"These symbols/ISINs may not exist in the match report or were "
+                f"filtered out by other criteria."
+            )
+            raise AssetSelectionError(msg)
+
+    return all_selected
 
 
 def get_args() -> argparse.Namespace:
@@ -114,6 +243,13 @@ def get_args() -> argparse.Namespace:
         action="store_true",
         help="Show what would be selected without performing the action.",
     )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=None,
+        help="Enable streaming mode with specified chunk size (e.g., 5000). "
+        "If not specified, loads entire file into memory (default behavior).",
+    )
     return parser.parse_args()
 
 
@@ -127,8 +263,7 @@ def main() -> None:
     )
 
     try:
-        matches_df = pd.read_csv(args.match_report)
-
+        # Load allowlist and blocklist if provided
         allowlist = (
             set(args.allowlist.read_text().splitlines()) if args.allowlist else None
         )
@@ -149,8 +284,25 @@ def main() -> None:
             blocklist=blocklist,
         )
 
-        selector = AssetSelector()
-        selected_assets = selector.select_assets(matches_df, criteria)
+        # Choose between chunked and eager loading based on --chunk-size
+        if args.chunk_size is not None:
+            if args.chunk_size <= 0:
+                logging.error("--chunk-size must be a positive integer")
+                sys.exit(1)
+
+            logging.info("Using streaming mode with chunk_size=%s", args.chunk_size)
+            selected_assets = process_chunked(
+                args.match_report,
+                criteria,
+                args.chunk_size,
+            )
+        else:
+            # Eager loading: original behavior
+            logging.info("Using eager loading (entire file in memory)")
+            matches_df = pd.read_csv(args.match_report)
+
+            selector = AssetSelector()
+            selected_assets = selector.select_assets(matches_df, criteria)
 
         selected_df = pd.DataFrame([asset.__dict__ for asset in selected_assets])
 

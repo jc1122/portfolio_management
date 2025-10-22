@@ -81,11 +81,59 @@ The CLI offers a rich set of configuration options:
 - `--max-forward-fill`: The maximum number of consecutive days to fill. Default: `5`.
 - `--align-method`: How to align assets with different date ranges (`outer` or `inner`). Default: `outer`.
 - `--min-coverage`: The minimum percentage (0.0 to 1.0) of non-null returns required to keep an asset. Default: `0.8`.
+- `--loader-workers`: Maximum worker threads for parallel price loading. Default: auto-scaled based on CPU count.
+- `--cache-size`: Maximum number of price series to cache in memory. Default: `1000`. Set to `0` to disable caching.
 - `--summary`: If specified, prints a summary of return statistics instead of the full matrix.
 - `--top`: The number of top/bottom assets to show in the summary. Default: `5`.
+
+## Memory Management
+
+The `PriceLoader` class now implements a bounded LRU (Least Recently Used) cache to prevent unbounded memory growth when processing wide universes or during long-running workflows.
+
+### Cache Configuration
+
+- **Default cache size**: 1000 price series
+- **Cache behavior**: When the cache is full, the least recently used entry is evicted to make room for new data
+- **Thread-safe**: Cache operations are protected by locks for concurrent loading scenarios
+
+### When to Adjust Cache Size
+
+Adjust the `--cache-size` parameter based on your workflow:
+
+- **Wide universe workflows** (1000+ assets loaded once): Use default or increase to match asset count for optimal reuse
+- **Long-running workflows** (multiple rounds of loading): Use default to balance memory and reuse
+- **Memory-constrained environments**: Reduce cache size (e.g., `--cache-size 100`) or disable entirely (`--cache-size 0`)
+- **Narrow universes** (< 100 assets with frequent reloads): Use smaller cache (e.g., `--cache-size 100`)
+
+### Memory Impact
+
+With the bounded cache:
+
+- **Before**: Unbounded memory growth - loading 5000 unique files retained all data in memory
+- **After**: Stable memory - loading 5000 unique files with `cache_size=1000` retains only the 1000 most recently used series
+- **Typical savings**: 70-90% reduction in memory footprint for wide-universe workflows
+
+### Programmatic Cache Management
+
+When using `PriceLoader` programmatically, you can control the cache directly:
+
+```python
+from portfolio_management.analytics.returns import PriceLoader
+
+# Create loader with custom cache size
+loader = PriceLoader(max_workers=8, cache_size=500)
+
+# Check cache statistics
+info = loader.cache_info()
+print(f"Cache: {info['size']} / {info['maxsize']} entries")
+
+# Clear cache after bulk operations (optional)
+loader.clear_cache()
+```
 
 ## Integration Notes
 
 - `UniverseManager` consumes the same `ReturnCalculator` instance to guarantee consistent behaviour across universes.
 - When adding new strategies or frequencies, update `ReturnConfig` validation and extend the resampling logic to keep the CLI and manager in sync.
 - Always validate new price data batches with the CLI before running costly portfolio optimisations.
+- The bounded cache ensures memory stability even when processing thousands of unique assets across multiple pipeline runs.

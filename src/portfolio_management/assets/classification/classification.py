@@ -57,8 +57,10 @@ from __future__ import annotations
 
 import logging
 import pathlib
-from dataclasses import dataclass, field
+import re
+from dataclasses import asdict, dataclass, field, is_dataclass
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 import pandas as pd
@@ -254,16 +256,13 @@ class AssetClassifier:
                 ],
             )
 
-        classifications: list[AssetClassification] = []
-        for asset in assets:
-            try:
-                classifications.append(self.classify_asset(asset))
-            except Exception as exc:  # pragma: no cover - defensive
-                raise ClassificationError(
-                    f"Failed to classify asset '{getattr(asset, 'symbol', repr(asset))}': {exc}",
-                ) from exc
+        try:
+            asset_dicts = [asdict(asset) for asset in assets]
+        except TypeError as exc:  # pragma: no cover - defensive
+            raise ClassificationError("Failed to serialise assets for classification.") from exc
 
-        df = pd.DataFrame([c.__dict__ for c in classifications])
+        assets_df = pd.DataFrame(asset_dicts)
+        df = self._classify_dataframe(assets_df)
 
         logger = logging.getLogger(__name__)
         logger.info("Classified %d assets.", len(df))
@@ -281,6 +280,162 @@ class AssetClassifier:
             )
 
         return df
+
+    def _contains_keywords(self, series: pd.Series, keywords: set[str]) -> pd.Series:
+        if series.empty or not keywords:
+            return pd.Series(False, index=series.index)
+        pattern = "|".join(re.escape(keyword) for keyword in keywords if keyword)
+        if not pattern:
+            return pd.Series(False, index=series.index)
+        return series.str.contains(pattern, na=False)
+
+    def _classify_dataframe(self, assets_df: pd.DataFrame) -> pd.DataFrame:
+        def column_or_empty(column: str) -> pd.Series:
+            if column in assets_df:
+                return assets_df[column]
+            return pd.Series([""] * len(assets_df), index=assets_df.index, dtype=object)
+
+        name_lower = column_or_empty("name").fillna("").astype(str).str.lower()
+        category_lower = column_or_empty("category").fillna("").astype(str).str.lower()
+        region_lower = column_or_empty("region").fillna("").astype(str).str.lower()
+        currency_lower = column_or_empty("currency").fillna("").astype(str).str.lower()
+
+        result_df = pd.DataFrame(
+            {
+                "symbol": column_or_empty("symbol"),
+                "isin": column_or_empty("isin"),
+                "name": column_or_empty("name"),
+            },
+            index=assets_df.index,
+        )
+
+        unknown_class = AssetClass.UNKNOWN.value
+        asset_class_name = pd.Series(unknown_class, index=result_df.index, dtype=object)
+
+        equity_mask = self._contains_keywords(name_lower, self.EQUITY_KEYWORDS)
+        asset_class_name[equity_mask] = AssetClass.EQUITY.value
+
+        remaining = asset_class_name == unknown_class
+        bond_mask = remaining & self._contains_keywords(name_lower, self.BOND_KEYWORDS)
+        asset_class_name[bond_mask] = AssetClass.FIXED_INCOME.value
+
+        remaining = asset_class_name == unknown_class
+        commodity_mask = remaining & self._contains_keywords(name_lower, self.COMMODITY_KEYWORDS)
+        asset_class_name[commodity_mask] = AssetClass.COMMODITY.value
+
+        remaining = asset_class_name == unknown_class
+        real_estate_mask = remaining & self._contains_keywords(name_lower, self.REAL_ESTATE_KEYWORDS)
+        asset_class_name[real_estate_mask] = AssetClass.REAL_ESTATE.value
+
+        class_from_category = pd.Series(unknown_class, index=result_df.index, dtype=object)
+        stock_mask = category_lower.str.contains("stock", na=False)
+        class_from_category[stock_mask] = AssetClass.EQUITY.value
+
+        remaining_cat = class_from_category == unknown_class
+        etf_mask = remaining_cat & category_lower.str.contains("etf", na=False)
+        class_from_category[etf_mask] = AssetClass.EQUITY.value
+
+        remaining_cat = class_from_category == unknown_class
+        bond_cat_mask = remaining_cat & category_lower.str.contains("bond", na=False)
+        class_from_category[bond_cat_mask] = AssetClass.FIXED_INCOME.value
+
+        unknown_name_mask = asset_class_name == unknown_class
+        unknown_cat_mask = class_from_category == unknown_class
+
+        asset_class = asset_class_name.copy()
+        confidence = pd.Series(0.7, index=result_df.index, dtype=float)
+
+        both_unknown = unknown_name_mask & unknown_cat_mask
+        asset_class[both_unknown] = unknown_class
+        confidence[both_unknown] = 0.5
+
+        both_known = (~unknown_name_mask) & (~unknown_cat_mask)
+        confidence[both_known] = 0.9
+
+        name_only_known = (~unknown_name_mask) & unknown_cat_mask
+        asset_class[name_only_known] = asset_class_name[name_only_known]
+        confidence[name_only_known] = 0.7
+
+        cat_only_known = unknown_name_mask & (~unknown_cat_mask)
+        asset_class[cat_only_known] = class_from_category[cat_only_known]
+        confidence[cat_only_known] = 0.7
+
+        geography = pd.Series(Geography.UNKNOWN, index=result_df.index, dtype=object)
+        assigned_geo = geography != Geography.UNKNOWN
+
+        for geo_enum, patterns in self.GEOGRAPHY_PATTERNS.items():
+            patterns_lower = [pattern.lower() for pattern in patterns]
+            mask_region = region_lower.isin(patterns_lower)
+            mask_currency = currency_lower.isin(patterns_lower)
+            pattern_regex = "|".join(re.escape(pattern) for pattern in patterns_lower if pattern)
+            mask_name = (
+                name_lower.str.contains(pattern_regex, na=False) if pattern_regex else pd.Series(False, index=result_df.index)
+            )
+            combined = (~assigned_geo) & (mask_region | mask_currency | mask_name)
+            geography[combined] = geo_enum
+            assigned_geo = geography != Geography.UNKNOWN
+
+        sub_class = pd.Series(SubClass.UNKNOWN.value, index=result_df.index, dtype=object)
+        equity_asset_mask = asset_class == AssetClass.EQUITY.value
+        sub_class[equity_asset_mask & name_lower.str.contains("large cap", na=False)] = SubClass.LARGE_CAP.value
+        sub_class[equity_asset_mask & name_lower.str.contains("small cap", na=False)] = SubClass.SMALL_CAP.value
+        sub_class[equity_asset_mask & name_lower.str.contains("value", na=False)] = SubClass.VALUE.value
+        sub_class[equity_asset_mask & name_lower.str.contains("growth", na=False)] = SubClass.GROWTH.value
+        sub_class[equity_asset_mask & name_lower.str.contains("dividend", na=False)] = SubClass.DIVIDEND.value
+
+        fixed_income_mask = asset_class == AssetClass.FIXED_INCOME.value
+        sub_class[
+            fixed_income_mask & name_lower.str.contains("government|gilt|treasury", na=False)
+        ] = SubClass.GOVERNMENT.value
+        sub_class[fixed_income_mask & name_lower.str.contains("corporate", na=False)] = SubClass.CORPORATE.value
+        sub_class[fixed_income_mask & name_lower.str.contains("high yield", na=False)] = SubClass.HIGH_YIELD.value
+
+        commodity_asset_mask = asset_class == AssetClass.COMMODITY.value
+        sub_class[commodity_asset_mask & name_lower.str.contains("gold", na=False)] = SubClass.GOLD.value
+
+        real_estate_asset_mask = asset_class == AssetClass.REAL_ESTATE.value
+        sub_class[real_estate_asset_mask & name_lower.str.contains("reit", na=False)] = SubClass.REIT.value
+
+        result_df["asset_class"] = asset_class.astype(str)
+        result_df["sub_class"] = sub_class.astype(str)
+        result_df["geography"] = geography
+        result_df["sector"] = None
+        result_df["confidence"] = confidence
+
+        if self.overrides.overrides:
+            isin_series = assets_df.get("isin", pd.Series([], dtype=str)).fillna("")
+            symbol_series = assets_df.get("symbol", pd.Series([], dtype=str)).fillna("")
+            override_keys = isin_series.where(isin_series != "", symbol_series)
+            for idx, key in enumerate(override_keys):
+                override = self.overrides.overrides.get(key)
+                if not override:
+                    continue
+                asset_class_override = override.get("asset_class", AssetClass.UNKNOWN.value)
+                if isinstance(asset_class_override, AssetClass):
+                    asset_class_override = asset_class_override.value
+                result_df.at[idx, "asset_class"] = str(asset_class_override)
+
+                sub_class_override = override.get("sub_class", SubClass.UNKNOWN.value)
+                if isinstance(sub_class_override, SubClass):
+                    sub_class_override = sub_class_override.value
+                result_df.at[idx, "sub_class"] = str(sub_class_override)
+
+                geography_override = override.get("geography", Geography.UNKNOWN)
+                if not isinstance(geography_override, Geography):
+                    try:
+                        geography_override = Geography(geography_override)
+                    except ValueError:
+                        geography_override = Geography.UNKNOWN
+                result_df.at[idx, "geography"] = geography_override
+
+                result_df.at[idx, "sector"] = override.get("sector")
+                confidence_override = override.get("confidence", 1.0)
+                try:
+                    result_df.at[idx, "confidence"] = float(confidence_override)
+                except (TypeError, ValueError):
+                    result_df.at[idx, "confidence"] = 1.0
+
+        return result_df
 
     def _classify_by_name(self, asset: SelectedAsset) -> AssetClass:
         if pd.isna(asset.name):
@@ -358,5 +513,16 @@ class AssetClassifier:
         classifications: list[AssetClassification],
         path: Path,
     ) -> None:
-        df = pd.DataFrame([c.__dict__ for c in classifications])
+        records = []
+        for classification in classifications:
+            if is_dataclass(classification):
+                records.append(asdict(classification))
+            elif isinstance(classification, dict):
+                records.append(classification)
+            elif hasattr(classification, "__dict__"):
+                records.append(vars(classification))
+            else:
+                raise ValueError("Unsupported classification record type for export.")
+
+        df = pd.DataFrame(records)
         df.to_csv(path, index=False)

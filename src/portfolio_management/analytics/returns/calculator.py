@@ -139,47 +139,60 @@ class ReturnCalculator:
         if prices.empty:
             return pd.DataFrame()
 
-        calculators = {
-            "simple": lambda series: self._calculate_simple_returns(series),
-            "log": lambda series: self._calculate_log_returns(series),
-            "excess": lambda series: self._calculate_excess_returns(
-                series,
-                config.risk_free_rate,
-            ),
-        }
-        calculator = calculators[config.method]
+        price_counts = prices.notna().sum()
+        insufficient = price_counts[price_counts < config.min_periods]
+        for symbol, count in insufficient.items():
+            logger.warning(
+                "Skipping %s because only %d observations available (min %d)",
+                symbol,
+                count,
+                config.min_periods,
+            )
 
-        results: dict[str, pd.Series] = {}
-        for column in prices.columns:
-            series = prices[column].dropna()
-            if len(series) < config.min_periods:
-                logger.warning(
-                    "Skipping %s because only %d observations available (min %d)",
-                    column,
-                    len(series),
-                    config.min_periods,
-                )
-                continue
-
-            returns_series = calculator(series)
-            if returns_series.empty:
-                logger.warning("No returns generated for %s; skipping", column)
-                continue
-
-            extreme = returns_series[returns_series.abs() > 1]
-            if not extreme.empty:
-                logger.warning(
-                    "Found %d extreme returns (>100%%) for %s",
-                    len(extreme),
-                    column,
-                )
-
-            results[column] = returns_series
-
-        if not results:
+        eligible_columns = price_counts[price_counts >= config.min_periods].index
+        if eligible_columns.empty:
             return pd.DataFrame()
 
-        return pd.DataFrame(results).sort_index()
+        filtered_prices = prices[eligible_columns].sort_index()
+        shifted = filtered_prices.shift(1)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            if config.method == "log":
+                returns = np.log(filtered_prices / shifted)
+            else:
+                returns = (filtered_prices / shifted) - 1
+                if config.method == "excess":
+                    daily_rf = (1 + config.risk_free_rate) ** (1 / 252) - 1
+                    returns = returns - daily_rf
+
+        returns = returns.replace([np.inf, -np.inf], np.nan)
+        returns = returns.dropna(how="all")
+        returns = returns.dropna(axis=1, how="all")
+
+        if returns.empty:
+            return pd.DataFrame()
+
+        nonzero_counts = returns.count()
+        empty_returns = nonzero_counts[nonzero_counts == 0].index.tolist()
+        if empty_returns:
+            for symbol in empty_returns:
+                logger.warning("No returns generated for %s; skipping", symbol)
+            returns = returns.drop(columns=empty_returns)
+
+        if returns.empty:
+            return pd.DataFrame()
+
+        extreme_counts = (returns.abs() > 1).sum()
+        for symbol, count in extreme_counts.items():
+            if count:
+                logger.warning(
+                    "Found %d extreme returns (>100%%) for %s",
+                    int(count),
+                    symbol,
+                )
+
+        returns = returns.sort_index()
+        return returns
 
     def _handle_missing_forward_fill(
         self,
@@ -224,7 +237,8 @@ class ReturnCalculator:
         if prices.empty:
             return prices
 
-        initial_missing = int(prices.isna().sum().sum())
+        missing_mask = prices.isna()
+        initial_missing = int(missing_mask.to_numpy().sum())
         if initial_missing == 0:
             logger.debug("No missing data detected")
             return prices

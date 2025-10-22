@@ -1,0 +1,16 @@
+{
+  "total_return": 0.5994409710000002,
+  "annualized_return": 0.08192775961107035,
+  "annualized_volatility": 0.08947822889376879,
+  "sharpe_ratio": 0.9156166882598606,
+  "sortino_ratio": 1.1424937183406556,
+  "max_drawdown": -0.15970164292832795,
+  "calmar_ratio": 0.5130051144673475,
+  "expected_shortfall_95": -0.00849106655880998,
+  "win_rate": 0.4420772303595206,
+  "avg_win": 0.004702067366775419,
+  "avg_loss": -0.00461149895077466,
+  "turnover": 0.0007509623963038564,
+  "total_costs": 11054.19,
+  "num_rebalances": 59
+}

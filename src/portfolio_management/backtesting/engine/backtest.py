@@ -133,27 +133,33 @@ class BacktestEngine:
 
             has_min_history = (i + 1) >= self.strategy.min_history_periods
 
-            if not self.rebalance_events and has_min_history:
-                lookback_returns = period_returns.iloc[: i + 1]
-                lookback_prices = period_prices.iloc[: i + 1]
-                self._rebalance(
-                    date,
-                    lookback_returns,
-                    lookback_prices,
-                    RebalanceTrigger.FORCED,
-                )
-                continue
+            # Only create lookback slices when actually rebalancing
+            should_rebalance_forced = not self.rebalance_events and has_min_history
+            should_rebalance_scheduled = (
+                has_min_history and self._should_rebalance_scheduled(date)
+            )
 
-            # Check for scheduled rebalancing
-            if has_min_history and self._should_rebalance_scheduled(date):
-                lookback_returns = period_returns.iloc[: i + 1]
-                lookback_prices = period_prices.iloc[: i + 1]
+            if should_rebalance_forced or should_rebalance_scheduled:
+                # Create lookback window only when needed
+                # Use rolling window for parameter estimation (standard practice in quant finance)
+                lookback_window = min(self.config.lookback_periods, i + 1)
+                start_idx = max(0, i + 1 - lookback_window)
+                lookback_returns = period_returns.iloc[start_idx : i + 1]
+                lookback_prices = period_prices.iloc[start_idx : i + 1]
+
+                trigger = (
+                    RebalanceTrigger.FORCED
+                    if should_rebalance_forced
+                    else RebalanceTrigger.SCHEDULED
+                )
                 self._rebalance(
                     date,
                     lookback_returns,
                     lookback_prices,
-                    RebalanceTrigger.SCHEDULED,
+                    trigger,
                 )
+                if should_rebalance_forced:
+                    continue
 
         # Calculate performance metrics
         equity_df = pd.DataFrame(

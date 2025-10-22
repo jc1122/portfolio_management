@@ -21,6 +21,9 @@ from .base import PortfolioStrategy
 
 if TYPE_CHECKING:
     from portfolio_management.portfolio.constraints.models import PortfolioConstraints
+    from portfolio_management.portfolio.statistics.rolling_statistics import (
+        RollingStatistics,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +39,24 @@ class RiskParityStrategy(PortfolioStrategy):
 
     Attributes:
         min_periods: Minimum periods for covariance estimation (default: 252, ~1 year)
+        statistics_cache: Optional RollingStatistics instance for caching covariance matrices
 
     """
 
-    def __init__(self, min_periods: int = 252) -> None:
+    def __init__(
+        self,
+        min_periods: int = 252,
+        statistics_cache: RollingStatistics | None = None,
+    ) -> None:
         """Initialize risk parity strategy.
 
         Args:
             min_periods: Minimum periods for covariance estimation
+            statistics_cache: Optional statistics cache to avoid redundant calculations
 
         """
         self._min_periods = min_periods
+        self._statistics_cache = statistics_cache
 
     @property
     def name(self) -> str:
@@ -91,7 +101,26 @@ class RiskParityStrategy(PortfolioStrategy):
                 asset_classes,
             )
 
-        cov_matrix = self._regularize_covariance(returns.cov(), n_assets)
+        # Use cached covariance if available
+        if self._statistics_cache is not None:
+            cov_matrix = self._statistics_cache.get_covariance_matrix(
+                returns,
+                annualize=False,
+            )
+            if not returns.empty:
+                dataset_signature = (
+                    f"{returns.index[0]}:{returns.index[-1]}:{len(returns)}"
+                )
+            else:
+                dataset_signature = "0"
+            base_key = self._statistics_cache._cache_key  # noqa: SLF001
+            self._statistics_cache._cache_key = (  # noqa: SLF001
+                f"{base_key}:{dataset_signature}"
+            )
+        else:
+            cov_matrix = returns.cov()
+
+        cov_matrix = self._regularize_covariance(cov_matrix, n_assets)
         max_uniform_weight = 1.0 / n_assets
 
         try:
