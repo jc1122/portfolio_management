@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import pandas as pd
-from pypfopt import objective_functions
 
 from portfolio_management.core.exceptions import (
     DependencyError,
@@ -177,6 +176,8 @@ class MeanVarianceStrategy(PortfolioStrategy):
                     asset_classes,
                 )
                 if attempt["l2_gamma"]:
+                    # Import objective_functions only when needed
+                    objective_functions = importlib.import_module("pypfopt.objective_functions")
                     candidate_ef.add_objective(
                         objective_functions.L2_reg,
                         gamma=attempt["l2_gamma"],

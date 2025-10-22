@@ -81,9 +81,10 @@ class RollingStatistics:
             # Compute new covariance matrix
             cov_matrix = returns.cov()
             
-            # Update cache
+            # Update cache (also cache mean for consistency)
             self._cached_data = returns.copy()
             self._cached_cov = cov_matrix
+            self._cached_mean = returns.mean()  # Cache mean too
             self._cache_key = cache_key
         
         if annualize:
@@ -115,11 +116,10 @@ class RollingStatistics:
             # Compute new mean returns
             mean_returns = returns.mean()
             
-            # Update cache (also update covariance if needed)
+            # Update cache (also update covariance for consistency)
             self._cached_data = returns.copy()
             self._cached_mean = mean_returns
-            if self._cached_cov is None:
-                self._cached_cov = returns.cov()
+            self._cached_cov = returns.cov()  # Cache covariance too
             self._cache_key = cache_key
         
         if annualize:
