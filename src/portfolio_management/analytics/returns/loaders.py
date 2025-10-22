@@ -4,26 +4,40 @@ from __future__ import annotations
 
 import logging
 import os
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 if TYPE_CHECKING:
-    from ...assets.selection.selection import SelectedAsset
+    from collections.abc import Iterable
+
+    from portfolio_management.assets.selection.selection import SelectedAsset
 
 logger = logging.getLogger(__name__)
 
 
 class PriceLoader:
-    """Utilities for reading price files into pandas objects."""
+    """Utilities for reading price files into pandas objects.
 
-    def __init__(self, max_workers: int | None = None):
+    This loader includes a bounded LRU cache to prevent unbounded memory growth
+    during long-running workflows or when processing wide universes with thousands
+    of unique price files.
+
+    Args:
+        max_workers: Maximum number of concurrent threads for parallel loading.
+        cache_size: Maximum number of price series to cache. Default is 1000.
+            Set to 0 to disable caching entirely.
+
+    """
+
+    def __init__(self, max_workers: int | None = None, cache_size: int = 1000):
         self.max_workers = max_workers
-        self._cache: dict[Path, pd.Series] = {}
+        self.cache_size = max(0, cache_size)  # Ensure non-negative
+        self._cache: OrderedDict[Path, pd.Series] = OrderedDict()
         self._cache_lock = Lock()
 
     def load_price_file(self, path: Path) -> pd.Series:
@@ -64,9 +78,9 @@ class PriceLoader:
                     f"Unsupported price file structure for {path}: columns={list(raw.columns)}",
                 )
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
-            df.set_index("date", inplace=True)
+            df = df.set_index("date")
 
-        df.sort_index(inplace=True)
+        df = df.sort_index()
 
         if df.index.duplicated().any():
             duplicate_count = int(df.index.duplicated().sum())
@@ -154,19 +168,55 @@ class PriceLoader:
         return df
 
     def _load_price_with_cache(self, path: Path) -> pd.Series:
+        """Load price file with LRU cache eviction when cache is full."""
+        # Check cache first (and update LRU order if hit)
         with self._cache_lock:
-            cached = self._cache.get(path)
-        if cached is not None:
-            return cached
+            if path in self._cache:
+                # Move to end (most recently used)
+                self._cache.move_to_end(path)
+                return self._cache[path]
 
+        # Cache miss - load from disk
         series = self.load_price_file(path)
-        if not series.empty:
+
+        # Store in cache if non-empty and caching is enabled
+        if not series.empty and self.cache_size > 0:
             with self._cache_lock:
+                # Remove oldest entry if at capacity
+                if len(self._cache) >= self.cache_size:
+                    # Remove from beginning (least recently used)
+                    self._cache.popitem(last=False)
+                # Add new entry at end (most recently used)
                 self._cache[path] = series
+
         return series
 
+    def clear_cache(self) -> None:
+        """Clear all cached price series.
+
+        This is useful after bulk operations where cached data is unlikely
+        to be reused, helping to free memory immediately rather than waiting
+        for LRU eviction.
+        """
+        with self._cache_lock:
+            self._cache.clear()
+            logger.debug("Cleared price loader cache")
+
+    def cache_info(self) -> dict[str, int]:
+        """Return cache statistics for monitoring.
+
+        Returns:
+            Dictionary with 'size' (current entries) and 'maxsize' (capacity).
+
+        """
+        with self._cache_lock:
+            return {
+                "size": len(self._cache),
+                "maxsize": self.cache_size,
+            }
+
     def _submit_load_tasks(
-        self, paths: Iterable[Path]
+        self, paths: Iterable[Path],
     ) -> list[tuple[Path, pd.Series | None]]:
         paths = list(paths)
         if not paths:
@@ -196,8 +246,8 @@ class PriceLoader:
                 path = future_to_path[future]
                 try:
                     series = future.result()
-                except Exception as exc:  # pragma: no cover - defensive logging
-                    logger.error("Failed to load %s: %s", path, exc)
+                except Exception:  # pragma: no cover - defensive logging
+                    logger.exception("Failed to load %s", path)
                     series = None
                 results.append((path, series))
 
@@ -206,7 +256,7 @@ class PriceLoader:
     def _resolve_price_path(
         self,
         prices_dir: Path,
-        asset: "SelectedAsset",
+        asset: SelectedAsset,
     ) -> Path | None:
         price_path = prices_dir / asset.stooq_path
         if price_path.exists():

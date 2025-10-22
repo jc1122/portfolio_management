@@ -37,3 +37,4 @@ coverage.json
 # Misc
 .DS_Store
 /data/
+benchmark_streaming.py
