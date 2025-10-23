@@ -301,7 +301,7 @@ class TestEdgeCases:
     def test_insufficient_data(self, sample_returns):
         """Test that insufficient data raises error."""
         config = PreselectionConfig(
-            method=PreselectionMethod.MOMENTUM, top_k=5, min_periods=1000
+            method=PreselectionMethod.MOMENTUM, top_k=5, lookback=500, min_periods=500
         )
         preselection = Preselection(config)
 

@@ -184,7 +184,8 @@ class Preselection:
 
         # Compute cumulative return for each asset
         # Using (1+r1)*(1+r2)*...*(1+rn) - 1
-        cumulative = (1 + lookback_returns).prod(axis=0) - 1
+        # Note: prod() with skipna=False will propagate NaN properly
+        cumulative = (1 + lookback_returns).prod(axis=0, skipna=False) - 1
 
         return cumulative
 
@@ -331,7 +332,11 @@ def create_preselection_from_dict(config_dict: dict) -> Preselection | None:
         Preselection instance or None if preselection disabled
 
     """
-    if not config_dict or config_dict.get("top_k", 0) <= 0:
+    if not config_dict:
+        return None
+    
+    top_k = config_dict.get("top_k", 0)
+    if top_k is None or top_k <= 0:
         return None
 
     method_str = config_dict.get("method", "momentum")
