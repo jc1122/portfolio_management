@@ -87,7 +87,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:  # noqa: C901, PLR0912
+def main() -> None:
     """Run the universe management CLI."""
     args = get_args()
 

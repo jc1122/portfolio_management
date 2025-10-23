@@ -2,15 +2,18 @@
 
 ## Stack Summary
 
-- Primary language: Python (>=3.10) executed via command-line scripts.
-- Core libraries: `pandas`, `numpy`, `pandas-datareader` (Stooq connector), `PyPortfolioOpt`, `riskparityportfolio` (or `Riskfolio-Lib` as alternative), `empyrical`, `matplotlib`, optional `quantstats` for tear sheets.
-- CLI tooling: `argparse` (baseline) or `click`; configuration optionally via `pyyaml` for YAML files.
+- Primary language: **Python 3.12** (minimum 3.10) executed via command-line scripts.
+- Core libraries: `pandas>=2.3`, `numpy>=2.0`, `jax>=0.4.0`, `jaxlib>=0.4.0`, `PyPortfolioOpt>=1.5.0`, `riskparityportfolio>=0.2`, `empyrical-reloaded>=0.5.0`, `cvxpy>=1.1.19`, `scipy>=1.3`, `PyYAML>=6.0`, `plotly>=5.0.0`.
+- CLI tooling: `argparse` for argument parsing; `pyyaml` for YAML configuration files.
+- Development tools: `black==25.9.0`, `ruff==0.14.1`, `mypy==1.18.2`, `pytest==8.4.2`, `pre-commit`.
 
 ## Development Environment
 
-- Local workstation or container with offline capability; data directories for cached Stooq CSV files to avoid repeated downloads.
-- Virtual environment/Poetry for dependency isolation; Git for version control.
-- Recommend integrating basic logging (Python `logging`) and plotting backend compatible with headless runs (e.g., Agg).
+- **System Python 3.12.11** (no virtual environments) with user site-packages (`--user` installations)
+- Dev container: Debian GNU/Linux 11 (bullseye) with Docker-outside-of-Docker support
+- VS Code configuration: Python 3.12 as default interpreter, auto-formatting with black, linting with ruff
+- Git for version control with pre-commit hooks
+- Data directories: `data/stooq/`, `data/processed/`, `data/metadata/` (gitignored but present locally)
 
 ## Key Patterns
 

@@ -84,7 +84,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
         """Return the minimum number of periods needed for estimation."""
         return self._min_periods
 
-    def construct(  # noqa: C901, PLR0915
+    def construct(
         self,
         returns: pd.DataFrame,
         constraints: PortfolioConstraints,

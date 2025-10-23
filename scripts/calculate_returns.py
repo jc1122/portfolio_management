@@ -140,7 +140,7 @@ def parse_args(
 
 def _load_assets(csv_path: Path) -> list[SelectedAsset]:
     if not csv_path.exists():
-        raise FileNotFoundError(f"Assets file not found: {csv_path}")  # noqa: TRY003
+        raise FileNotFoundError(f"Assets file not found: {csv_path}")
 
     assets_df = pd.read_csv(csv_path, keep_default_na=False)
     if "price_rows" in assets_df.columns:

@@ -74,7 +74,7 @@ def _read_stooq_csv(
     return pd.read_csv(file_path, **read_kwargs)
 
 
-def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
+def _stream_stooq_file_for_diagnostics(
     file_path: pathlib.Path,
 ) -> tuple[dict[str, str], str]:
     """Stream through a Stooq file to compute diagnostics without loading entire file.
