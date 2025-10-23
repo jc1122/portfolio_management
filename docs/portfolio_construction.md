@@ -109,3 +109,23 @@ python scripts/construct_portfolio.py \
 - `--max-equity`: Maximum total exposure to equity. Default: `0.90`.
 - `--min-bond`: Minimum total exposure to bonds/cash. Default: `0.10`.
 - `--verbose`: Enable detailed logging output.
+
+## Cardinality Constraints
+
+Cardinality constraints limit the number of positions in the portfolio. The toolkit supports two approaches:
+
+1. **Preselection (Current)**: Use factor-based preselection to filter assets before optimization
+   - See `docs/preselection.md` for details
+   - Fast, deterministic, factor-driven
+   - No special solver requirements
+
+2. **Optimizer-Integrated (Future)**: Enforce cardinality within the optimization
+   - See `docs/cardinality_constraints.md` for design details
+   - Methods: MIQP, heuristics, relaxation
+   - Currently design stubs only
+
+The preselection approach is production-ready and recommended for most use cases. The optimizer-integrated approach provides extension points for future development when commercial solvers or heuristic algorithms are needed.
+
+For more information:
+- Current implementation: `docs/preselection.md`
+- Future design: `docs/cardinality_constraints.md`

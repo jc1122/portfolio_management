@@ -4,7 +4,19 @@ This package provides portfolio construction strategies and utilities.
 """
 
 from .builder import PortfolioConstructor
-from .constraints import PortfolioConstraints
+from .cardinality import (
+    CardinalityNotImplementedError,
+    get_cardinality_optimizer,
+    optimize_with_cardinality_heuristic,
+    optimize_with_cardinality_miqp,
+    optimize_with_cardinality_relaxation,
+    validate_cardinality_constraints,
+)
+from .constraints import (
+    CardinalityConstraints,
+    CardinalityMethod,
+    PortfolioConstraints,
+)
 from .membership import MembershipPolicy, apply_membership_policy
 from .models import Portfolio, StrategyType
 from .preselection import (
@@ -27,7 +39,16 @@ __all__ = [
     "Portfolio",
     "StrategyType",
     # Constraints
+    "CardinalityConstraints",
+    "CardinalityMethod",
     "PortfolioConstraints",
+    # Cardinality (design stubs)
+    "CardinalityNotImplementedError",
+    "get_cardinality_optimizer",
+    "optimize_with_cardinality_heuristic",
+    "optimize_with_cardinality_miqp",
+    "optimize_with_cardinality_relaxation",
+    "validate_cardinality_constraints",
     # Membership
     "MembershipPolicy",
     "apply_membership_policy",

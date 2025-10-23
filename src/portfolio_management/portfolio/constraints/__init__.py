@@ -1,5 +1,5 @@
 """Portfolio constraints."""
 
-from .models import PortfolioConstraints
+from .models import CardinalityConstraints, CardinalityMethod, PortfolioConstraints
 
-__all__ = ["PortfolioConstraints"]
+__all__ = ["CardinalityConstraints", "CardinalityMethod", "PortfolioConstraints"]
