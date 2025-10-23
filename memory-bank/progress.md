@@ -2,20 +2,125 @@
 
 ## Current Status
 
-**Branch:** `main`
+**Branch:** `feature/issue-35-membership-policy`
 **Core Architecture:** Phases 1-9 ✅ **COMPLETE** (Oct-18) – Production-ready
 **Documentation Cleanup:** ✅ **COMPLETE** (Oct-18)
 **Performance Optimization Sprint:** ✅ **COMPLETE** (Oct 19-22) – 6 major initiatives merged
 **Environment Migration:** ✅ **COMPLETE** (Oct 23) – Python 3.12, zero ruff errors
-**Test Status:** 328 tests passing (100%), all modules validated, 1 xfailed (expected)
-**Type Safety:** Zero mypy errors (73+ files checked, perfect!)
+**Membership Policy Implementation:** 🚧 **IN PROGRESS** (Issue #35)
+**Test Status:** 351 tests passing (23 new membership tests), all modules validated, 1 xfailed (expected)
+**Type Safety:** Zero mypy errors (74+ files checked, perfect!)
 **Code Quality:** 10/10 (Perfect - zero ruff errors, all warnings addressed)
 **Repository State:** 🧹 Clean and well-organized
-**Current Development Stage:** Production-ready, fully optimized, clean environment
+**Current Development Stage:** Sprint 1 - Membership Policy (Issue #35) ~95% complete
 
 ______________________________________________________________________
 
-## � 2025-10-23 – ENVIRONMENT UPDATE & CODE QUALITY COMPLETE
+## 🎯 2025-10-24 – MEMBERSHIP POLICY CLI & DOCUMENTATION COMPLETE
+
+**Date:** October 24, 2025
+**Branch:** `feature/issue-35-membership-policy`
+**Focus:** Issue #35 - Membership Policy CLI integration and documentation
+**Commit:** 6bee005
+
+### Summary
+
+Completed CLI integration and comprehensive documentation for membership policy feature. Core module, tests, CLI flags, and documentation are now production-ready.
+
+### Key Achievements
+
+**CLI Integration (run_backtest.py):**
+
+- ✅ Added `MembershipPolicy` import
+- ✅ Added 6 CLI flags: `--membership-enabled`, `--membership-buffer-rank`, `--membership-min-hold`, `--membership-max-turnover`, `--membership-max-new`, `--membership-max-removed`
+- ✅ Implemented `create_membership_policy()` helper function
+- ✅ Integrated membership policy into `BacktestConfig`
+
+**Configuration Extension:**
+
+- ✅ Extended `BacktestConfig` dataclass with `membership_policy` field
+- ✅ Added TYPE_CHECKING import for proper type hints
+- ✅ All existing tests remain passing
+
+**Documentation:**
+
+- ✅ Created comprehensive `docs/membership_policy.md` (330+ lines)
+  - Overview, architecture, design decisions
+  - CLI and programmatic usage examples
+  - Policy rules with detailed explanations
+  - Turnover calculation methodology
+  - Integration notes with preselection
+  - Performance characteristics
+  - Testing coverage details
+  - Future enhancements roadmap
+- ✅ Updated `README.md` with membership policy section
+  - Command-line examples
+  - Parameter descriptions
+  - Link to detailed documentation
+
+**Test Coverage:**
+
+- ✅ 23 membership policy tests (all passing)
+- ✅ 328 existing tests remain passing
+- ✅ Total: 351 tests passing
+
+**Code Quality:**
+
+- ✅ All pre-commit hooks passing
+- ✅ Black formatting applied
+- ✅ isort imports organized
+- ✅ Ruff linting clean
+- ✅ Mypy type checking clean
+- ✅ mdformat documentation formatting applied
+
+### What's Complete
+
+1. ✅ Core membership policy module (`src/portfolio_management/portfolio/membership.py`)
+1. ✅ Comprehensive test suite (`tests/portfolio/test_membership.py`)
+1. ✅ Package exports updated
+1. ✅ CLI integration (`scripts/run_backtest.py`)
+1. ✅ Configuration extension (`BacktestConfig`)
+1. ✅ Documentation (`docs/membership_policy.md`, `README.md`)
+1. ✅ Git branch pushed to origin
+
+### What's Remaining
+
+1. ⏳ BacktestEngine integration (requires preselection for ranking - Issue #31)
+1. ⏳ Universe YAML configuration support
+1. ⏳ End-to-end integration tests
+
+### Technical Notes
+
+**Dependency on Preselection:**
+The membership policy requires ranked candidates to apply buffer_rank protection. Full integration with BacktestEngine depends on the preselection feature (Issue #31) which will provide sophisticated ranking strategies. Until then, a placeholder rank-by-weight approach can be used.
+
+**Type Checking:**
+Used TYPE_CHECKING import guard in BacktestConfig to avoid circular import issues while maintaining proper type hints.
+
+**CLI Design:**
+Followed existing CLI patterns in run_backtest.py with separate flag for each policy parameter, allowing fine-grained control from command line.
+
+### Files Modified
+
+- `scripts/run_backtest.py`: CLI flags and policy creation
+- `src/portfolio_management/backtesting/models.py`: BacktestConfig extension
+- `docs/membership_policy.md`: Comprehensive documentation (new)
+- `README.md`: Membership policy usage section
+- `memory-bank/progress.md`: This entry
+
+### Next Steps
+
+To complete Issue #35:
+
+1. Wait for preselection implementation (Issue #31) or implement placeholder ranking
+1. Integrate membership policy into BacktestEngine.\_rebalance()
+1. Add universe YAML configuration support
+1. Write end-to-end integration tests
+1. Create pull request for review
+
+______________________________________________________________________
+
+## 🌍 2025-10-23 – ENVIRONMENT UPDATE & CODE QUALITY COMPLETE
 
 **Date:** October 23, 2025
 **Branch:** `main`

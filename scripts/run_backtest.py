@@ -217,6 +217,7 @@ def create_parser() -> argparse.ArgumentParser:
         help="Risk aversion parameter for mean-variance (higher = more conservative). Default: 1.0",
     )
 
+
     # Preselection options
     parser.add_argument(
         "--preselect-method",
@@ -252,6 +253,56 @@ def create_parser() -> argparse.ArgumentParser:
         default=0.5,
         help="Weight for low-volatility in combined preselection (0-1). Default: 0.5",
     )
+
+    # Technical indicators
+    parser.add_argument(
+        "--enable-indicators",
+        action="store_true",
+        help="Enable technical indicator filtering (currently no-op stub)",
+    )
+    parser.add_argument(
+        "--indicator-provider",
+        type=str,
+        default="noop",
+        choices=["noop"],
+        help="Indicator provider to use. Default: noop (currently only option)",
+    )
+
+    # Membership policy
+    parser.add_argument(
+        "--membership-enabled",
+        action="store_true",
+        help="Enable membership policy to control asset churn during rebalancing",
+    )
+    parser.add_argument(
+        "--membership-buffer-rank",
+        type=int,
+        default=5,
+        help="Rank buffer to protect existing holdings (higher = more stable). Default: 5",
+    )
+    parser.add_argument(
+        "--membership-min-hold",
+        type=int,
+        default=3,
+        help="Minimum rebalance periods to hold an asset. Default: 3",
+    )
+    parser.add_argument(
+        "--membership-max-turnover",
+        type=parse_decimal,
+        help="Maximum portfolio turnover per rebalancing (0-1, e.g., 0.3 = 30%%)",
+    )
+    parser.add_argument(
+        "--membership-max-new",
+        type=int,
+        help="Maximum number of new assets to add per rebalancing",
+    )
+    parser.add_argument(
+        "--membership-max-removed",
+        type=int,
+        help="Maximum number of assets to remove per rebalancing",
+    )
+
+    # Output options
 
     # Technical indicators
     parser.add_argument(
@@ -586,9 +637,7 @@ def main() -> int:
         # Apply technical indicator filtering if enabled
         if args.enable_indicators:
             if args.verbose:
-                print(
-                    f"Applying technical indicator filtering (provider: {args.indicator_provider})...",
-                )
+                print(f"Applying technical indicator filtering (provider: {args.indicator_provider})...")
             indicator_config = IndicatorConfig(
                 enabled=True,
                 provider=args.indicator_provider,
@@ -599,9 +648,7 @@ def main() -> int:
             filtered_assets = filter_hook.filter_assets(prices, assets)
 
             if args.verbose:
-                print(
-                    f"  Assets after indicator filtering: {len(filtered_assets)} (from {len(assets)})",
-                )
+                print(f"  Assets after indicator filtering: {len(filtered_assets)} (from {len(assets)})")
 
             # Reload data with filtered assets
             if filtered_assets != assets:
@@ -664,7 +711,7 @@ def main() -> int:
             if args.verbose:
                 print(
                     f"Preselection enabled: {args.preselect_method} "
-                    f"(top-{args.preselect_top_k})",
+                    f"(top-{args.preselect_top_k})"
                 )
 
         # Run backtest

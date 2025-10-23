@@ -27,6 +27,9 @@ __all__ = [
     "StrategyType",
     # Constraints
     "PortfolioConstraints",
+    # Membership
+    "MembershipPolicy",
+    "apply_membership_policy",
     # Preselection
     "Preselection",
     "PreselectionConfig",

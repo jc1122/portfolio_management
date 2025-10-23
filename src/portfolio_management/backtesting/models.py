@@ -9,8 +9,12 @@ import datetime
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from portfolio_management.core.exceptions import InvalidBacktestConfigError
+
+if TYPE_CHECKING:
+    from portfolio_management.portfolio.membership import MembershipPolicy
 
 
 class RebalanceFrequency(Enum):
@@ -45,6 +49,7 @@ class BacktestConfig:
         commission_min: Minimum commission per trade (default: 0.0).
         slippage_bps: Slippage in basis points (default: 5.0 = 0.05%).
         cash_reserve_pct: Minimum cash reserve as percentage (default: 0.01 = 1%).
+        membership_policy: Optional policy to control asset membership changes (default: None).
 
     """
 
@@ -60,6 +65,7 @@ class BacktestConfig:
     lookback_periods: int = (
         252  # Rolling window for parameter estimation (252 = 1 year)
     )
+    membership_policy: MembershipPolicy | None = None
 
     def __post_init__(self) -> None:
         """Validate configuration values."""
