@@ -106,7 +106,7 @@ def _load_price_data(
             return None
 
         # Try to detect format by reading first line
-        with open(full_path) as f:
+        with open(full_path, encoding="utf-8") as f:
             header = f.readline().strip()
 
         # Check if it's Stooq format with <DATE> column
@@ -184,7 +184,8 @@ def _calculate_returns_matrix(
     )
 
     # Calculate returns (percentage change)
-    returns_df = prices_df.pct_change(fill_method=None).dropna()
+    # Note: dropna() will remove any rows with NaN, so we don't need explicit fill_method
+    returns_df = prices_df.pct_change().dropna()
 
     # Check for sufficient overlapping data
     valid_symbols = []
