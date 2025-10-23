@@ -25,12 +25,14 @@ jobs:
           python -m pip install "setuptools<80" wheel
           python -m pip install --timeout=120 --retries 3 -r requirements.txt
           python -m pip install --timeout=120 --retries 3 -r requirements-dev.txt
+          python -m pip install -e .
 
       - name: Verify critical dependencies
         run: |
           python -c "import pandas; import numpy; import yaml; import scipy; import cvxpy; print('Core dependencies OK')"
           python -c "import pypfopt; print('PyPortfolioOpt OK')" || echo "Warning: PyPortfolioOpt not available"
           python -c "import riskparityportfolio; print('riskparityportfolio OK')" || echo "Warning: riskparityportfolio not available"
+          python -c "import portfolio_management; print('portfolio_management package OK')"
 
       - name: Run pytest suite
         run: |
