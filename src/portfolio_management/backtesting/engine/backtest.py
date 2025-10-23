@@ -15,6 +15,10 @@ import pandas as pd
 if TYPE_CHECKING:
     from portfolio_management.portfolio import PortfolioStrategy
 
+from portfolio_management.backtesting.eligibility import (
+    compute_pit_eligibility,
+    detect_delistings,
+)
 from portfolio_management.backtesting.models import (
     BacktestConfig,
     PerformanceMetrics,
@@ -100,6 +104,7 @@ class BacktestEngine:
         self.cash: Decimal = config.initial_capital
         self.rebalance_events: list[RebalanceEvent] = []
         self.equity_curve: list[tuple[datetime.date, float]] = []
+        self.delisted_assets: dict[str, datetime.date] = {}  # Track delisted assets
 
     def run(self) -> tuple[pd.DataFrame, PerformanceMetrics, list[RebalanceEvent]]:
         """Execute the backtest simulation.
@@ -245,39 +250,78 @@ class BacktestEngine:
                 # Not enough history yet, skip rebalance
                 return
 
-            # Apply preselection if configured
-            selected_returns = historical_returns
-            if self.preselection is not None:
-                try:
-                    selected_assets = self.preselection.select_assets(
-                        returns=historical_returns, rebalance_date=date
-                    )
-                    # Filter to selected assets only
-                    selected_returns = historical_returns[selected_assets]
-                except Exception:
-                    # If preselection fails, use all assets
-                    selected_returns = historical_returns
+            # Apply point-in-time eligibility mask if enabled
+            eligible_returns = historical_returns
+            if self.config.use_pit_eligibility:
+                # Compute eligibility based only on data up to this date
+                eligibility_mask = compute_pit_eligibility(
+                    returns=historical_returns,
+                    date=date,
+                    min_history_days=self.config.min_history_days,
+                    min_price_rows=self.config.min_price_rows,
+                )
+                
+                # Filter to only eligible assets
+                eligible_tickers = historical_returns.columns[eligibility_mask]
+                if len(eligible_tickers) == 0:
+                    # No eligible assets yet, skip rebalance
+                    return
+                    
+                eligible_returns = historical_returns[eligible_tickers]
+                
+                # Detect delistings - assets that have stopped trading
+                delistings = detect_delistings(
+                    returns=self.returns,
+                    current_date=date,
+                    lookforward_days=30,
+                )
+                
+                # Liquidate holdings in delisted assets
+                for ticker, last_date in delistings.items():
+                    if ticker in self.holdings and self.holdings[ticker] > 0:
+                        # Mark as delisted
+                        self.delisted_assets[ticker] = last_date
+                        
+                        # Liquidate at last available price if we have it
+                        if ticker in date_prices.index and not pd.isna(date_prices[ticker]):
+                            shares = self.holdings[ticker]
+                            price = float(date_prices[ticker])
+                            
+                            if price > 0:
+                                # Calculate cost for selling
+                                cost = self.cost_model.calculate_cost(
+                                    ticker,
+                                    shares,
+                                    price,
+                                    is_buy=False,
+                                )
+                                
+                                # Sell and add proceeds to cash
+                                sale_value = Decimal(str(shares * price))
+                                self.cash += sale_value
+                                self.cash -= cost
+                                
+                                # Remove from holdings
+                                del self.holdings[ticker]
 
             constraints = PortfolioConstraints(
-                max_weight=0.25,
+                max_weight=1.0,  # Allow any weight for single asset
                 min_weight=0.0,
-                max_equity_exposure=0.90,
-                min_bond_exposure=0.10,
+                max_equity_exposure=1.0,  # Allow full equity exposure
+                min_bond_exposure=0.0,  # No minimum bond requirement
             )
 
             # Build asset class series if we have classifications
             asset_classes = None
             if self.classifications:
+                # Filter to only eligible assets
                 asset_classes = pd.Series(self.classifications)
-                # Filter to selected assets
-                if self.preselection is not None:
-                    asset_classes = asset_classes[
-                        asset_classes.index.isin(selected_returns.columns)
-                    ]
+                if self.config.use_pit_eligibility:
+                    asset_classes = asset_classes[asset_classes.index.isin(eligible_returns.columns)]
 
             # Construct target portfolio (on selected subset)
             portfolio = self.strategy.construct(
-                returns=selected_returns,
+                returns=eligible_returns,
                 constraints=constraints,
                 asset_classes=asset_classes,
             )

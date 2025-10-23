@@ -49,7 +49,9 @@ class BacktestConfig:
         commission_min: Minimum commission per trade (default: 0.0).
         slippage_bps: Slippage in basis points (default: 5.0 = 0.05%).
         cash_reserve_pct: Minimum cash reserve as percentage (default: 0.01 = 1%).
-        membership_policy: Optional policy to control asset membership changes (default: None).
+        use_pit_eligibility: Enable point-in-time eligibility filtering (default: True).
+        min_history_days: Minimum days of history for PIT eligibility (default: 252 = 1 year).
+        min_price_rows: Minimum price rows for PIT eligibility (default: 252).
 
     """
 
@@ -65,7 +67,9 @@ class BacktestConfig:
     lookback_periods: int = (
         252  # Rolling window for parameter estimation (252 = 1 year)
     )
-    membership_policy: MembershipPolicy | None = None
+    use_pit_eligibility: bool = False  # Enable point-in-time eligibility filtering
+    min_history_days: int = 252  # Minimum days for eligibility (1 year)
+    min_price_rows: int = 252  # Minimum price rows for eligibility
 
     def __post_init__(self) -> None:
         """Validate configuration values."""
@@ -104,6 +108,18 @@ class BacktestConfig:
                 config_field="cash_reserve_pct",
                 invalid_value=self.cash_reserve_pct,
                 reason="Must be between 0 and 1",
+            )
+        if self.min_history_days <= 0:
+            raise InvalidBacktestConfigError(
+                config_field="min_history_days",
+                invalid_value=self.min_history_days,
+                reason="Must be positive",
+            )
+        if self.min_price_rows <= 0:
+            raise InvalidBacktestConfigError(
+                config_field="min_price_rows",
+                invalid_value=self.min_price_rows,
+                reason="Must be positive",
             )
 
 
