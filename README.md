@@ -10,6 +10,7 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
 - 200+ automated tests (unit, CLI, integration, performance smoke) covering the full data-to-portfolio stack.
 - Portfolio construction module with equal-weight, risk-parity, and mean-variance strategies plus comparison tooling and CLI access.
+- **Factor-based preselection** - deterministic momentum and low-volatility filters to reduce universe size before optimization, with no lookahead bias and configurable via CLI or universe YAML.
 - **Statistics caching** for portfolio strategies - automatically caches covariance matrices and expected returns to avoid redundant calculations during monthly rebalances with overlapping data windows (particularly beneficial for 300+ asset universes).
 - Backtesting engine with CLI orchestration, opportunistic rebalancing, transaction cost modelling, and performance analytics ready for production validation.
 
@@ -80,6 +81,7 @@ tests/                               # Test structure mirrors packages
 docs/                                # Living module guides
   ├── backtesting.md
   ├── portfolio_construction.md
+  ├── preselection.md                # Factor-based asset preselection guide
   ├── returns.md
   ├── statistics_caching.md          # Statistics caching guide
   └── universes.md
