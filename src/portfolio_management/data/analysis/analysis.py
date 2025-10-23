@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 import pathlib
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from portfolio_management.core.config import REGION_CURRENCY_MAP, STOOQ_COLUMNS
 from portfolio_management.core.exceptions import DependencyNotInstalledError
@@ -101,7 +101,7 @@ def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
     previous_date = None
     has_duplicate_dates = False
     has_non_monotonic_dates = False
-    seen_date_ints: Optional[set[int]] = set()
+    seen_date_ints: set[int] | None = set()
 
     # Read file in chunks
     chunk_size = 10000

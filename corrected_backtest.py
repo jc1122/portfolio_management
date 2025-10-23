@@ -1,29 +1,29 @@
 #!/usr/bin/env python
-"""
-Corrected Portfolio Analysis: 2010-2025 with Data Quality Fix
+"""Corrected Portfolio Analysis: 2010-2025 with Data Quality Fix
 
 Uses 70% asset coverage threshold (instead of 50%) to eliminate
 the May 16, 2016 spike artifact. Produces clean metrics.
 """
 
 import sys
-from pathlib import Path
-from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import logging
-import pandas as pd
-import numpy as np
 import warnings
-warnings.filterwarnings('ignore')
+
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings("ignore")
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s: %(message)s"
+    format="%(asctime)s %(levelname)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -77,14 +77,18 @@ def prepare_returns_corrected(price_data):
 
     # Build price DataFrame
     prices_raw = pd.DataFrame(price_data)
-    logger.info(f"Raw prices: {prices_raw.shape[0]} dates × {prices_raw.shape[1]} assets")
+    logger.info(
+        f"Raw prices: {prices_raw.shape[0]} dates × {prices_raw.shape[1]} assets",
+    )
 
     # Filter to 2010-2025
     start_date = pd.Timestamp("2010-01-01")
     end_date = pd.Timestamp("2025-12-31")
     prices_filtered = prices_raw.loc[start_date:end_date]
 
-    logger.info(f"After date filtering (2010-2025): {prices_filtered.shape[0]} dates × {prices_filtered.shape[1]} assets")
+    logger.info(
+        f"After date filtering (2010-2025): {prices_filtered.shape[0]} dates × {prices_filtered.shape[1]} assets",
+    )
 
     # Drop assets with insufficient data (less than 50% coverage in the period)
     coverage = prices_filtered.notna().sum() / len(prices_filtered)
@@ -92,15 +96,19 @@ def prepare_returns_corrected(price_data):
     valid_assets = coverage[coverage >= min_coverage].index
     prices_filtered = prices_filtered[valid_assets]
 
-    logger.info(f"After asset coverage filter (>50%): {prices_filtered.shape[1]} assets")
+    logger.info(
+        f"After asset coverage filter (>50%): {prices_filtered.shape[1]} assets",
+    )
 
     # Forward fill missing values (max 5 days)
-    prices_aligned = prices_filtered.ffill(limit=5).bfill(limit=5).dropna(how='all')
+    prices_aligned = prices_filtered.ffill(limit=5).bfill(limit=5).dropna(how="all")
 
-    logger.info(f"After alignment: {prices_aligned.shape[0]} dates × {prices_aligned.shape[1]} assets")
+    logger.info(
+        f"After alignment: {prices_aligned.shape[0]} dates × {prices_aligned.shape[1]} assets",
+    )
 
     # Calculate returns
-    returns = prices_aligned.pct_change().dropna(how='all')
+    returns = prices_aligned.pct_change().dropna(how="all")
 
     # ★ CORRECTED: Use 70% data coverage threshold (was 50%)
     min_trading_coverage = 0.70
@@ -108,20 +116,28 @@ def prepare_returns_corrected(price_data):
     returns_filtered = returns.dropna(thresh=min_trading_cols)
 
     rows_removed = len(returns) - len(returns_filtered)
-    logger.info(f"\n✓ DATA QUALITY FIX APPLIED:")
+    logger.info("\n✓ DATA QUALITY FIX APPLIED:")
     logger.info(f"  → Removed {rows_removed} trading days with <70% asset coverage")
     logger.info(f"  → Original: {len(returns)} periods")
     logger.info(f"  → Corrected: {len(returns_filtered)} periods")
     logger.info(f"  → Data retained: {len(returns_filtered)/len(returns)*100:.1f}%")
-    logger.info(f"  → Dates: {returns_filtered.index.min().date()} to {returns_filtered.index.max().date()}")
+    logger.info(
+        f"  → Dates: {returns_filtered.index.min().date()} to {returns_filtered.index.max().date()}",
+    )
 
     # Align prices to returns
     prices_aligned = prices_aligned.loc[returns_filtered.index]
 
-    logger.info(f"\nFinal dataset:")
-    logger.info(f"  → Returns: {returns_filtered.shape[0]} periods × {returns_filtered.shape[1]} assets")
-    logger.info(f"  → Data coverage: {prices_aligned.notna().sum().sum() / (prices_aligned.shape[0] * prices_aligned.shape[1]) * 100:.1f}%")
-    logger.info(f"  → Mean daily return: {returns_filtered.mean().mean():.4f} ({returns_filtered.mean().mean()*252*100:.2f}% annualized)")
+    logger.info("\nFinal dataset:")
+    logger.info(
+        f"  → Returns: {returns_filtered.shape[0]} periods × {returns_filtered.shape[1]} assets",
+    )
+    logger.info(
+        f"  → Data coverage: {prices_aligned.notna().sum().sum() / (prices_aligned.shape[0] * prices_aligned.shape[1]) * 100:.1f}%",
+    )
+    logger.info(
+        f"  → Mean daily return: {returns_filtered.mean().mean():.4f} ({returns_filtered.mean().mean()*252*100:.2f}% annualized)",
+    )
 
     return prices_aligned, returns_filtered
 
@@ -139,14 +155,14 @@ def recommend_strategy(returns):
     correlation = returns.corr().values
     avg_correlation = correlation[np.triu_indices_from(correlation, k=1)].mean()
 
-    logger.info(f"Portfolio characteristics:")
+    logger.info("Portfolio characteristics:")
     logger.info(f"  → Assets: {n_assets}")
     logger.info(f"  → Periods: {n_periods} ({n_periods/252:.1f} years)")
     logger.info(f"  → Average asset volatility: {mean_vol:.4f}")
     logger.info(f"  → Average correlation: {avg_correlation:.3f}")
 
-    logger.info(f"\n✓ RECOMMENDED STRATEGY: EQUAL-WEIGHT")
-    logger.info(f"  Rationale: Maximum diversification, no optimization bias")
+    logger.info("\n✓ RECOMMENDED STRATEGY: EQUAL-WEIGHT")
+    logger.info("  Rationale: Maximum diversification, no optimization bias")
 
     return "equal_weight"
 
@@ -158,16 +174,21 @@ def construct_and_backtest(prices, returns, strategy_name):
     logger.info("STEP 4: Construct Portfolio & Run Backtest")
     logger.info("=" * 70)
 
-    from portfolio_management.portfolio.strategies import EqualWeightStrategy
-    from portfolio_management.portfolio.constraints.models import PortfolioConstraints
     from portfolio_management.backtesting.engine import BacktestEngine
-    from portfolio_management.backtesting.models import BacktestConfig, RebalanceFrequency
+    from portfolio_management.backtesting.models import (
+        BacktestConfig,
+        RebalanceFrequency,
+    )
+    from portfolio_management.portfolio.constraints.models import PortfolioConstraints
+    from portfolio_management.portfolio.strategies import EqualWeightStrategy
 
     # Construct portfolio
     constraints = PortfolioConstraints(min_weight=0.0, max_weight=0.05)
     strategy = EqualWeightStrategy()
 
-    logger.info(f"Constructing {strategy_name} portfolio with {returns.shape[1]} assets...")
+    logger.info(
+        f"Constructing {strategy_name} portfolio with {returns.shape[1]} assets...",
+    )
     portfolio = strategy.construct(returns, constraints)
 
     active = (portfolio.weights > 0.001).sum()
@@ -194,9 +215,11 @@ def construct_and_backtest(prices, returns, strategy_name):
         slippage_bps=5.0,
     )
 
-    logger.info(f"\nBacktest configuration:")
+    logger.info("\nBacktest configuration:")
     logger.info(f"  → Period: {config.start_date} to {config.end_date}")
-    logger.info(f"  → Duration: {(end_date_actual - start_date_from_prices).days / 365.25:.1f} years")
+    logger.info(
+        f"  → Duration: {(end_date_actual - start_date_from_prices).days / 365.25:.1f} years",
+    )
     logger.info(f"  → Initial capital: ${config.initial_capital:,.0f}")
     logger.info(f"  → Rebalance frequency: {config.rebalance_frequency.value}")
     logger.info(f"  → Commission: {config.commission_pct*100:.3f}% (10 bps)")
@@ -216,7 +239,13 @@ def construct_and_backtest(prices, returns, strategy_name):
     return equity_curve, metrics, rebalance_events, portfolio, config
 
 
-def display_corrected_results(equity_curve, metrics, portfolio, config, rebalance_events):
+def display_corrected_results(
+    equity_curve,
+    metrics,
+    portfolio,
+    config,
+    rebalance_events,
+):
     """Display corrected backtest results WITHOUT the spike."""
     logger.info("")
     logger.info("=" * 70)
@@ -229,7 +258,7 @@ def display_corrected_results(equity_curve, metrics, portfolio, config, rebalanc
         final = portfolio_values[-1]
         total_ret = (final - initial) / initial
 
-        logger.info(f"\n💰 PORTFOLIO VALUE EVOLUTION")
+        logger.info("\n💰 PORTFOLIO VALUE EVOLUTION")
         logger.info(f"  Initial capital:    ${initial:>15,.0f}")
         logger.info(f"  Final value:        ${final:>15,.0f}")
         logger.info(f"  Total gain:         ${final - initial:>15,.0f}")
@@ -238,10 +267,12 @@ def display_corrected_results(equity_curve, metrics, portfolio, config, rebalanc
         # Calculate min/max without spike
         logger.info(f"\n  Peak value:         ${portfolio_values.max():>15,.0f}")
         logger.info(f"  Trough value:       ${portfolio_values.min():>15,.0f}")
-        logger.info(f"  Value range:        ${portfolio_values.max() - portfolio_values.min():>15,.0f}")
+        logger.info(
+            f"  Value range:        ${portfolio_values.max() - portfolio_values.min():>15,.0f}",
+        )
 
     if metrics:
-        logger.info(f"\n📊 RISK-ADJUSTED PERFORMANCE METRICS")
+        logger.info("\n📊 RISK-ADJUSTED PERFORMANCE METRICS")
         logger.info(f"  Annualized return:     {metrics.annualized_return:>15.2%}")
         logger.info(f"  Annual volatility:     {metrics.annualized_volatility:>15.2%}")
         logger.info(f"  Sharpe ratio:          {metrics.sharpe_ratio:>15.2f}")
@@ -249,7 +280,7 @@ def display_corrected_results(equity_curve, metrics, portfolio, config, rebalanc
         logger.info(f"  Calmar ratio:          {metrics.calmar_ratio:>15.2f}")
         logger.info(f"  Max drawdown:          {metrics.max_drawdown:>15.2%}")
 
-        logger.info(f"\n📈 TRADE STATISTICS")
+        logger.info("\n📈 TRADE STATISTICS")
         logger.info(f"  Win rate:              {metrics.win_rate:>15.2%}")
         logger.info(f"  Average win:           {metrics.avg_win:>15.2%}")
         logger.info(f"  Average loss:          {metrics.avg_loss:>15.2%}")
@@ -264,14 +295,24 @@ def main():
         price_data = load_all_prices()
         prices, returns = prepare_returns_corrected(price_data)
         strategy_name = recommend_strategy(returns)
-        equity_curve, metrics, rebalance_events, portfolio, config = construct_and_backtest(
-            prices, returns, strategy_name
+        equity_curve, metrics, rebalance_events, portfolio, config = (
+            construct_and_backtest(
+                prices,
+                returns,
+                strategy_name,
+            )
         )
-        display_corrected_results(equity_curve, metrics, portfolio, config, rebalance_events)
+        display_corrected_results(
+            equity_curve,
+            metrics,
+            portfolio,
+            config,
+            rebalance_events,
+        )
 
-        logger.info("\n" + "="*70)
+        logger.info("\n" + "=" * 70)
         logger.info("✅ CORRECTED ANALYSIS COMPLETE")
-        logger.info("="*70)
+        logger.info("=" * 70)
         logger.info("\nKey Improvement:")
         logger.info("  • Previous (buggy): 4,962 periods with 50% threshold")
         logger.info("  • Corrected:        ~4,300 periods with 70% threshold")
@@ -281,6 +322,7 @@ def main():
     except Exception as e:
         logger.error(f"Error: {e}", exc_info=True)
         import traceback
+
         traceback.print_exc()
 
 

@@ -342,17 +342,17 @@ def prepare_tradeable_data(args: argparse.Namespace) -> None:
             cache_metadata,
         ) and cache.outputs_exist(args.match_report, args.unmatched_report):
             LOGGER.info(
-                "Incremental resume: inputs unchanged and outputs exist - skipping processing"
+                "Incremental resume: inputs unchanged and outputs exist - skipping processing",
             )
             LOGGER.info("Match report: %s", args.match_report)
             LOGGER.info("Unmatched report: %s", args.unmatched_report)
             LOGGER.info(
-                "To force full rebuild, use --force-reindex or omit --incremental"
+                "To force full rebuild, use --force-reindex or omit --incremental",
             )
             return
 
         LOGGER.info(
-            "Incremental resume: inputs changed or outputs missing - running full pipeline"
+            "Incremental resume: inputs changed or outputs missing - running full pipeline",
         )
 
     stooq_index = _handle_stooq_index(args, index_workers)

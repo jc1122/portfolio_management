@@ -22,8 +22,8 @@ def prepare_monthly_returns_heatmap(equity_df: pd.DataFrame) -> pd.DataFrame:
     # Calculate daily returns
     returns = equity_df["equity"].pct_change()
 
-    # Resample to monthly
-    monthly_returns = (1 + returns).resample("M").prod() - 1
+    # Resample to monthly (ME = month end, replaces deprecated 'M')
+    monthly_returns = (1 + returns).resample("ME").prod() - 1
 
     # Create pivot table with years and months
     monthly_returns_df = pd.DataFrame(

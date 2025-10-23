@@ -1,5 +1,8 @@
 {
-    "python.defaultInterpreterPath": "/usr/local/python/current/bin/python",
+    "python.defaultInterpreterPath": "/usr/local/bin/python3.12",
+    "python.terminal.activateEnvironment": false,
+    "python.terminal.activateEnvInCurrentTerminal": false,
+    "python.pythonPath": "/usr/local/bin/python3.12",
     "python.testing.pytestArgs": [
         "tests",
         "--tb=short"
@@ -21,5 +24,15 @@
         "archive/": true,
         "**/__pycache__": true,
         "**/*.egg-info": true
-    }
+    },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "python.formatting.provider": "none",
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "isort.args": ["--profile", "black"]
 }

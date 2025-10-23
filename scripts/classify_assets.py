@@ -93,7 +93,6 @@ def _load_selected_assets(input_path: Path) -> list[SelectedAsset]:
 
 def run_cli(args: argparse.Namespace) -> int:
     """Execute the asset classification CLI."""
-
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",

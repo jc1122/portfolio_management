@@ -3,9 +3,6 @@
 import pathlib
 import tempfile
 
-import pandas as pd
-import pytest
-
 from portfolio_management.data.analysis.analysis import (
     _stream_stooq_file_for_diagnostics,
     summarize_price_file,

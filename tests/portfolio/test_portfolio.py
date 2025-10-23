@@ -43,7 +43,7 @@ class TestRiskParityStrategy:
         """Create sample returns DataFrame."""
         dates = pd.date_range("2020-01-01", periods=252, freq="D")
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"]
-        data = np.random.randn(252, 4) * 0.02  # 2% daily vol  # noqa: NPY002
+        data = np.random.randn(252, 4) * 0.02  # 2% daily vol
         return pd.DataFrame(data, index=dates, columns=tickers)
 
     def test_basic_risk_parity(self, sample_returns):
@@ -231,7 +231,7 @@ class TestEqualWeightStrategy:
         """Create sample returns DataFrame."""
         dates = pd.date_range("2020-01-01", periods=100, freq="D")
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"]
-        data = np.random.randn(100, 4) * 0.02  # 2% daily vol  # noqa: NPY002
+        data = np.random.randn(100, 4) * 0.02  # 2% daily vol
         return pd.DataFrame(data, index=dates, columns=tickers)
 
     def test_basic_equal_weight(self, sample_returns):

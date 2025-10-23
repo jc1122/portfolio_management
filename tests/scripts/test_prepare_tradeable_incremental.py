@@ -6,8 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 
 def test_incremental_resume_skips_when_unchanged(tmp_path: Path) -> None:
     """Test that incremental resume skips processing when inputs unchanged."""
@@ -67,6 +65,7 @@ def test_incremental_resume_skips_when_unchanged(tmp_path: Path) -> None:
     # but we can test the cache creation
     result1 = subprocess.run(
         cmd1,
+        check=False,
         capture_output=True,
         text=True,
         cwd=Path.cwd(),
@@ -78,6 +77,7 @@ def test_incremental_resume_skips_when_unchanged(tmp_path: Path) -> None:
     # Second run - should skip processing since nothing changed
     result2 = subprocess.run(
         cmd1,
+        check=False,
         capture_output=True,
         text=True,
         cwd=Path.cwd(),
@@ -121,7 +121,6 @@ def test_incremental_resume_reruns_when_tradeable_changed(tmp_path: Path) -> Non
     cache_file = metadata_dir / "cache.json"
 
     # Create initial cache manually
-    import json
 
     from portfolio_management.data import cache as cache_module
 
@@ -163,6 +162,7 @@ def test_incremental_resume_reruns_when_tradeable_changed(tmp_path: Path) -> Non
 
     result = subprocess.run(
         cmd,
+        check=False,
         capture_output=True,
         text=True,
         cwd=Path.cwd(),
@@ -182,6 +182,7 @@ def test_help_shows_incremental_flags() -> None:
     """Test that help message includes incremental resume flags."""
     result = subprocess.run(
         [sys.executable, "scripts/prepare_tradeable_data.py", "--help"],
+        check=False,
         capture_output=True,
         text=True,
         cwd=Path.cwd(),
@@ -190,4 +191,7 @@ def test_help_shows_incremental_flags() -> None:
     assert result.returncode == 0
     assert "--incremental" in result.stdout
     assert "--cache-metadata" in result.stdout
-    assert "incremental resume" in result.stdout.lower()
+    # Check for "incremental" and "resume" separately since help formatting may split them
+    help_text_lower = result.stdout.lower()
+    assert "incremental" in help_text_lower
+    assert "resume" in help_text_lower

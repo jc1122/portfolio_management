@@ -353,19 +353,38 @@ log "codex path: $(command -v codex || echo missing)"
 # Install project dependencies
 # ---------------------------------
 log "Installing project dependencies and dev tooling..."
-python3.12 -m pip install -U pip setuptools wheel || true
+
+# Ensure we're using Python 3.12 system-wide (no venv)
+export PIP_NO_CACHE_DIR=1
+export PYTHONDONTWRITEBYTECODE=1
+
+# Upgrade pip for Python 3.12
+/usr/local/bin/python3.12 -m pip install --upgrade pip setuptools wheel || true
+
+# Install requirements
+if [[ -f requirements.txt ]]; then
+  /usr/local/bin/python3.12 -m pip install --user -r requirements.txt || warn "requirements.txt install failed"
+fi
+
 if [[ -f requirements-dev.txt ]]; then
-  pip install -r requirements-dev.txt || warn "requirements-dev.txt install failed"
+  /usr/local/bin/python3.12 -m pip install --user -r requirements-dev.txt || warn "requirements-dev.txt install failed"
 else
   log "requirements-dev.txt not found; installing dev tools directly"
-  python3.12 -m pip install black ruff mypy pytest bandit pip-audit pre-commit || warn "tooling install had issues"
+  /usr/local/bin/python3.12 -m pip install --user black ruff mypy pytest bandit pip-audit pre-commit || warn "tooling install had issues"
 fi
-pip install -e . || warn "Editable install failed (check pyproject/ setup.cfg)"
+
+# Install package in editable mode
+/usr/local/bin/python3.12 -m pip install --user -e . || warn "Editable install failed (check pyproject/ setup.cfg)"
+
+# Create test fixture directories if they don't exist
+mkdir -p tests/fixtures/stooq
+mkdir -p tests/fixtures/tradeable_instruments
+log "Test fixture directories created"
 
 # Initialize pre-commit hooks if config exists
 if [[ -f .pre-commit-config.yaml ]]; then
   pre-commit install || warn "pre-commit install failed"
-  pre-commit run --all-files || true
+  ok "Pre-commit hooks installed"
 else
   log ".pre-commit-config.yaml not found (skipping hooks)"
 fi

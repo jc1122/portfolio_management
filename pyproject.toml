@@ -19,6 +19,8 @@ dependencies = [
     "PyPortfolioOpt>=1.5.0",
     "riskparityportfolio>=0.2",
     "tqdm>=4.65.0",
+    "jax>=0.4.0",
+    "jaxlib>=0.4.0",
 ]
 
 [project.optional-dependencies]
@@ -41,6 +43,25 @@ where = ["src"]
 
 [tool.black]
 line-length = 88
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.venv312
+  | _build
+  | buck-out
+  | build
+  | dist
+  | data
+  | archive
+  | outputs
+  | results
+)/
+'''
 
 [tool.isort]
 profile = "black"
@@ -82,6 +103,14 @@ ignore = ["E501"]
   "TCH002",
   "TCH003",
   "ISC001",
+  "T201",
+  "PTH123",
+  "NPY002",
+  "F841",
+  "TRY300",
+  "N806",
+  "C408",
+  "B905",
 ]
 "src/portfolio_management/assets/classification/classification.py" = [
   "TRY003",

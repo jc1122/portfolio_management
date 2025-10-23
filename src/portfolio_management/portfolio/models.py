@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -33,7 +32,7 @@ class Portfolio:
     weights: pd.Series
     strategy: str
     timestamp: pd.Timestamp = field(default_factory=pd.Timestamp.now)
-    metadata: Optional[dict[str, object]] = None
+    metadata: dict[str, object] | None = None
 
     def __post_init__(self) -> None:
         """Validate portfolio construction."""

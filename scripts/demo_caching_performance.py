@@ -13,7 +13,8 @@ from portfolio_management.portfolio.statistics import RollingStatistics
 
 
 def generate_synthetic_returns(
-    n_assets: int = 300, n_periods: int = 504
+    n_assets: int = 300,
+    n_periods: int = 504,
 ) -> pd.DataFrame:
     """Generate synthetic returns for testing.
 
@@ -25,15 +26,15 @@ def generate_synthetic_returns(
         DataFrame of synthetic returns
 
     """
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
     dates = pd.date_range("2020-01-01", periods=n_periods, freq="D")
     tickers = [f"ASSET_{i:03d}" for i in range(n_assets)]
 
     # Generate correlated returns using a simple factor model
     n_factors = 5
-    factor_returns = np.random.randn(n_periods, n_factors) * 0.01
-    factor_loadings = np.random.randn(n_assets, n_factors) * 0.5
-    idiosyncratic = np.random.randn(n_periods, n_assets) * 0.01
+    factor_returns = rng.normal(0, 0.01, size=(n_periods, n_factors))
+    factor_loadings = rng.normal(0, 0.5, size=(n_assets, n_factors))
+    idiosyncratic = rng.normal(0, 0.01, size=(n_periods, n_assets))
 
     returns = factor_returns @ factor_loadings.T + idiosyncratic
     return pd.DataFrame(returns, index=dates, columns=tickers)
@@ -136,7 +137,11 @@ def verify_results_match(
     if len(results_no_cache) != len(results_with_cache):
         return False
 
-    for (mean_nc, cov_nc), (mean_c, cov_c) in zip(results_no_cache, results_with_cache):
+    for (mean_nc, cov_nc), (mean_c, cov_c) in zip(
+        results_no_cache,
+        results_with_cache,
+        strict=True,
+    ):
         if not np.allclose(mean_nc.values, mean_c.values, rtol=1e-12):
             return False
         if not np.allclose(cov_nc.values, cov_c.values, rtol=1e-12):
@@ -167,13 +172,13 @@ def main():
         window_size = 252
         overlap_pct = (1 - 21 / 252) * 100
 
-        print(f"Configuration:")
+        print("Configuration:")
         print(f"  - Window size: {window_size} periods")
         print(f"  - Number of rebalances: {n_rebalances}")
         print(f"  - Data overlap between rebalances: ~{overlap_pct:.1f}%")
 
         # Run without cache
-        print(f"\nRunning WITHOUT cache...")
+        print("\nRunning WITHOUT cache...")
         time_no_cache, results_no_cache = simulate_monthly_rebalances_no_cache(
             returns,
             window_size=window_size,
@@ -183,7 +188,7 @@ def main():
         print(f"  Rebalances completed: {len(results_no_cache)}")
 
         # Run with cache
-        print(f"\nRunning WITH cache...")
+        print("\nRunning WITH cache...")
         time_with_cache, results_with_cache = simulate_monthly_rebalances_with_cache(
             returns,
             window_size=window_size,
@@ -193,7 +198,7 @@ def main():
         print(f"  Rebalances completed: {len(results_with_cache)}")
 
         # Verify results match
-        print(f"\nVerifying results...")
+        print("\nVerifying results...")
         results_match = verify_results_match(results_no_cache, results_with_cache)
         print(f"  Results match: {results_match}")
 
@@ -205,7 +210,7 @@ def main():
             speedup = float("inf")
             time_reduction_pct = 100.0
 
-        print(f"\nPerformance Improvement:")
+        print("\nPerformance Improvement:")
         print(f"  Speedup: {speedup:.2f}x")
         print(f"  Time reduction: {time_reduction_pct:.1f}%")
         print(f"  Absolute time saved: {time_no_cache - time_with_cache:.3f}s")
@@ -220,7 +225,7 @@ def main():
     print("  3. Larger universes benefit more from caching")
     print("  4. Cache automatically invalidates when data changes")
     print(
-        "\nFor actual portfolio construction strategies (risk parity, mean-variance),"
+        "\nFor actual portfolio construction strategies (risk parity, mean-variance),",
     )
     print("the speedup will be even greater as these include additional optimization")
     print("steps beyond just computing statistics.")

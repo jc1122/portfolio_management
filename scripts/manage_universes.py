@@ -109,7 +109,8 @@ def main() -> None:  # noqa: C901, PLR0912
             elif args.command == "show":
                 if args.name not in universes:
                     logging.error(
-                        "Universe '%s' not found in configuration.", args.name
+                        "Universe '%s' not found in configuration.",
+                        args.name,
                     )
                     sys.exit(1)
                 definition = universes[args.name]

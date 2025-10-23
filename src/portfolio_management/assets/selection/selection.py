@@ -438,9 +438,14 @@ class AssetSelector:
             Series of history days (int), with 0 for invalid dates.
 
         """
-        # Convert to datetime, setting errors to NaT
-        start_dates = pd.to_datetime(price_start_series, errors="coerce")
-        end_dates = pd.to_datetime(price_end_series, errors="coerce")
+        # Convert to datetime with explicit format to avoid inference warning
+        # Most dates are in YYYY-MM-DD format from CSV files
+        start_dates = pd.to_datetime(
+            price_start_series,
+            errors="coerce",
+            format="ISO8601",
+        )
+        end_dates = pd.to_datetime(price_end_series, errors="coerce", format="ISO8601")
 
         # Calculate timedelta
         deltas = end_dates - start_dates

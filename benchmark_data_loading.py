@@ -15,14 +15,20 @@ import numpy as np
 import pandas as pd
 
 
-def create_test_data(num_assets: int, num_days: int, output_dir: Path) -> tuple[Path, Path]:
+def create_test_data(
+    num_assets: int,
+    num_days: int,
+    output_dir: Path,
+) -> tuple[Path, Path]:
     """Create test price and return data files."""
     dates = pd.date_range("2020-01-01", periods=num_days, freq="D")
     assets = [f"ASSET{i:04d}" for i in range(num_assets)]
     rng = np.random.default_rng(42)
 
     # Create prices
-    prices_data = {asset: 100 + np.cumsum(rng.normal(0, 1, num_days)) for asset in assets}
+    prices_data = {
+        asset: 100 + np.cumsum(rng.normal(0, 1, num_days)) for asset in assets
+    }
     prices_df = pd.DataFrame(prices_data, index=dates)
     prices_df.index.name = "date"
     prices_csv = output_dir / "prices.csv"
@@ -118,7 +124,9 @@ def benchmark(num_assets: int, num_requested: int, num_days: int) -> dict[str, f
     with TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
 
-        print(f"\nBenchmark: {num_assets} total assets, {num_requested} requested, {num_days} days")
+        print(
+            f"\nBenchmark: {num_assets} total assets, {num_requested} requested, {num_days} days",
+        )
         print("-" * 80)
 
         # Create test data
@@ -129,20 +137,30 @@ def benchmark(num_assets: int, num_requested: int, num_days: int) -> dict[str, f
         prices_size = prices_csv.stat().st_size / (1024 * 1024)  # MB
         returns_size = returns_csv.stat().st_size / (1024 * 1024)  # MB
         total_size = prices_size + returns_size
-        print(f"Data files: {prices_size:.1f} MB (prices) + {returns_size:.1f} MB (returns) = {total_size:.1f} MB total")
+        print(
+            f"Data files: {prices_size:.1f} MB (prices) + {returns_size:.1f} MB (returns) = {total_size:.1f} MB total",
+        )
 
         # Select subset of assets
-        requested_assets = [f"ASSET{i:04d}" for i in range(0, num_assets, num_assets // num_requested)][:num_requested]
+        requested_assets = [
+            f"ASSET{i:04d}" for i in range(0, num_assets, num_assets // num_requested)
+        ][:num_requested]
 
         # Benchmark old approach
         print("\nOld approach (load all, then filter):")
         start = time.perf_counter()
-        old_prices, old_returns = old_load_data(prices_csv, returns_csv, requested_assets)
+        old_prices, old_returns = old_load_data(
+            prices_csv,
+            returns_csv,
+            requested_assets,
+        )
         old_time = time.perf_counter() - start
         old_memory = (
-            old_prices.memory_usage(deep=True).sum() +
-            old_returns.memory_usage(deep=True).sum()
-        ) / (1024 * 1024)  # MB
+            old_prices.memory_usage(deep=True).sum()
+            + old_returns.memory_usage(deep=True).sum()
+        ) / (
+            1024 * 1024
+        )  # MB
         print(f"  Time: {old_time:.3f} seconds")
         print(f"  Memory: {old_memory:.1f} MB")
 
@@ -158,9 +176,11 @@ def benchmark(num_assets: int, num_requested: int, num_days: int) -> dict[str, f
         )
         new_time = time.perf_counter() - start
         new_memory = (
-            new_prices.memory_usage(deep=True).sum() +
-            new_returns.memory_usage(deep=True).sum()
-        ) / (1024 * 1024)  # MB
+            new_prices.memory_usage(deep=True).sum()
+            + new_returns.memory_usage(deep=True).sum()
+        ) / (
+            1024 * 1024
+        )  # MB
         print(f"  Time: {new_time:.3f} seconds")
         print(f"  Memory: {new_memory:.1f} MB")
 
@@ -220,10 +240,12 @@ if __name__ == "__main__":
     print("- Time improvement varies based on data size and I/O characteristics")
     print("- The optimization prevents loading unnecessary columns into memory")
     print("- Date filtering further reduces memory for long-history backtests")
-    print(f"\n{'Assets':<10} {'Req.':<8} {'Days':<8} {'Size (MB)':<12} {'Time Imp.':<12} {'Mem. Imp.':<12}")
+    print(
+        f"\n{'Assets':<10} {'Req.':<8} {'Days':<8} {'Size (MB)':<12} {'Time Imp.':<12} {'Mem. Imp.':<12}",
+    )
     print("-" * 80)
     for r in results:
         print(
             f"{r['num_assets']:<10} {r['num_requested']:<8} {r['num_days']:<8} "
-            f"{r['data_size_mb']:<12.1f} {r['time_improvement_pct']:<12.1f}% {r['memory_improvement_pct']:<12.1f}%"
+            f"{r['data_size_mb']:<12.1f} {r['time_improvement_pct']:<12.1f}% {r['memory_improvement_pct']:<12.1f}%",
         )

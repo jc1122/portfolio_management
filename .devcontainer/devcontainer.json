@@ -25,9 +25,9 @@
     "vscode": {
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python3.12",
-        "[python]": {
-          "editor.defaultFormatter": "ms-python.autopep8"
-        },
+        "python.terminal.activateEnvironment": false,
+        "python.terminal.activateEnvInCurrentTerminal": false,
+        "python.pythonPath": "/usr/local/bin/python3.12",
         "terminal.integrated.env.linux": {
           "CLINE_AGENT": "1"
         },
@@ -41,7 +41,7 @@
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-python.autopep8",
+        "charliermarsh.ruff",
         "dbaeumer.vscode-eslint",
         "google.geminicodeassist",
         "saoudrizwan.claude-dev"

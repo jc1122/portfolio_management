@@ -6,7 +6,6 @@ the lookback slicing in BacktestEngine.run().
 
 import time
 import tracemalloc
-from datetime import date
 from decimal import Decimal
 
 import numpy as np
@@ -17,7 +16,10 @@ from portfolio_management.backtesting.models import RebalanceFrequency
 from portfolio_management.portfolio.strategies import EqualWeightStrategy
 
 
-def create_large_dataset(years: int = 10, num_assets: int = 50) -> tuple[pd.DataFrame, pd.DataFrame]:
+def create_large_dataset(
+    years: int = 10,
+    num_assets: int = 50,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create a large synthetic dataset for benchmarking.
 
     Args:
@@ -26,6 +28,7 @@ def create_large_dataset(years: int = 10, num_assets: int = 50) -> tuple[pd.Data
 
     Returns:
         Tuple of (prices_df, returns_df)
+
     """
     # Create ~252 trading days per year
     num_days = years * 252
@@ -72,6 +75,7 @@ def run_benchmark(
 
     Returns:
         Dictionary with timing and memory metrics
+
     """
     # Use actual data range
     start_date = prices.index[0].date()
@@ -80,7 +84,7 @@ def run_benchmark(
     config = BacktestConfig(
         start_date=start_date,
         end_date=end_date,
-        initial_capital=Decimal("100000"),
+        initial_capital=Decimal(100000),
         rebalance_frequency=rebalance_freq,
     )
 
@@ -163,14 +167,16 @@ def main() -> None:
     print("\n" + "=" * 70)
     print("Summary")
     print("=" * 70)
-    print(f"{'Frequency':<12} {'Runtime (s)':<12} {'Memory (MB)':<12} {'Rebalances':<12}")
+    print(
+        f"{'Frequency':<12} {'Runtime (s)':<12} {'Memory (MB)':<12} {'Rebalances':<12}",
+    )
     print("-" * 70)
     for freq, res in results.items():
         print(
             f"{freq.capitalize():<12} "
             f"{res['runtime']:<12.2f} "
             f"{res['peak_memory_mb']:<12.1f} "
-            f"{res['num_rebalances']:<12}"
+            f"{res['num_rebalances']:<12}",
         )
 
     print("\n" + "=" * 70)

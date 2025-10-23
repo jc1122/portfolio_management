@@ -23,6 +23,7 @@ def generate_large_match_report(n_rows: int = 10000, seed: int = 42) -> pd.DataF
 
     Returns:
         DataFrame with columns matching the tradeable_matches.csv format.
+
     """
     rng = np.random.default_rng(seed)
 
@@ -121,6 +122,7 @@ def benchmark_filter_operation(
 
     Returns:
         Dictionary with timing statistics.
+
     """
     selector = AssetSelector()
 

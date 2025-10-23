@@ -140,10 +140,10 @@ class RollingStatistics:
         self._count = 0
 
     def _retrieve_statistics(
-        self, returns: pd.DataFrame,
+        self,
+        returns: pd.DataFrame,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Return statistics from cache or recompute them."""
-
         cache_key = self._compute_cache_key(returns)
 
         if self._can_incrementally_update(cache_key, returns):
@@ -172,7 +172,6 @@ class RollingStatistics:
 
     def _can_incrementally_update(self, cache_key: str, returns: pd.DataFrame) -> bool:
         """Determine whether cached state can service the new data."""
-
         if (
             self._cache_key is None
             or self._cached_data is None
@@ -213,10 +212,11 @@ class RollingStatistics:
         )
 
     def _recompute_statistics(
-        self, returns: pd.DataFrame, cache_key: str,
+        self,
+        returns: pd.DataFrame,
+        cache_key: str,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Recompute statistics from scratch and refresh the cache."""
-
         self._cached_data = returns.copy()
         self._cache_key = cache_key
         self._asset_columns = returns.columns.copy()
@@ -270,10 +270,11 @@ class RollingStatistics:
         return mean_returns, cov_matrix
 
     def _update_incrementally(
-        self, returns: pd.DataFrame, cache_key: str,
+        self,
+        returns: pd.DataFrame,
+        cache_key: str,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Update cached statistics for a partially overlapping window."""
-
         assert self._cached_data is not None  # For type checkers
         assert self._asset_columns is not None
         assert self._sum_vector is not None

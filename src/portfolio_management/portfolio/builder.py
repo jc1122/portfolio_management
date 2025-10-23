@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from typing import Optional
 
 import pandas as pd
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 class PortfolioConstructor:
     """Coordinate portfolio strategy selection and construction."""
 
-    def __init__(self, constraints: Optional[PortfolioConstraints] = None) -> None:
+    def __init__(self, constraints: PortfolioConstraints | None = None) -> None:
         """Initialise the constructor with optional default constraints."""
         self._default_constraints = constraints or PortfolioConstraints()
         self._strategies: dict[str, PortfolioStrategy] = {}
@@ -51,8 +50,8 @@ class PortfolioConstructor:
         self,
         strategy_name: str,
         returns: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None,
-        asset_classes: Optional[pd.Series] = None,
+        constraints: PortfolioConstraints | None = None,
+        asset_classes: pd.Series | None = None,
     ) -> Portfolio:
         """Construct a portfolio using the requested strategy."""
         strategy = self._strategies.get(strategy_name)
@@ -70,8 +69,8 @@ class PortfolioConstructor:
         self,
         strategy_names: Sequence[str],
         returns: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None,
-        asset_classes: Optional[pd.Series] = None,
+        constraints: PortfolioConstraints | None = None,
+        asset_classes: pd.Series | None = None,
     ) -> pd.DataFrame:
         """Construct and compare multiple strategies."""
         portfolios: dict[str, pd.Series] = {}

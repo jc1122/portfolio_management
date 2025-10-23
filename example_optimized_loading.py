@@ -5,9 +5,6 @@ This example shows how the CLI automatically uses the optimized data loading
 when you specify start-date and end-date parameters.
 """
 
-import subprocess
-import sys
-from pathlib import Path
 
 # Example 1: Old behavior (still works) - loads all data without date filtering
 print("Example 1: Running backtest without date filtering")
@@ -16,7 +13,9 @@ print("Command:")
 print("  python scripts/run_backtest.py equal_weight \\")
 print("    --universe-file config/universes.yaml \\")
 print("    --universe-name small_test")
-print("\nThis will load ALL data from the CSV files, then filter in the backtest engine.")
+print(
+    "\nThis will load ALL data from the CSV files, then filter in the backtest engine.",
+)
 print()
 
 # Example 2: New optimized behavior - only loads needed columns and date range

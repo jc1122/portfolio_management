@@ -13,12 +13,14 @@ except FileNotFoundError:
 # --- Sample Selection ---
 # 150 successful matches
 ok_matches = matches_df[matches_df["data_status"] == "ok"].sample(
-    n=150, random_state=42,
+    n=150,
+    random_state=42,
 )
 
 # 150 matches with issues (warnings, errors, etc.)
 error_matches = matches_df[matches_df["data_status"] != "ok"].sample(
-    n=150, random_state=42,
+    n=150,
+    random_state=42,
 )
 
 # 100 unmatched instruments
@@ -63,7 +65,8 @@ with open("copy_fixtures.sh", "w") as f:
             fixture_df = original_df[original_df["symbol"].isin(all_tradeable_symbols)]
             if not fixture_df.empty:
                 fixture_df.to_csv(
-                    f"tests/fixtures/tradeable_instruments/{source_file}", index=False,
+                    f"tests/fixtures/tradeable_instruments/{source_file}",
+                    index=False,
                 )
 
     f.write("\necho 'Fixture creation script finished.'\n")

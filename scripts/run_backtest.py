@@ -35,7 +35,6 @@ from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import yaml
@@ -267,8 +266,8 @@ def load_data(
     prices_file: Path,
     returns_file: Path,
     assets: list[str],
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load prices and returns data for specified assets and date range.
 
