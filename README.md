@@ -312,6 +312,31 @@ Key outputs include normalised equity curves, daily returns, allocation historie
 
 For the full argument reference and detailed workflow notes see [`docs/backtesting.md`](docs/backtesting.md).
 
+### Membership Policy
+
+Control asset portfolio churn during rebalancing with configurable membership policies. Enable this feature to reduce transaction costs and stabilize holdings:
+
+```bash
+python scripts/run_backtest.py equal_weight \
+    --membership-enabled \
+    --membership-buffer-rank 5 \
+    --membership-min-hold 3 \
+    --membership-max-turnover 0.30 \
+    --start-date 2020-01-01 \
+    --end-date 2023-12-31
+```
+
+**Key Parameters:**
+
+- `--membership-enabled`: Activates membership policy
+- `--membership-buffer-rank`: Rank buffer to protect existing holdings (default: 5)
+- `--membership-min-hold`: Minimum rebalance periods to hold an asset (default: 3)
+- `--membership-max-turnover`: Maximum portfolio turnover per rebalance (0-1)
+- `--membership-max-new`: Maximum new assets to add per rebalance
+- `--membership-max-removed`: Maximum assets to remove per rebalance
+
+See [`docs/membership_policy.md`](docs/membership_policy.md) for detailed documentation.
+
 ## Universe Management Workflow
 
 Define repeatable investment universes via `config/universes.yaml` and control

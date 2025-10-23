@@ -52,6 +52,7 @@ from portfolio_management.core.exceptions import (
 from portfolio_management.portfolio import (
     EqualWeightStrategy,
     MeanVarianceStrategy,
+    MembershipPolicy,
     PortfolioStrategy,
     RiskParityStrategy,
 )
@@ -212,6 +213,40 @@ def create_parser() -> argparse.ArgumentParser:
         help="Risk aversion parameter for mean-variance (higher = more conservative). Default: 1.0",
     )
 
+    # Membership policy
+    parser.add_argument(
+        "--membership-enabled",
+        action="store_true",
+        help="Enable membership policy to control asset churn during rebalancing",
+    )
+    parser.add_argument(
+        "--membership-buffer-rank",
+        type=int,
+        default=5,
+        help="Rank buffer to protect existing holdings (higher = more stable). Default: 5",
+    )
+    parser.add_argument(
+        "--membership-min-hold",
+        type=int,
+        default=3,
+        help="Minimum rebalance periods to hold an asset. Default: 3",
+    )
+    parser.add_argument(
+        "--membership-max-turnover",
+        type=parse_decimal,
+        help="Maximum portfolio turnover per rebalancing (0-1, e.g., 0.3 = 30%%)",
+    )
+    parser.add_argument(
+        "--membership-max-new",
+        type=int,
+        help="Maximum number of new assets to add per rebalancing",
+    )
+    parser.add_argument(
+        "--membership-max-removed",
+        type=int,
+        help="Maximum number of assets to remove per rebalancing",
+    )
+
     # Output options
     parser.add_argument(
         "--output-dir",
@@ -235,6 +270,27 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     return parser
+
+
+def create_membership_policy(args: argparse.Namespace) -> MembershipPolicy | None:
+    """Create membership policy from CLI arguments.
+
+    Returns None if membership policy is disabled.
+    """
+    if not args.membership_enabled:
+        return None
+
+    return MembershipPolicy(
+        buffer_rank=args.membership_buffer_rank,
+        min_holding_periods=args.membership_min_hold,
+        max_turnover=(
+            float(args.membership_max_turnover)
+            if args.membership_max_turnover is not None
+            else None
+        ),
+        max_new_assets=args.membership_max_new,
+        max_removed_assets=args.membership_max_removed,
+    )
 
 
 def load_universe(universe_file: Path, universe_name: str) -> list[str]:
@@ -544,6 +600,9 @@ def main() -> int:
             "annual": RebalanceFrequency.ANNUAL,
         }
 
+        # Create membership policy if enabled
+        membership_policy = create_membership_policy(args)
+
         # Create backtest configuration
         config = BacktestConfig(
             start_date=args.start_date,
@@ -555,6 +614,7 @@ def main() -> int:
             commission_min=float(args.min_commission),
             slippage_bps=float(args.slippage) * 10000,
             lookback_periods=args.lookback_periods,
+            membership_policy=membership_policy,
         )
 
         # Run backtest
