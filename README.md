@@ -6,6 +6,7 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 
 - Offline-first data pipeline that ingests Stooq exports, validates quality, and produces tradeable match reports with diagnostics.
 - **Incremental resume** for data preparation - skips redundant processing when inputs unchanged, reducing runtime from minutes to seconds.
+- **Optional fast IO** - polars/pyarrow backends provide 2-5x speedup for CSV reading on large datasets (500-1000+ assets, 5-10+ years). Pandas remains the default; fast backends are opt-in.
 - Production-ready asset selection, classification, return preparation, and universe management CLIs with defensive validation and rich logging.
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
 - **Macroeconomic signal infrastructure** - provider for loading macro series from Stooq directories and regime gating framework (NoOp stubs ready for future logic implementation).
@@ -86,6 +87,7 @@ tests/                               # Test structure mirrors packages
 
 docs/                                # Living module guides
   ├── backtesting.md
+  ├── fast_io.md                     # Optional fast IO with polars/pyarrow
   ├── macro_signals.md               # Macroeconomic signals & regime gating
   ├── portfolio_construction.md
   ├── preselection.md                # Factor-based asset preselection guide
@@ -179,6 +181,31 @@ Worker pools default to `CPU cores - 1` for both matching/export and index scans
 > The match report includes a `data_flags` column populated by additional validation checks (duplicate dates, non-positive closes, zero/missing volume, etc.) and the CLI emits summaries/warnings so suspect price files can be triaged immediately.
 >
 > The script now mandates pandas for all data access (indexing, tradeable ingestion, report writing, price exports). A 1,000-file benchmark shows identical outputs with roughly a 12 % runtime increase versus the previous hybrid implementation.
+
+## Optional Fast IO (New!)
+
+For large datasets (500-1000+ assets, 5-10+ years), enable optional fast IO backends for **2-5x speedup**:
+
+```bash
+# Install optional backends (choose one or both)
+pip install polars      # Recommended: fastest CSV parsing
+pip install pyarrow     # Alternative: fast CSV + excellent Parquet support
+
+# Use fast IO in return calculation
+python scripts/calculate_returns.py \
+    --assets data/selected/core_global.csv \
+    --prices-dir data/processed/tradeable_prices \
+    --output outputs/returns.csv \
+    --io-backend polars  # or 'pyarrow', 'auto', 'pandas' (default)
+```
+
+**Key points:**
+- **Optional**: Pandas remains the default; no changes needed if satisfied with current performance
+- **Transparent**: All backends produce identical pandas DataFrames
+- **Auto-fallback**: If backend unavailable, automatically falls back to pandas with a warning
+- **Auto-select**: Use `--io-backend auto` to pick the best available backend
+
+See [`docs/fast_io.md`](docs/fast_io.md) for detailed documentation, benchmarks, and usage examples.
 
 ## Asset Selection Workflow
 
