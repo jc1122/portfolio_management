@@ -49,6 +49,7 @@ class BacktestEngine:
         returns: pd.DataFrame,
         classifications: dict[str, str] | None = None,
         preselection=None,
+        membership_policy=None,
     ) -> None:
         """Initialize the backtesting engine.
 
@@ -59,6 +60,7 @@ class BacktestEngine:
             returns: Historical returns (index=dates, columns=tickers).
             classifications: Optional asset class mappings for constraints.
             preselection: Optional Preselection instance for asset filtering.
+            membership_policy: Optional MembershipPolicy for controlling portfolio churn.
 
         Raises:
             InsufficientHistoryError: If data doesn't cover backtest period.
@@ -70,6 +72,8 @@ class BacktestEngine:
         self.returns = returns.copy()
         self.classifications = classifications or {}
         self.preselection = preselection
+        self.membership_policy = membership_policy
+        self.holding_periods: dict[str, int] = {}  # Track holding periods for membership policy
 
         # Validate date coverage
         data_start = self.prices.index.min()
@@ -319,6 +323,94 @@ class BacktestEngine:
                 if self.config.use_pit_eligibility:
                     asset_classes = asset_classes[asset_classes.index.isin(eligible_returns.columns)]
 
+            # Apply preselection if configured
+            candidate_assets = list(eligible_returns.columns)
+            preselected_ranks: pd.Series | None = None
+            membership_top_k = len(candidate_assets)
+            if self.preselection is not None:
+                # Preselect assets based on factors (momentum, low_vol, etc.)
+                selected_assets = self.preselection.select_assets(
+                    returns=eligible_returns,
+                    rebalance_date=date,
+                )
+                candidate_assets = selected_assets
+                membership_top_k = len(selected_assets)
+
+                # Get ranks for membership policy (if needed)
+                if self.membership_policy is not None and self.membership_policy.enabled:
+                    if isinstance(eligible_returns.index, pd.DatetimeIndex):
+                        date_mask = eligible_returns.index.date < date
+                    else:
+                        date_mask = eligible_returns.index < date
+                    available_returns = eligible_returns.loc[date_mask]
+
+                    if self.preselection.config.method.value == "momentum":
+                        scores = self.preselection._compute_momentum(available_returns)
+                    elif self.preselection.config.method.value == "low_vol":
+                        scores = self.preselection._compute_low_volatility(available_returns)
+                    elif self.preselection.config.method.value == "combined":
+                        scores = self.preselection._compute_combined(available_returns)
+                    else:
+                        scores = pd.Series(
+                            range(len(available_returns.columns)),
+                            index=available_returns.columns,
+                        )
+
+                    valid_scores = scores.dropna()
+                    sorted_scores = valid_scores.sort_values(ascending=False)
+                    preselected_ranks = pd.Series(
+                        range(1, len(sorted_scores) + 1),
+                        index=sorted_scores.index,
+                    )
+
+            # Apply membership policy if configured
+            if self.membership_policy is not None and self.membership_policy.enabled:
+                from portfolio_management.portfolio import apply_membership_policy
+
+                current_holdings = list(self.holdings.keys())
+
+                # If preselection not used, create simple rank by name for determinism
+                if preselected_ranks is None:
+                    # Simple ranking: alphabetical order
+                    preselected_ranks = pd.Series(
+                        range(1, len(candidate_assets) + 1),
+                        index=sorted(candidate_assets),
+                    )
+                else:
+                    # Ensure current holdings have ranks even if not in preselection results
+                    missing_holdings = sorted(set(current_holdings) - set(preselected_ranks.index))
+                    if missing_holdings:
+                        worst_rank = int(preselected_ranks.max()) if not preselected_ranks.empty else 0
+                        additional_ranks = pd.Series(
+                            range(worst_rank + 1, worst_rank + len(missing_holdings) + 1),
+                            index=missing_holdings,
+                        )
+                        preselected_ranks = pd.concat([preselected_ranks, additional_ranks])
+
+                current_weight_map = {ticker: 0.0 for ticker in current_holdings}
+                candidate_weight_map = {
+                    ticker: 0.0 for ticker in set(candidate_assets) | set(current_holdings)
+                }
+
+                # Apply membership policy
+                final_candidates = apply_membership_policy(
+                    current_holdings=current_holdings,
+                    preselected_ranks=preselected_ranks,
+                    policy=self.membership_policy,
+                    holding_periods=self.holding_periods,
+                    top_k=membership_top_k,
+                    current_weights=current_weight_map,
+                    candidate_weights=candidate_weight_map,
+                )
+
+                candidate_assets = [c for c in final_candidates if c in eligible_returns.columns]
+
+            # Filter to final candidates determined by preselection/membership
+            eligible_returns = eligible_returns[candidate_assets]
+
+            if asset_classes is not None:
+                asset_classes = asset_classes[asset_classes.index.isin(candidate_assets)]
+
             # Construct target portfolio (on selected subset)
             portfolio = self.strategy.construct(
                 returns=eligible_returns,
@@ -423,7 +515,19 @@ class BacktestEngine:
                 self.holdings[ticker] = self.holdings.get(ticker, 0) + share_change
 
             # Remove zero positions
+            removed_tickers = [t for t, s in self.holdings.items() if s == 0]
             self.holdings = {t: s for t, s in self.holdings.items() if s != 0}
+            
+            # Update holding periods for membership policy
+            if self.membership_policy is not None and self.membership_policy.enabled:
+                # Increment holding periods for all current holdings
+                for ticker in self.holdings.keys():
+                    self.holding_periods[ticker] = self.holding_periods.get(ticker, 0) + 1
+                
+                # Reset holding periods for removed positions
+                for ticker in removed_tickers:
+                    if ticker in self.holding_periods:
+                        del self.holding_periods[ticker]
 
             # Calculate post-rebalance value
             post_value = self._calculate_portfolio_value(date_prices)

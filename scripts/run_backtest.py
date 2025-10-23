@@ -302,20 +302,23 @@ def create_parser() -> argparse.ArgumentParser:
         help="Maximum number of assets to remove per rebalancing",
     )
 
-    # Output options
-
-    # Technical indicators
+    # Point-in-time (PIT) eligibility
     parser.add_argument(
-        "--enable-indicators",
+        "--use-pit-eligibility",
         action="store_true",
-        help="Enable technical indicator filtering (currently no-op stub)",
+        help="Enable point-in-time eligibility filtering to avoid lookahead bias",
     )
     parser.add_argument(
-        "--indicator-provider",
-        type=str,
-        default="noop",
-        choices=["noop"],
-        help="Indicator provider to use. Default: noop (currently only option)",
+        "--min-history-days",
+        type=int,
+        default=252,
+        help="Minimum days of history for PIT eligibility (default: 252 = 1 year)",
+    )
+    parser.add_argument(
+        "--min-price-rows",
+        type=int,
+        default=252,
+        help="Minimum price rows for PIT eligibility (default: 252)",
     )
 
     # Output options
@@ -343,8 +346,12 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def load_universe(universe_file: Path, universe_name: str) -> list[str]:
-    """Load asset universe from YAML configuration."""
+def load_universe(universe_file: Path, universe_name: str) -> tuple[list[str], dict]:
+    """Load asset universe and configuration from YAML.
+    
+    Returns:
+        Tuple of (assets list, universe config dict with preselection/membership/pit blocks)
+    """
     if not universe_file.exists():
         raise FileNotFoundError(f"Universe file not found: {universe_file}")
 
@@ -365,7 +372,7 @@ def load_universe(universe_file: Path, universe_name: str) -> list[str]:
     if "assets" not in universe:
         raise ValueError(f"Universe '{universe_name}' has no 'assets' field")
 
-    return universe["assets"]
+    return universe["assets"], universe
 
 
 def load_data(
@@ -464,6 +471,118 @@ def create_strategy(strategy_name: str) -> PortfolioStrategy:
     if strategy_name == "mean_variance":
         return MeanVarianceStrategy()
     raise ValueError(f"Unknown strategy: {strategy_name}")
+
+
+def create_membership_policy(args: argparse.Namespace):
+    """Create membership policy from CLI arguments.
+    
+    Returns:
+        MembershipPolicy instance if enabled, None otherwise.
+    """
+    if not args.membership_enabled:
+        return None
+    
+    from portfolio_management.portfolio import MembershipPolicy
+    
+    return MembershipPolicy(
+        buffer_rank=args.membership_buffer_rank if args.membership_buffer_rank else None,
+        min_holding_periods=args.membership_min_hold if args.membership_min_hold else None,
+        max_turnover=float(args.membership_max_turnover) if args.membership_max_turnover else None,
+        max_new_assets=args.membership_max_new if args.membership_max_new else None,
+        max_removed_assets=args.membership_max_removed if args.membership_max_removed else None,
+        enabled=True,
+    )
+
+
+def create_preselection_from_universe(universe_config: dict, args: argparse.Namespace):
+    """Create preselection from universe config, with CLI args as override.
+    
+    Returns:
+        Preselection instance if configured, None otherwise.
+    """
+    # CLI args override universe config
+    if args.preselect_method and args.preselect_top_k:
+        from portfolio_management.portfolio import (
+            Preselection,
+            PreselectionConfig,
+            PreselectionMethod,
+        )
+        
+        preselection_config = PreselectionConfig(
+            method=PreselectionMethod(args.preselect_method),
+            top_k=args.preselect_top_k,
+            lookback=args.preselect_lookback,
+            skip=args.preselect_skip,
+            momentum_weight=args.preselect_momentum_weight,
+            low_vol_weight=args.preselect_low_vol_weight,
+        )
+        return Preselection(preselection_config)
+    
+    # Check universe config
+    if "preselection" in universe_config:
+        from portfolio_management.portfolio import (
+            Preselection,
+            PreselectionConfig,
+            PreselectionMethod,
+        )
+        
+        ps_config = universe_config["preselection"]
+        if ps_config.get("method") and ps_config.get("top_k"):
+            preselection_config = PreselectionConfig(
+                method=PreselectionMethod(ps_config["method"]),
+                top_k=ps_config["top_k"],
+                lookback=ps_config.get("lookback", 252),
+                skip=ps_config.get("skip", 1),
+                momentum_weight=ps_config.get("momentum_weight", 0.5),
+                low_vol_weight=ps_config.get("low_vol_weight", 0.5),
+                min_periods=ps_config.get("min_periods", 60),
+            )
+            return Preselection(preselection_config)
+    
+    return None
+
+
+def create_membership_policy_from_universe(universe_config: dict, args: argparse.Namespace):
+    """Create membership policy from universe config, with CLI args as override.
+    
+    Returns:
+        MembershipPolicy instance if configured, None otherwise.
+    """
+    # CLI args override universe config
+    if args.membership_enabled:
+        return create_membership_policy(args)
+    
+    # Check universe config
+    if "membership_policy" in universe_config:
+        from portfolio_management.portfolio import MembershipPolicy
+        
+        mp_config = universe_config["membership_policy"]
+        if mp_config.get("enabled", False):
+            return MembershipPolicy(
+                buffer_rank=mp_config.get("buffer_rank"),
+                min_holding_periods=mp_config.get("min_holding_periods"),
+                max_turnover=mp_config.get("max_turnover"),
+                max_new_assets=mp_config.get("max_new_assets"),
+                max_removed_assets=mp_config.get("max_removed_assets"),
+                enabled=True,
+            )
+    
+    return None
+
+
+def apply_pit_config_from_universe(universe_config: dict, args: argparse.Namespace):
+    """Update args with PIT settings from universe config if not already set by CLI.
+    
+    CLI args take precedence over universe config.
+    """
+    if "pit_eligibility" in universe_config:
+        pit_config = universe_config["pit_eligibility"]
+        
+        # Only apply universe config if CLI didn't explicitly enable
+        if not args.use_pit_eligibility and pit_config.get("enabled", False):
+            args.use_pit_eligibility = True
+            args.min_history_days = pit_config.get("min_history_days", 252)
+            args.min_price_rows = pit_config.get("min_price_rows", 252)
 
 
 def save_results(
@@ -614,12 +733,15 @@ def main() -> int:
         if args.verbose:
             pass
 
-        # Load universe
+        # Load universe and configuration
         if args.verbose:
             pass
-        assets = load_universe(args.universe_file, args.universe_name)
+        assets, universe_config = load_universe(args.universe_file, args.universe_name)
         if args.verbose:
             pass
+        
+        # Apply PIT eligibility config from universe (if not set via CLI)
+        apply_pit_config_from_universe(universe_config, args)
 
         # Load data (optimized to only load required columns and date range)
         if args.verbose:
@@ -688,31 +810,26 @@ def main() -> int:
             commission_min=float(args.min_commission),
             slippage_bps=float(args.slippage) * 10000,
             lookback_periods=args.lookback_periods,
+            use_pit_eligibility=args.use_pit_eligibility,
+            min_history_days=args.min_history_days,
+            min_price_rows=args.min_price_rows,
         )
 
-        # Create preselection if configured
-        preselection = None
-        if args.preselect_method and args.preselect_top_k:
-            from portfolio_management.portfolio import (
-                Preselection,
-                PreselectionConfig,
-                PreselectionMethod,
+        # Create preselection from universe config or CLI args
+        preselection = create_preselection_from_universe(universe_config, args)
+        if preselection and args.verbose:
+            print(
+                f"Preselection enabled: {preselection.config.method.value} "
+                f"(top-{preselection.config.top_k})"
             )
 
-            preselection_config = PreselectionConfig(
-                method=PreselectionMethod(args.preselect_method),
-                top_k=args.preselect_top_k,
-                lookback=args.preselect_lookback,
-                skip=args.preselect_skip,
-                momentum_weight=args.preselect_momentum_weight,
-                low_vol_weight=args.preselect_low_vol_weight,
+        # Create membership policy from universe config or CLI args
+        membership_policy = create_membership_policy_from_universe(universe_config, args)
+        if membership_policy and args.verbose:
+            print(
+                f"Membership policy enabled: buffer_rank={membership_policy.buffer_rank}, "
+                f"min_hold={membership_policy.min_holding_periods}"
             )
-            preselection = Preselection(preselection_config)
-            if args.verbose:
-                print(
-                    f"Preselection enabled: {args.preselect_method} "
-                    f"(top-{args.preselect_top_k})"
-                )
 
         # Run backtest
         if args.verbose:
@@ -723,6 +840,7 @@ def main() -> int:
             prices=prices,
             returns=returns,
             preselection=preselection,
+            membership_policy=membership_policy,
         )
         equity_curve, metrics, rebalance_events = engine.run()
         if args.verbose:
