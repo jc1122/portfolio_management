@@ -1,0 +1,62 @@
+# Example regime configurations for macroeconomic gating
+# These are example configurations showing how regime_config can be specified
+# Note: Current implementation is NoOp (all gating returns neutral/pass-through)
+
+regime_configs:
+  # Default: no regime gating (None)
+  disabled:
+    description: "No regime gating applied (default)"
+    config: null
+
+  # Basic configuration with gating disabled (NoOp)
+  recession_monitoring_noop:
+    description: "Monitor recession indicator but don't apply gating (NoOp)"
+    config:
+      enable_gating: false
+      recession_indicator: "recession_indicator.us"
+      risk_off_threshold: null
+      custom_rules: null
+
+  # Example configuration for future implementation
+  risk_off_gating_stub:
+    description: "Risk-off gating configuration (stub, currently NoOp)"
+    config:
+      enable_gating: true  # Will be active when logic is implemented
+      recession_indicator: "recession_indicator.us"
+      risk_off_threshold: 30.0  # VIX threshold example
+      custom_rules:
+        vix_ticker: "vix.us"
+        high_vol_threshold: 30.0
+        extreme_vol_threshold: 40.0
+
+  # Comprehensive configuration for future use
+  multi_indicator_stub:
+    description: "Multi-indicator regime detection (stub, currently NoOp)"
+    config:
+      enable_gating: true
+      recession_indicator: "recession_indicator.us"
+      risk_off_threshold: 0.5
+      custom_rules:
+        sentiment_indicator: "sentiment_index.us"
+        credit_spread_ticker: "credit_spread.us"
+        credit_spread_threshold: 200  # basis points
+        yield_curve_ticker: "yield_curve_slope.us"
+        yield_curve_inversion_threshold: 0.0
+
+# Usage in FilterCriteria:
+#
+# from portfolio_management.assets.selection import FilterCriteria
+# from portfolio_management.macro import RegimeConfig
+#
+# # Load from this config file (pseudo-code)
+# regime_config = RegimeConfig(**config['regime_configs']['risk_off_gating_stub']['config'])
+#
+# criteria = FilterCriteria(
+#     data_status=["ok"],
+#     min_history_days=252,
+#     markets=["UK", "US"],
+#     regime_config=regime_config
+# )
+#
+# Note: Even with enable_gating=True, current implementation is NoOp.
+# Selection will proceed unchanged until actual regime logic is implemented.
