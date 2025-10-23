@@ -325,25 +325,25 @@ class BacktestEngine:
 
             # Apply preselection if configured
             candidate_assets = list(eligible_returns.columns)
-            preselected_ranks = None
+            preselected_ranks: pd.Series | None = None
+            membership_top_k = len(candidate_assets)
             if self.preselection is not None:
                 # Preselect assets based on factors (momentum, low_vol, etc.)
                 selected_assets = self.preselection.select_assets(
                     returns=eligible_returns,
                     rebalance_date=date,
                 )
-                
+                candidate_assets = selected_assets
+                membership_top_k = len(selected_assets)
+
                 # Get ranks for membership policy (if needed)
-                # We need to compute ranks by running the preselection scoring internally
                 if self.membership_policy is not None and self.membership_policy.enabled:
-                    # Filter returns up to rebalance date (matching preselection logic)
                     if isinstance(eligible_returns.index, pd.DatetimeIndex):
                         date_mask = eligible_returns.index.date < date
                     else:
                         date_mask = eligible_returns.index < date
                     available_returns = eligible_returns.loc[date_mask]
-                    
-                    # Compute scores using preselection's method
+
                     if self.preselection.config.method.value == "momentum":
                         scores = self.preselection._compute_momentum(available_returns)
                     elif self.preselection.config.method.value == "low_vol":
@@ -351,54 +351,65 @@ class BacktestEngine:
                     elif self.preselection.config.method.value == "combined":
                         scores = self.preselection._compute_combined(available_returns)
                     else:
-                        scores = pd.Series(range(len(available_returns.columns)), index=available_returns.columns)
-                    
-                    # Convert scores to ranks (higher score = better rank = lower rank number)
-                    # Sort descending by score, then assign ranks 1, 2, 3, ...
+                        scores = pd.Series(
+                            range(len(available_returns.columns)),
+                            index=available_returns.columns,
+                        )
+
                     valid_scores = scores.dropna()
                     sorted_scores = valid_scores.sort_values(ascending=False)
                     preselected_ranks = pd.Series(
                         range(1, len(sorted_scores) + 1),
-                        index=sorted_scores.index
+                        index=sorted_scores.index,
                     )
-                
-                candidate_assets = selected_assets
-                eligible_returns = eligible_returns[selected_assets]
-                
-                if asset_classes is not None:
-                    asset_classes = asset_classes[asset_classes.index.isin(selected_assets)]
-            
+
             # Apply membership policy if configured
             if self.membership_policy is not None and self.membership_policy.enabled:
                 from portfolio_management.portfolio import apply_membership_policy
-                
+
                 current_holdings = list(self.holdings.keys())
-                
+
                 # If preselection not used, create simple rank by name for determinism
                 if preselected_ranks is None:
                     # Simple ranking: alphabetical order
                     preselected_ranks = pd.Series(
                         range(1, len(candidate_assets) + 1),
-                        index=sorted(candidate_assets)
+                        index=sorted(candidate_assets),
                     )
-                
+                else:
+                    # Ensure current holdings have ranks even if not in preselection results
+                    missing_holdings = sorted(set(current_holdings) - set(preselected_ranks.index))
+                    if missing_holdings:
+                        worst_rank = int(preselected_ranks.max()) if not preselected_ranks.empty else 0
+                        additional_ranks = pd.Series(
+                            range(worst_rank + 1, worst_rank + len(missing_holdings) + 1),
+                            index=missing_holdings,
+                        )
+                        preselected_ranks = pd.concat([preselected_ranks, additional_ranks])
+
+                current_weight_map = {ticker: 0.0 for ticker in current_holdings}
+                candidate_weight_map = {
+                    ticker: 0.0 for ticker in set(candidate_assets) | set(current_holdings)
+                }
+
                 # Apply membership policy
                 final_candidates = apply_membership_policy(
                     current_holdings=current_holdings,
                     preselected_ranks=preselected_ranks,
                     policy=self.membership_policy,
                     holding_periods=self.holding_periods,
-                    top_k=len(candidate_assets),  # Use preselected count as top_k
+                    top_k=membership_top_k,
+                    current_weights=current_weight_map,
+                    candidate_weights=candidate_weight_map,
                 )
-                
-                # Filter to final candidates
-                eligible_returns = eligible_returns[
-                    [c for c in final_candidates if c in eligible_returns.columns]
-                ]
-                candidate_assets = list(eligible_returns.columns)
-                
-                if asset_classes is not None:
-                    asset_classes = asset_classes[asset_classes.index.isin(candidate_assets)]
+
+                candidate_assets = [c for c in final_candidates if c in eligible_returns.columns]
+
+            # Filter to final candidates determined by preselection/membership
+            eligible_returns = eligible_returns[candidate_assets]
+
+            if asset_classes is not None:
+                asset_classes = asset_classes[asset_classes.index.isin(candidate_assets)]
 
             # Construct target portfolio (on selected subset)
             portfolio = self.strategy.construct(
