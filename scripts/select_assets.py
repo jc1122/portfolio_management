@@ -48,7 +48,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.assets.selection import AssetSelector, FilterCriteria
+from portfolio_management.assets.selection import (
+    AssetSelector,
+    ClusteringConfig,
+    ClusteringMethod,
+    FilterCriteria,
+)
 from portfolio_management.core.exceptions import (
     AssetSelectionError,
     PortfolioManagementError,
@@ -250,6 +255,40 @@ def get_args() -> argparse.Namespace:
         help="Enable streaming mode with specified chunk size (e.g., 5000). "
         "If not specified, loads entire file into memory (default behavior).",
     )
+    # Clustering arguments
+    parser.add_argument(
+        "--preselect-clustering",
+        type=str,
+        default="none",
+        choices=["none", "hierarchical"],
+        help="Clustering method for diversification (default: none).",
+    )
+    parser.add_argument(
+        "--shortlist",
+        type=int,
+        default=200,
+        help="Number of top assets to shortlist before clustering (default: 200).",
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        default=50,
+        help="Final number of assets to select after clustering (default: 50).",
+    )
+    parser.add_argument(
+        "--linkage-method",
+        type=str,
+        default="ward",
+        choices=["ward", "average", "complete", "single"],
+        help="Linkage method for hierarchical clustering (default: ward).",
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=None,
+        help="Base directory containing Stooq data (required if clustering enabled). "
+        "Defaults to data/stooq/ relative to current directory.",
+    )
     return parser.parse_args()
 
 
@@ -271,6 +310,17 @@ def main() -> None:
             set(args.blocklist.read_text().splitlines()) if args.blocklist else None
         )
 
+        # Create clustering config if enabled
+        clustering_config = None
+        if args.preselect_clustering != "none":
+            clustering_method = ClusteringMethod.HIERARCHICAL
+            clustering_config = ClusteringConfig(
+                method=clustering_method,
+                shortlist_size=args.shortlist,
+                top_k=args.top_k,
+                linkage_method=args.linkage_method,
+            )
+
         criteria = FilterCriteria(
             data_status=args.data_status.split(","),
             min_history_days=args.min_history_days,
@@ -282,13 +332,36 @@ def main() -> None:
             currencies=args.currencies.split(",") if args.currencies else None,
             allowlist=allowlist,
             blocklist=blocklist,
+            clustering_config=clustering_config,
         )
+
+        # Determine data directory for clustering
+        data_dir = args.data_dir
+        if data_dir is None and clustering_config is not None:
+            data_dir = Path("data/stooq")
+            logging.info(f"Using default data directory: {data_dir}")
+
+        # Validate data directory exists if clustering enabled
+        if clustering_config is not None and clustering_config.method != ClusteringMethod.NONE:
+            if not data_dir.exists():
+                logging.error(
+                    f"Data directory does not exist: {data_dir}. "
+                    "Please specify --data-dir or disable clustering.",
+                )
+                sys.exit(1)
 
         # Choose between chunked and eager loading based on --chunk-size
         if args.chunk_size is not None:
             if args.chunk_size <= 0:
                 logging.error("--chunk-size must be a positive integer")
                 sys.exit(1)
+
+            if clustering_config is not None:
+                logging.warning(
+                    "Clustering is not supported in streaming mode. "
+                    "Clustering will be disabled.",
+                )
+                criteria.clustering_config = None
 
             logging.info("Using streaming mode with chunk_size=%s", args.chunk_size)
             selected_assets = process_chunked(
@@ -302,7 +375,7 @@ def main() -> None:
             matches_df = pd.read_csv(args.match_report)
 
             selector = AssetSelector()
-            selected_assets = selector.select_assets(matches_df, criteria)
+            selected_assets = selector.select_assets(matches_df, criteria, data_dir)
 
         selected_df = pd.DataFrame([asset.__dict__ for asset in selected_assets])
 

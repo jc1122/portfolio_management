@@ -22,10 +22,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from ...core.exceptions import AssetSelectionError, DataValidationError
+
+if TYPE_CHECKING:
+    from .clustering import ClusteringConfig
 
 
 @dataclass
@@ -84,6 +89,7 @@ class FilterCriteria:
     categories: list[str] | None = None
     allowlist: set[str] | None = None
     blocklist: set[str] | None = None
+    clustering_config: ClusteringConfig | None = None
 
     def validate(self) -> None:
         """Validate filter criteria parameters.
@@ -797,12 +803,14 @@ class AssetSelector:
         self,
         matches_df: pd.DataFrame,
         criteria: FilterCriteria,
+        data_dir: Path | None = None,
     ) -> list[SelectedAsset]:
         """Run the full asset selection pipeline.
 
         Args:
             matches_df: DataFrame of matched assets.
             criteria: Filtering criteria.
+            data_dir: Base directory containing Stooq data (required if clustering enabled).
 
         Returns:
             A list of SelectedAsset objects that pass all filters.
@@ -882,4 +890,36 @@ class AssetSelector:
         logger.info(f"Breakdown by market: {market_breakdown}")
         logger.info(f"Breakdown by region: {region_breakdown}")
 
-        return self._df_to_selected_assets(df)
+        # Convert to SelectedAsset objects
+        selected_assets = self._df_to_selected_assets(df)
+
+        # Apply clustering if enabled
+        if criteria.clustering_config is not None:
+            from .clustering import ClusteringMethod, cluster_by_correlation
+
+            if criteria.clustering_config.method != ClusteringMethod.NONE:
+                if data_dir is None:
+                    raise DataValidationError(
+                        "data_dir is required when clustering is enabled",
+                    )
+
+                logger.info(
+                    f"Applying clustering: shortlist={criteria.clustering_config.shortlist_size}, "
+                    f"top_k={criteria.clustering_config.top_k}",
+                )
+
+                # Take top shortlist_size assets (use all if we have fewer)
+                shortlist = selected_assets[: criteria.clustering_config.shortlist_size]
+
+                # Apply clustering
+                selected_assets = cluster_by_correlation(
+                    shortlist,
+                    criteria.clustering_config,
+                    data_dir,
+                )
+
+                logger.info(
+                    f"After clustering: {len(selected_assets)} assets selected",
+                )
+
+        return selected_assets
