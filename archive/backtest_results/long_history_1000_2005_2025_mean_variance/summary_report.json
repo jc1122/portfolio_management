@@ -1,0 +1,31 @@
+{
+  "performance": {
+    "total_return_pct": 485.52,
+    "annualized_return_pct": 8.77,
+    "volatility_pct": 20.63,
+    "sharpe_ratio": 0.42,
+    "sortino_ratio": 0.52,
+    "max_drawdown_pct": -57.22,
+    "calmar_ratio": 0.15
+  },
+  "risk": {
+    "expected_shortfall_95_pct": -1.92,
+    "win_rate_pct": 51.7,
+    "avg_win_pct": 0.85,
+    "avg_loss_pct": -0.91,
+    "best_day_pct": 10.91,
+    "worst_day_pct": -11.32
+  },
+  "trading": {
+    "num_rebalances": 237,
+    "total_costs_usd": 1732031.58,
+    "avg_turnover": 0.0,
+    "total_trades": 3538
+  },
+  "portfolio": {
+    "initial_value": 1000000.0,
+    "final_value": 5855249.428906,
+    "peak_value": 5894824.562906,
+    "num_days": 5300
+  }
+}
