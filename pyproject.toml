@@ -37,6 +37,10 @@ dev = [
     "mdformat",
     "gitlint",
 ]
+fast-io = [
+    "polars>=0.19.0",
+    "pyarrow>=14.0.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

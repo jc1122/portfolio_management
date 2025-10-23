@@ -19,7 +19,16 @@ The portfolio management toolkit supports optional fast IO backends using **pola
 
 Fast IO backends are **optional**. The system works perfectly with pandas alone.
 
-### Install Polars (Recommended)
+### Install Fast IO Backends (Recommended Method)
+
+```bash
+# Install all fast IO backends in one command
+pip install -e ".[fast-io]"
+```
+
+This installs both polars and pyarrow from the optional dependencies in `pyproject.toml`.
+
+### Install Polars Only (Fastest)
 
 ```bash
 pip install polars
@@ -27,7 +36,7 @@ pip install polars
 
 Polars provides the best performance for CSV parsing and is actively maintained.
 
-### Install PyArrow (Alternative)
+### Install PyArrow Only (Alternative)
 
 ```bash
 pip install pyarrow
@@ -35,7 +44,7 @@ pip install pyarrow
 
 PyArrow is often already installed as a pandas dependency and provides good CSV performance plus excellent Parquet support.
 
-### Install Both (Maximum Flexibility)
+### Install Both Manually
 
 ```bash
 pip install polars pyarrow
