@@ -302,20 +302,23 @@ def create_parser() -> argparse.ArgumentParser:
         help="Maximum number of assets to remove per rebalancing",
     )
 
-    # Output options
-
-    # Technical indicators
+    # Point-in-time (PIT) eligibility
     parser.add_argument(
-        "--enable-indicators",
+        "--use-pit-eligibility",
         action="store_true",
-        help="Enable technical indicator filtering (currently no-op stub)",
+        help="Enable point-in-time eligibility filtering to avoid lookahead bias",
     )
     parser.add_argument(
-        "--indicator-provider",
-        type=str,
-        default="noop",
-        choices=["noop"],
-        help="Indicator provider to use. Default: noop (currently only option)",
+        "--min-history-days",
+        type=int,
+        default=252,
+        help="Minimum days of history for PIT eligibility (default: 252 = 1 year)",
+    )
+    parser.add_argument(
+        "--min-price-rows",
+        type=int,
+        default=252,
+        help="Minimum price rows for PIT eligibility (default: 252)",
     )
 
     # Output options
@@ -464,6 +467,27 @@ def create_strategy(strategy_name: str) -> PortfolioStrategy:
     if strategy_name == "mean_variance":
         return MeanVarianceStrategy()
     raise ValueError(f"Unknown strategy: {strategy_name}")
+
+
+def create_membership_policy(args: argparse.Namespace):
+    """Create membership policy from CLI arguments.
+    
+    Returns:
+        MembershipPolicy instance if enabled, None otherwise.
+    """
+    if not args.membership_enabled:
+        return None
+    
+    from portfolio_management.portfolio import MembershipPolicy
+    
+    return MembershipPolicy(
+        buffer_rank=args.membership_buffer_rank if args.membership_buffer_rank else None,
+        min_holding_periods=args.membership_min_hold if args.membership_min_hold else None,
+        max_turnover=float(args.membership_max_turnover) if args.membership_max_turnover else None,
+        max_new_assets=args.membership_max_new if args.membership_max_new else None,
+        max_removed_assets=args.membership_max_removed if args.membership_max_removed else None,
+        enabled=True,
+    )
 
 
 def save_results(
@@ -688,6 +712,9 @@ def main() -> int:
             commission_min=float(args.min_commission),
             slippage_bps=float(args.slippage) * 10000,
             lookback_periods=args.lookback_periods,
+            use_pit_eligibility=args.use_pit_eligibility,
+            min_history_days=args.min_history_days,
+            min_price_rows=args.min_price_rows,
         )
 
         # Create preselection if configured
@@ -714,6 +741,14 @@ def main() -> int:
                     f"(top-{args.preselect_top_k})"
                 )
 
+        # Create membership policy if configured
+        membership_policy = create_membership_policy(args)
+        if membership_policy and args.verbose:
+            print(
+                f"Membership policy enabled: buffer_rank={membership_policy.buffer_rank}, "
+                f"min_hold={membership_policy.min_holding_periods}"
+            )
+
         # Run backtest
         if args.verbose:
             pass
@@ -723,6 +758,7 @@ def main() -> int:
             prices=prices,
             returns=returns,
             preselection=preselection,
+            membership_policy=membership_policy,
         )
         equity_curve, metrics, rebalance_events = engine.run()
         if args.verbose:
