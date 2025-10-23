@@ -90,6 +90,14 @@ universes:
       momentum_weight: 0.5  # Weight for momentum factor (when using combined)
       low_vol_weight: 0.5  # Weight for low-volatility factor (when using combined)
       min_periods: 60  # Minimum data required for valid calculation
+    membership_policy:
+      # Optional: Control asset turnover and stability during rebalancing
+      enabled: true  # Enable/disable membership policy
+      buffer_rank: 35  # Keep existing holdings if ranked within top 35 (even if outside top_k)
+      min_holding_periods: 3  # Hold assets for at least 3 rebalance periods
+      max_turnover: 0.30  # Maximum 30% portfolio turnover per rebalance
+      max_new_assets: 5  # Add at most 5 new assets per rebalance
+      max_removed_assets: 5  # Remove at most 5 assets per rebalance
 
   defensive:
     description: "Defensive sleeve (income, precious metals, property)"
@@ -118,6 +126,11 @@ universes:
 
   equity_only:
     description: "Pure equity growth sleeve (US + UK large/mid cap)"
+    pit_eligibility:
+      # Optional: Enable point-in-time eligibility filtering to avoid lookahead bias
+      enabled: true
+      min_history_days: 252  # Require 1 year of history
+      min_price_rows: 252  # Require 252 valid price observations
     filter_criteria:
       data_status: ["ok"]
       min_history_days: 756

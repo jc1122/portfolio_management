@@ -1,4 +1,75 @@
 universes:
+  long_history_30_integrated:
+    description: Top-30 universe with PIT, preselection, and membership policy enabled
+    assets:
+    - AAPL
+    - MSFT
+    - GOOGL
+    - AMZN
+    - META
+    - TSLA
+    - NVDA
+    - JPM
+    - JNJ
+    - V
+    - PG
+    - UNH
+    - HD
+    - MA
+    - DIS
+    - ADBE
+    - NFLX
+    - PYPL
+    - INTC
+    - CSCO
+    - PEP
+    - COST
+    - CMCSA
+    - AVGO
+    - QCOM
+    - TXN
+    - AMGN
+    - SBUX
+    - INTU
+    - AMD
+    - HON
+    - UNP
+    - BA
+    - CAT
+    - MMM
+    - GE
+    - IBM
+    - T
+    - VZ
+    - WMT
+    - MCD
+    - KO
+    - XOM
+    - CVX
+    - LMT
+    - RTX
+    - BMY
+    - MRK
+    - GILD
+    - ABT
+    pit_eligibility:
+      enabled: true
+      min_history_days: 252
+      min_price_rows: 252
+    preselection:
+      method: "momentum"
+      top_k: 30
+      lookback: 252
+      skip: 1
+      min_periods: 60
+    membership_policy:
+      enabled: true
+      buffer_rank: 35
+      min_holding_periods: 3
+      max_turnover: 0.30
+      max_new_assets: 5
+      max_removed_assets: 5
+
   long_history_100:
     description: 100-asset universe with >=20y history across NYSE/Nasdaq/LSE
     assets:
