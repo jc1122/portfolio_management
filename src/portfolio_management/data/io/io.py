@@ -419,11 +419,14 @@ def _stream_price_file(source_path: pathlib.Path, target_path: pathlib.Path) -> 
     """Stream the raw Stooq file to CSV with normalized header; return rows written."""
     target_path.parent.mkdir(parents=True, exist_ok=True)
     rows_written = 0
-    with source_path.open("r", encoding="utf-8", newline="") as src, target_path.open(
-        "w",
-        encoding="utf-8",
-        newline="",
-    ) as dst:
+    with (
+        source_path.open("r", encoding="utf-8", newline="") as src,
+        target_path.open(
+            "w",
+            encoding="utf-8",
+            newline="",
+        ) as dst,
+    ):
         dst.write(",".join(STOOQ_COLUMNS) + "\n")
         for raw_line in src:
             if not raw_line:

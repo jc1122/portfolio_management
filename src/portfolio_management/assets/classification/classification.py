@@ -259,7 +259,9 @@ class AssetClassifier:
         try:
             asset_dicts = [asdict(asset) for asset in assets]
         except TypeError as exc:  # pragma: no cover - defensive
-            raise ClassificationError("Failed to serialise assets for classification.") from exc
+            raise ClassificationError(
+                "Failed to serialise assets for classification."
+            ) from exc
 
         assets_df = pd.DataFrame(asset_dicts)
         df = self._classify_dataframe(assets_df)
@@ -320,14 +322,20 @@ class AssetClassifier:
         asset_class_name[bond_mask] = AssetClass.FIXED_INCOME.value
 
         remaining = asset_class_name == unknown_class
-        commodity_mask = remaining & self._contains_keywords(name_lower, self.COMMODITY_KEYWORDS)
+        commodity_mask = remaining & self._contains_keywords(
+            name_lower, self.COMMODITY_KEYWORDS
+        )
         asset_class_name[commodity_mask] = AssetClass.COMMODITY.value
 
         remaining = asset_class_name == unknown_class
-        real_estate_mask = remaining & self._contains_keywords(name_lower, self.REAL_ESTATE_KEYWORDS)
+        real_estate_mask = remaining & self._contains_keywords(
+            name_lower, self.REAL_ESTATE_KEYWORDS
+        )
         asset_class_name[real_estate_mask] = AssetClass.REAL_ESTATE.value
 
-        class_from_category = pd.Series(unknown_class, index=result_df.index, dtype=object)
+        class_from_category = pd.Series(
+            unknown_class, index=result_df.index, dtype=object
+        )
         stock_mask = category_lower.str.contains("stock", na=False)
         class_from_category[stock_mask] = AssetClass.EQUITY.value
 
@@ -367,34 +375,59 @@ class AssetClassifier:
             patterns_lower = [pattern.lower() for pattern in patterns]
             mask_region = region_lower.isin(patterns_lower)
             mask_currency = currency_lower.isin(patterns_lower)
-            pattern_regex = "|".join(re.escape(pattern) for pattern in patterns_lower if pattern)
+            pattern_regex = "|".join(
+                re.escape(pattern) for pattern in patterns_lower if pattern
+            )
             mask_name = (
-                name_lower.str.contains(pattern_regex, na=False) if pattern_regex else pd.Series(False, index=result_df.index)
+                name_lower.str.contains(pattern_regex, na=False)
+                if pattern_regex
+                else pd.Series(False, index=result_df.index)
             )
             combined = (~assigned_geo) & (mask_region | mask_currency | mask_name)
             geography[combined] = geo_enum
             assigned_geo = geography != Geography.UNKNOWN
 
-        sub_class = pd.Series(SubClass.UNKNOWN.value, index=result_df.index, dtype=object)
+        sub_class = pd.Series(
+            SubClass.UNKNOWN.value, index=result_df.index, dtype=object
+        )
         equity_asset_mask = asset_class == AssetClass.EQUITY.value
-        sub_class[equity_asset_mask & name_lower.str.contains("large cap", na=False)] = SubClass.LARGE_CAP.value
-        sub_class[equity_asset_mask & name_lower.str.contains("small cap", na=False)] = SubClass.SMALL_CAP.value
-        sub_class[equity_asset_mask & name_lower.str.contains("value", na=False)] = SubClass.VALUE.value
-        sub_class[equity_asset_mask & name_lower.str.contains("growth", na=False)] = SubClass.GROWTH.value
-        sub_class[equity_asset_mask & name_lower.str.contains("dividend", na=False)] = SubClass.DIVIDEND.value
+        sub_class[
+            equity_asset_mask & name_lower.str.contains("large cap", na=False)
+        ] = SubClass.LARGE_CAP.value
+        sub_class[
+            equity_asset_mask & name_lower.str.contains("small cap", na=False)
+        ] = SubClass.SMALL_CAP.value
+        sub_class[equity_asset_mask & name_lower.str.contains("value", na=False)] = (
+            SubClass.VALUE.value
+        )
+        sub_class[equity_asset_mask & name_lower.str.contains("growth", na=False)] = (
+            SubClass.GROWTH.value
+        )
+        sub_class[equity_asset_mask & name_lower.str.contains("dividend", na=False)] = (
+            SubClass.DIVIDEND.value
+        )
 
         fixed_income_mask = asset_class == AssetClass.FIXED_INCOME.value
         sub_class[
-            fixed_income_mask & name_lower.str.contains("government|gilt|treasury", na=False)
+            fixed_income_mask
+            & name_lower.str.contains("government|gilt|treasury", na=False)
         ] = SubClass.GOVERNMENT.value
-        sub_class[fixed_income_mask & name_lower.str.contains("corporate", na=False)] = SubClass.CORPORATE.value
-        sub_class[fixed_income_mask & name_lower.str.contains("high yield", na=False)] = SubClass.HIGH_YIELD.value
+        sub_class[
+            fixed_income_mask & name_lower.str.contains("corporate", na=False)
+        ] = SubClass.CORPORATE.value
+        sub_class[
+            fixed_income_mask & name_lower.str.contains("high yield", na=False)
+        ] = SubClass.HIGH_YIELD.value
 
         commodity_asset_mask = asset_class == AssetClass.COMMODITY.value
-        sub_class[commodity_asset_mask & name_lower.str.contains("gold", na=False)] = SubClass.GOLD.value
+        sub_class[commodity_asset_mask & name_lower.str.contains("gold", na=False)] = (
+            SubClass.GOLD.value
+        )
 
         real_estate_asset_mask = asset_class == AssetClass.REAL_ESTATE.value
-        sub_class[real_estate_asset_mask & name_lower.str.contains("reit", na=False)] = SubClass.REIT.value
+        sub_class[
+            real_estate_asset_mask & name_lower.str.contains("reit", na=False)
+        ] = SubClass.REIT.value
 
         result_df["asset_class"] = asset_class.astype(str)
         result_df["sub_class"] = sub_class.astype(str)
@@ -410,7 +443,9 @@ class AssetClassifier:
                 override = self.overrides.overrides.get(key)
                 if not override:
                     continue
-                asset_class_override = override.get("asset_class", AssetClass.UNKNOWN.value)
+                asset_class_override = override.get(
+                    "asset_class", AssetClass.UNKNOWN.value
+                )
                 if isinstance(asset_class_override, AssetClass):
                     asset_class_override = asset_class_override.value
                 result_df.at[idx, "asset_class"] = str(asset_class_override)

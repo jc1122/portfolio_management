@@ -7,6 +7,7 @@ The incremental resume feature dramatically speeds up repeated executions of `pr
 ## Problem Solved
 
 Previously, `scripts/prepare_tradeable_data.py` would always:
+
 - Rebuild the Stooq index (scanning 70k+ files)
 - Re-match every instrument
 - Re-generate all exports and reports
@@ -16,17 +17,20 @@ This took several minutes even when nothing had changed, making iterative develo
 ## Solution
 
 The incremental resume system:
+
 1. **Tracks input state** via cryptographic hashes of:
+
    - Tradeable instrument CSVs (directory-level hash based on filenames and mtimes)
    - Stooq index file (content hash)
 
-2. **Detects changes** by comparing current state to cached metadata
+1. **Detects changes** by comparing current state to cached metadata
 
-3. **Skips processing** when:
+1. **Skips processing** when:
+
    - Input hashes match previous run
    - Output files exist (match report, unmatched report)
 
-4. **Logs clearly** what action is taken and why
+1. **Logs clearly** what action is taken and why
 
 ## Usage
 
@@ -113,16 +117,19 @@ The cache file is JSON with this structure:
 Three ways to bypass the cache:
 
 1. **Omit --incremental flag**:
+
    ```bash
    python scripts/prepare_tradeable_data.py  # no --incremental
    ```
 
-2. **Use --force-reindex**:
+1. **Use --force-reindex**:
+
    ```bash
    python scripts/prepare_tradeable_data.py --incremental --force-reindex
    ```
 
-3. **Delete cache file**:
+1. **Delete cache file**:
+
    ```bash
    rm data/metadata/.prepare_cache.json
    python scripts/prepare_tradeable_data.py --incremental
@@ -133,10 +140,12 @@ Three ways to bypass the cache:
 ### Tradeable CSVs
 
 Hash computed from:
+
 - Sorted list of `.csv` filenames in tradeable directory
 - Modification time (`st_mtime`) of each file
 
 **Triggers rebuild**:
+
 - New CSV added
 - CSV deleted
 - CSV content modified (changes mtime)
@@ -145,19 +154,23 @@ Hash computed from:
 ### Stooq Index
 
 Hash computed from:
+
 - Full content of `metadata_output` CSV file (default: `data/metadata/stooq_index.csv`)
 
 **Triggers rebuild**:
+
 - Stooq index regenerated
 - Stooq data directory changed (when using `--force-reindex`)
 
 ### Output Files
 
 Existence check for:
+
 - Match report (default: `data/metadata/tradeable_matches.csv`)
 - Unmatched report (default: `data/metadata/tradeable_unmatched.csv`)
 
 **Triggers rebuild**:
+
 - Either file missing
 - Either file deleted
 
@@ -168,7 +181,7 @@ Existence check for:
 | Scenario | Without --incremental | With --incremental |
 |----------|----------------------|-------------------|
 | First run | 3-5 minutes | 3-5 minutes |
-| No changes | 3-5 minutes | **< 5 seconds** |
+| No changes | 3-5 minutes | **\< 5 seconds** |
 | 1 CSV changed | 3-5 minutes | 3-5 minutes |
 | Force reindex | 3-5 minutes | 3-5 minutes |
 
@@ -181,11 +194,13 @@ The feature includes comprehensive test coverage:
 ### Unit Tests (18 tests)
 
 Tests for `data/cache.py` functions:
+
 ```bash
 pytest tests/data/test_cache.py -v
 ```
 
 Covers:
+
 - Hash computation (directories, files)
 - Change detection logic
 - Metadata persistence
@@ -194,11 +209,13 @@ Covers:
 ### Integration Tests (3 tests)
 
 Tests for end-to-end behavior:
+
 ```bash
 pytest tests/scripts/test_prepare_tradeable_incremental.py -v
 ```
 
 Covers:
+
 - Skipping when inputs unchanged
 - Rerunning when inputs change
 - CLI flag presence
@@ -234,22 +251,27 @@ prepare_tradeable_data(args)
 ## Limitations & Caveats
 
 1. **Hash-based, not content-aware**
+
    - Changing a file triggers rebuild even if change is inconsequential
    - E.g., adding a comment or whitespace to CSV
 
-2. **Directory-level granularity**
+1. **Directory-level granularity**
+
    - Cannot detect which specific tradeable CSV changed
    - Always rebuilds entire dataset when any CSV changes
 
-3. **No partial exports**
+1. **No partial exports**
+
    - Even if only one instrument changed, all exports regenerated
    - Future enhancement could add symbol-level granularity
 
-4. **Manual cache invalidation**
+1. **Manual cache invalidation**
+
    - If you modify Stooq data files directly, you must use `--force-reindex`
    - Cache doesn't track raw Stooq directory (only the built index)
 
-5. **Single-machine only**
+1. **Single-machine only**
+
    - Cache metadata is local to the machine
    - Shared/distributed builds would need cache synchronization
 
@@ -258,22 +280,27 @@ prepare_tradeable_data(args)
 Potential improvements for future iterations:
 
 1. **Symbol-level caching**
+
    - Track which instruments changed
    - Only re-export affected price files
 
-2. **Partial matching**
+1. **Partial matching**
+
    - Re-match only new/changed instruments
    - Merge with previous match report
 
-3. **Stooq directory tracking**
+1. **Stooq directory tracking**
+
    - Hash Stooq data directory directly
    - Auto-invalidate when new files appear
 
-4. **Cache versioning**
+1. **Cache versioning**
+
    - Invalidate cache when script logic changes
    - Prevent stale results from old algorithm
 
-5. **Cache statistics**
+1. **Cache statistics**
+
    - Track hit/miss rate
    - Show time saved
 
@@ -284,10 +311,11 @@ Potential improvements for future iterations:
 **Symptom**: Always rebuilds even with `--incremental`
 
 **Checks**:
+
 1. Verify cache file exists: `ls -la data/metadata/.prepare_cache.json`
-2. Check logs for "DEBUG: Tradeable directory changed" or "DEBUG: Stooq index changed"
-3. Ensure output files exist (match_report, unmatched_report)
-4. Try with `--log-level DEBUG` for detailed diagnostics
+1. Check logs for "DEBUG: Tradeable directory changed" or "DEBUG: Stooq index changed"
+1. Ensure output files exist (match_report, unmatched_report)
+1. Try with `--log-level DEBUG` for detailed diagnostics
 
 ### Stale Results
 

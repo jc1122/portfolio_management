@@ -9,6 +9,7 @@ The AssetSelector filtering pipeline has been successfully vectorized, replacing
 ### 1. Severity Filtering (`_filter_by_data_quality`)
 
 **Before:**
+
 ```python
 def check_severity(row: pd.Series[str]) -> bool:
     severity = self._parse_severity(row["data_flags"])
@@ -18,6 +19,7 @@ severity_mask = df_status.apply(check_severity, axis=1)
 ```
 
 **After:**
+
 ```python
 # New vectorized helper method
 @staticmethod
@@ -38,6 +40,7 @@ severity_mask = severity_series.isin(severity_list)
 ### 2. History Calculation (`_filter_by_history`)
 
 **Before:**
+
 ```python
 def calculate_row_history(row: pd.Series[str]) -> int:
     return self._calculate_history_days(
@@ -49,6 +52,7 @@ df_copy["_history_days"] = df_copy.apply(calculate_row_history, axis=1)
 ```
 
 **After:**
+
 ```python
 # New vectorized helper method
 @staticmethod
@@ -75,6 +79,7 @@ df_copy["_history_days"] = self._calculate_history_days_vectorized(
 ### 3. Allow/Blocklist Filtering (`_apply_lists`)
 
 **Before:**
+
 ```python
 def not_in_blocklist(row: pd.Series[str]) -> bool:
     return not self._is_in_list(row["symbol"], row["isin"], blocklist)
@@ -88,6 +93,7 @@ allowlist_mask = df_result.apply(in_allowlist, axis=1)
 ```
 
 **After:**
+
 ```python
 # Blocklist filtering
 symbol_blocked = df_result["symbol"].isin(blocklist)
@@ -107,6 +113,7 @@ allowlist_mask = in_allowlist
 ### 4. Dataclass Conversion (`_df_to_selected_assets`)
 
 **Before:**
+
 ```python
 assets = []
 for _, row in df.iterrows():
@@ -119,6 +126,7 @@ for _, row in df.iterrows():
 ```
 
 **After:**
+
 ```python
 records = df.to_dict("records")
 assets = []
@@ -149,21 +157,21 @@ All benchmarks run on a 10,000-row synthetic dataset with realistic filtering sc
 
 1. **Scalability:** The vectorized implementation scales linearly with dataset size, while the previous implementation had quadratic-like behavior for some operations.
 
-2. **Most Improved:** Allow/blocklist filtering saw the most dramatic improvement (206x) because it involved two nested loops (one for apply, one for checking membership).
+1. **Most Improved:** Allow/blocklist filtering saw the most dramatic improvement (206x) because it involved two nested loops (one for apply, one for checking membership).
 
-3. **Consistency:** All speedups are in the 45-206x range, showing consistent improvement across all filtering operations.
+1. **Consistency:** All speedups are in the 45-206x range, showing consistent improvement across all filtering operations.
 
-4. **Test Suite:** All 76 existing tests pass, confirming that filtering semantics remain unchanged.
+1. **Test Suite:** All 76 existing tests pass, confirming that filtering semantics remain unchanged.
 
 ## Technical Details
 
 ### Vectorization Techniques Used
 
 1. **String Operations:** `Series.str.extract()` with regex for parsing complex string flags
-2. **Datetime Arithmetic:** `pd.to_datetime()` + `Series.dt.days` for date calculations
-3. **Set Operations:** `Series.isin()` for membership checks
-4. **Boolean Indexing:** Combining boolean masks with `&`, `|`, `~` operators
-5. **Batch Conversion:** `to_dict("records")` for DataFrame-to-object conversion
+1. **Datetime Arithmetic:** `pd.to_datetime()` + `Series.dt.days` for date calculations
+1. **Set Operations:** `Series.isin()` for membership checks
+1. **Boolean Indexing:** Combining boolean masks with `&`, `|`, `~` operators
+1. **Batch Conversion:** `to_dict("records")` for DataFrame-to-object conversion
 
 ### Edge Cases Handled
 
@@ -193,9 +201,9 @@ pytest tests/benchmarks/test_selection_performance.py::TestSelectionPerformance:
 Potential further optimizations (not included in this change to maintain minimal scope):
 
 1. **Caching:** Cache parsed severity values if the same match report is filtered multiple times
-2. **Parallel Processing:** Use Dask or multiprocessing for extremely large datasets (>1M rows)
-3. **Memory Optimization:** Use categorical dtypes for columns with low cardinality
-4. **JIT Compilation:** Consider Numba for hot paths if further speedup is needed
+1. **Parallel Processing:** Use Dask or multiprocessing for extremely large datasets (>1M rows)
+1. **Memory Optimization:** Use categorical dtypes for columns with low cardinality
+1. **JIT Compilation:** Consider Numba for hot paths if further speedup is needed
 
 ## Conclusion
 

@@ -13,7 +13,7 @@ Incremental Resume Feature:
     inputs haven't changed. The script tracks:
     - Stooq index file hash
     - Tradeable CSV directory hash (file names and modification times)
-    
+
     When both inputs are unchanged and output files exist, processing is skipped
     entirely, completing in seconds instead of minutes. Use --force-reindex to
     override the cache.
@@ -29,11 +29,11 @@ Example usage:
         --prices-output data/processed/tradeable_prices \
         --max-workers 8 \
         --incremental
-    
+
     # Second run - skips if unchanged (completes in seconds)
     python scripts/prepare_tradeable_data.py \
         --incremental
-    
+
     # Force full rebuild
     python scripts/prepare_tradeable_data.py \
         --force-reindex
@@ -334,16 +334,13 @@ def prepare_tradeable_data(args: argparse.Namespace) -> None:
     # Check for incremental resume opportunity
     if args.incremental:
         cache_metadata = cache.load_cache_metadata(args.cache_metadata)
-        
+
         # Check if we can skip processing
-        if (
-            cache.inputs_unchanged(
-                args.tradeable_dir,
-                args.metadata_output,
-                cache_metadata,
-            )
-            and cache.outputs_exist(args.match_report, args.unmatched_report)
-        ):
+        if cache.inputs_unchanged(
+            args.tradeable_dir,
+            args.metadata_output,
+            cache_metadata,
+        ) and cache.outputs_exist(args.match_report, args.unmatched_report):
             LOGGER.info(
                 "Incremental resume: inputs unchanged and outputs exist - skipping processing"
             )
@@ -353,13 +350,15 @@ def prepare_tradeable_data(args: argparse.Namespace) -> None:
                 "To force full rebuild, use --force-reindex or omit --incremental"
             )
             return
-        
-        LOGGER.info("Incremental resume: inputs changed or outputs missing - running full pipeline")
+
+        LOGGER.info(
+            "Incremental resume: inputs changed or outputs missing - running full pipeline"
+        )
 
     stooq_index = _handle_stooq_index(args, index_workers)
     matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
     _generate_reports(matches, unmatched, args, data_dir, max_workers)
-    
+
     # Save cache metadata for next run if incremental mode enabled
     if args.incremental:
         new_cache_metadata = cache.create_cache_metadata(

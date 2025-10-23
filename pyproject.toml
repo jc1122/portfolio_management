@@ -55,8 +55,11 @@ ignore = ["E501"]
 [tool.ruff.lint.per-file-ignores]
 "scripts/prepare_tradeable_data.py" = ["C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "TRY300", "E402", "TCH003", "D407"]
 "scripts/run_backtest.py" = ["T201", "C901", "PLR0912", "PLR0915", "PLR0913", "TRY003", "DTZ", "PTH123", "FBT001", "ARG001", "D401", "BLE001", "PLC0415", "TRY300", "PERF401"]
+"scripts/classify_assets.py" = ["D100", "TCH003"]
 "create_test_fixtures.py" = ["D100", "PTH123", "PTH120"]
 "profile_pre_commit.py" = ["D100", "PTH123", "S603", "S607"]
+"benchmark_*.py" = ["T201", "NPY002", "FBT001", "FBT002", "PLC0415", "PLR2004", "BLE001", "D100"]
+"corrected_backtest.py" = ["T201", "D100", "INP001"]
 "tests/**/*.py" = [
   "D103",
   "S101",
@@ -80,6 +83,22 @@ ignore = ["E501"]
   "TCH003",
   "ISC001",
 ]
+"src/portfolio_management/assets/classification/classification.py" = [
+  "TRY003",
+  "COM812",
+  "PERF203",
+  "C901",
+  "PLR0911",
+  "PLR0912",
+  "PLR1714",
+  "PLR2004",
+  "SIM102",
+  "UP037",
+  "D102",
+  "RUF100",
+  "F821",
+  "PD901",
+]
 "src/portfolio_management/classification.py" = [
   "TRY003",
   "COM812",
@@ -94,6 +113,20 @@ ignore = ["E501"]
   "D102",
   "RUF100",
   "F821",
+  "PD901",
+]
+"src/portfolio_management/assets/universes/universes.py" = [
+  "TRY003",
+  "TRY401",
+  "TRY400",
+  "COM812",
+  "FBT001",
+  "FBT002",
+  "TCH003",
+  "PTH123",
+  "C901",
+  "PLR0912",
+  "PLR0915",
   "PD901",
 ]
 "src/portfolio_management/universes.py" = [

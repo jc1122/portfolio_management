@@ -19,9 +19,9 @@ The original implementation (`summarize_price_file`) loaded each complete Stooq 
 The new `_stream_stooq_file_for_diagnostics()` function:
 
 1. **Chunked reading:** Processes files in 10,000-row chunks using pandas' `chunksize` parameter
-2. **Column filtering:** Only loads 3 required columns (date, close, volume) instead of all 9
-3. **Incremental statistics:** Accumulates metrics across chunks without materialization
-4. **Memory efficiency:** Each chunk is processed and discarded before loading the next
+1. **Column filtering:** Only loads 3 required columns (date, close, volume) instead of all 9
+1. **Incremental statistics:** Accumulates metrics across chunks without materialization
+1. **Memory efficiency:** Each chunk is processed and discarded before loading the next
 
 ### Key Features
 
@@ -68,11 +68,13 @@ Based on benchmark results scaled to production workload:
 ### Memory Breakdown
 
 **Old approach per file:**
+
 - DataFrame storage: ~660 KB (all columns)
 - Processing overhead: ~50 KB
 - Total: ~710 KB per file
 
 **New approach per file:**
+
 - Chunk buffer: ~130 KB (3 columns, 10k rows)
 - Accumulator state: ~10 KB
 - Total: ~140 KB per file
@@ -81,6 +83,7 @@ Based on benchmark results scaled to production workload:
 ### I/O Efficiency
 
 **Column loading reduction:**
+
 - Old: 9 columns (ticker, per, date, time, open, high, low, close, volume, openint)
 - New: 3 columns (date, close, volume)
 - **Reduction: 67%** in data read from disk
@@ -90,10 +93,12 @@ Based on benchmark results scaled to production workload:
 ### Modified Functions
 
 1. **`summarize_price_file()`**
+
    - Now calls `_stream_stooq_file_for_diagnostics()` instead of loading full DataFrame
    - Simpler implementation (15 lines vs. 40+ lines of processing logic)
 
-2. **New: `_stream_stooq_file_for_diagnostics()`**
+1. **New: `_stream_stooq_file_for_diagnostics()`**
+
    - 170 lines of streaming logic
    - Handles chunk iteration, cross-chunk state tracking
    - Accumulates statistics: dates, row counts, quality metrics
@@ -109,6 +114,7 @@ Based on benchmark results scaled to production workload:
 ### New Tests Added
 
 13 comprehensive tests covering:
+
 - Missing files
 - Empty files
 - Clean data validation
@@ -149,16 +155,19 @@ Based on benchmark results scaled to production workload:
 ### Expected Benefits
 
 1. **Memory pressure relief:**
+
    - Parallel workers can process more files concurrently
    - Reduced risk of OOM errors
    - Better multi-process scalability
 
-2. **System stability:**
+1. **System stability:**
+
    - Lower peak memory = less swapping
    - More predictable resource usage
    - Better behavior under load
 
-3. **Disk I/O reduction:**
+1. **Disk I/O reduction:**
+
    - 67% fewer columns read from disk
    - Less cache pressure
    - Faster in I/O-bound scenarios
@@ -166,17 +175,17 @@ Based on benchmark results scaled to production workload:
 ### Trade-offs
 
 1. **Slightly slower per file:** +8.8% time overhead acceptable for memory gains
-2. **More complex code:** Streaming logic is longer but well-tested
-3. **Cross-chunk state:** Must track statistics across boundaries (handled correctly)
+1. **More complex code:** Streaming logic is longer but well-tested
+1. **Cross-chunk state:** Must track statistics across boundaries (handled correctly)
 
 ## Future Optimizations
 
 Potential areas for further improvement:
 
 1. **Adaptive chunk size:** Tune based on file size or available memory
-2. **Parallel chunk processing:** Process chunks concurrently (requires careful state management)
-3. **Custom CSV parser:** Skip pandas for even lower overhead
-4. **Memory-mapped files:** For very large files, use mmap for zero-copy access
+1. **Parallel chunk processing:** Process chunks concurrently (requires careful state management)
+1. **Custom CSV parser:** Skip pandas for even lower overhead
+1. **Memory-mapped files:** For very large files, use mmap for zero-copy access
 
 ## Conclusion
 

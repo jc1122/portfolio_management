@@ -12,7 +12,9 @@ import pandas as pd
 from portfolio_management.portfolio.statistics import RollingStatistics
 
 
-def generate_synthetic_returns(n_assets: int = 300, n_periods: int = 504) -> pd.DataFrame:
+def generate_synthetic_returns(
+    n_assets: int = 300, n_periods: int = 504
+) -> pd.DataFrame:
     """Generate synthetic returns for testing.
 
     Args:
@@ -217,7 +219,9 @@ def main():
     print("  2. Results are identical (within numerical precision)")
     print("  3. Larger universes benefit more from caching")
     print("  4. Cache automatically invalidates when data changes")
-    print("\nFor actual portfolio construction strategies (risk parity, mean-variance),")
+    print(
+        "\nFor actual portfolio construction strategies (risk parity, mean-variance),"
+    )
     print("the speedup will be even greater as these include additional optimization")
     print("steps beyond just computing statistics.")
 

@@ -144,10 +144,14 @@ def _load_assets(csv_path: Path) -> list[SelectedAsset]:
 
     assets_df = pd.read_csv(csv_path, keep_default_na=False)
     if "price_rows" in assets_df.columns:
-        assets_df["price_rows"] = pd.to_numeric(
-            assets_df["price_rows"],
-            errors="coerce",
-        ).fillna(0).astype(int)
+        assets_df["price_rows"] = (
+            pd.to_numeric(
+                assets_df["price_rows"],
+                errors="coerce",
+            )
+            .fillna(0)
+            .astype(int)
+        )
 
     records = assets_df.to_dict("records")
     return [SelectedAsset(**record) for record in records]

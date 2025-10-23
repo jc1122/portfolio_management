@@ -6,7 +6,7 @@
 
 Using improved data quality filtering (70% instead of 50%), the May 2016 spike artifact has been eliminated. Results are now clean and represent real portfolio performance without data anomalies.
 
----
+______________________________________________________________________
 
 ## Key Results at a Glance
 
@@ -23,7 +23,7 @@ Using improved data quality filtering (70% instead of 50%), the May 2016 spike a
 | **Max Drawdown** | -65.46% | -67.12% | +1.7% (less extreme) |
 | **Peak Value** | $19,709,278 | $22,862,854 | -$3.2M (real peak) |
 
----
+______________________________________________________________________
 
 ## Detailed Corrected Metrics
 
@@ -41,6 +41,7 @@ Value range:               $18,720,616
 ```
 
 **Interpretation:**
+
 - Portfolio grew 18.7× over 13.2 years
 - Peak occurs at end of period (no artificial spike)
 - Consistent growth trajectory without anomalies
@@ -57,6 +58,7 @@ Value range:               $18,720,616
 | **Max Drawdown** | -65.46% | Worst peak-to-trough: ~2/3 portfolio loss at worst |
 
 **Key Insights:**
+
 - **Return is Strong:** 19.13% annualized beats stock market (~10%)
 - **Volatility is High:** 155% indicates significant small-cap exposure
 - **Risk-Adjustment:** Sharpe of 0.12 shows volatility not well-compensated
@@ -75,6 +77,7 @@ Value range:               $18,720,616
 | **Rebalance Events** | 54 | Quarterly triggers (13.2 years ÷ 4 ≈ 53) |
 
 **Rebalancing Value:**
+
 - Costs: $357K (minimal relative to gains)
 - Recovery: Gains exceed costs by 52×
 - Benefit: Buy-low/sell-high discipline working
@@ -90,13 +93,14 @@ Value range:               $18,720,616
 | **Diversification** | Maximum (no concentration) |
 | **Strategy** | EQUAL-WEIGHT (1/N) |
 
----
+______________________________________________________________________
 
 ## Data Quality Improvement
 
 ### What Changed
 
 **Previous Analysis (Buggy - 50% threshold):**
+
 - 4,962 trading periods
 - Included 666 sparse data days
 - Allowed up to 40% NaN on single day
@@ -104,6 +108,7 @@ Value range:               $18,720,616
 - Final value: $22.9M (inflated by spike)
 
 **Corrected Analysis (70% threshold):**
+
 - 4,296 trading periods
 - Removed 666 sparse data days
 - Requires 70% of assets to have real prices
@@ -123,12 +128,13 @@ Data Quality Improvement:
 ```
 
 **Why This Matters:**
+
 - Eliminates forward-fill artifacts
 - Prevents rebalancing on incomplete data
 - Ensures all metrics reflect true performance
 - Data coverage: 95.8% (still excellent)
 
----
+______________________________________________________________________
 
 ## Performance Analysis by Period
 
@@ -147,6 +153,7 @@ Max Drawdown:        -65.46%
 ### Market Conditions Captured
 
 The corrected backtest covers (after 2012 start):
+
 - ✅ **2013-2014:** Emerging markets recovery
 - ✅ **2015:** China devaluation, volatility spike
 - ✅ **2016-2017:** Post-Brexit, Trump election recovery
@@ -158,7 +165,7 @@ The corrected backtest covers (after 2012 start):
 - ✅ **2023:** Rate peak, recovery begins
 - ✅ **2024-2025:** Current period (Q3 2025 = strong)
 
----
+______________________________________________________________________
 
 ## Comparison: Original vs Corrected
 
@@ -177,9 +184,10 @@ $1.0M ───→ Smooth growth ───→ $19.7M (real peak)
 ### Why the Corrected Value is Lower
 
 The "missing" $3.2M comes from:
+
 1. **Spike removal:** -$11.1M
-2. **Shorter period:** Lost 2.5 years of early growth (+$8M higher)
-3. **Net effect:** $19.7M vs $22.9M
+1. **Shorter period:** Lost 2.5 years of early growth (+$8M higher)
+1. **Net effect:** $19.7M vs $22.9M
 
 If we extended corrected analysis back to 2010, likely reaching $22-25M again, but with clean metrics.
 
@@ -191,7 +199,7 @@ If we extended corrected analysis back to 2010, likely reaching $22-25M again, b
 ✅ **Reproducible:** Same 70% threshold applied consistently
 ✅ **Professional:** Production-quality analysis
 
----
+______________________________________________________________________
 
 ## Risk Profile Summary
 
@@ -202,6 +210,7 @@ If we extended corrected analysis back to 2010, likely reaching $22-25M again, b
 - **Annual volatility:** 155%
 
 This is **very high** - typical for portfolios with:
+
 - 2,694 small/mid-cap positions
 - Significant emerging market exposure
 - No hedging or risk management
@@ -218,6 +227,7 @@ Number of drawdowns >30%: Estimated 3-5
 ```
 
 **Interpretation:**
+
 - Expect losing years with this portfolio
 - Not suitable for risk-averse investors
 - Requires 10+ year holding period
@@ -226,23 +236,26 @@ Number of drawdowns >30%: Estimated 3-5
 ### Return/Risk Ratio
 
 **Sharpe Ratio: 0.12**
+
 - For every 1% additional risk, earning 0.12% excess return
 - Below average (typical stock fund ~0.4-0.6)
 - Volatility not adequately compensated
 - May indicate too many small-cap/illiquid holdings
 
 **Sortino Ratio: 1.01**
+
 - Better when focusing on downside risk
 - More favorable than Sharpe (1.01 vs 0.12)
 - Still indicates downside not fully rewarded
 
----
+______________________________________________________________________
 
 ## Investment Profile
 
 ### Who This Portfolio is For
 
 ✅ **SUITABLE:**
+
 - Young investors (25-35 years old)
 - Long holding period (10+ years)
 - High risk tolerance
@@ -251,9 +264,10 @@ Number of drawdowns >30%: Estimated 3-5
 - Adequate emergency fund outside portfolio
 
 ❌ **NOT SUITABLE:**
+
 - Retirees needing income
 - Conservative investors
-- Short-term traders (< 5 years)
+- Short-term traders (\< 5 years)
 - Risk-averse temperament
 - Lack emergency savings
 - Undiversified (all-in on one portfolio)
@@ -261,19 +275,19 @@ Number of drawdowns >30%: Estimated 3-5
 ### Use Cases
 
 1. **Aggressive Growth Portfolio:** Core holding for young professionals
-2. **Diversified Holding:** Only 20-30% of total wealth
-3. **Experimental Strategy:** Test alternative allocation methods
-4. **Research Baseline:** Compare against other strategies
+1. **Diversified Holding:** Only 20-30% of total wealth
+1. **Experimental Strategy:** Test alternative allocation methods
+1. **Research Baseline:** Compare against other strategies
 
 ### Alternative Strategies to Consider
 
 1. **Market-Cap Weighted:** Reduce small-cap concentration
-2. **Risk Parity:** Balance small-cap with bonds
-3. **Trend-Following:** Add momentum screens
-4. **Factor-Based:** Tilt toward quality factors
-5. **Hedged Version:** Add protective puts for -65% protection
+1. **Risk Parity:** Balance small-cap with bonds
+1. **Trend-Following:** Add momentum screens
+1. **Factor-Based:** Tilt toward quality factors
+1. **Hedged Version:** Add protective puts for -65% protection
 
----
+______________________________________________________________________
 
 ## Conclusion
 
@@ -282,6 +296,7 @@ Number of drawdowns >30%: Estimated 3-5
 The corrected portfolio analysis eliminates the May 2016 data artifact by requiring 70% asset coverage instead of 50%. This produces:
 
 **Clean Results:**
+
 - $19.7M final value (13.2 years)
 - 1,870.93% total return
 - 19.13% annualized return
@@ -298,6 +313,7 @@ The corrected portfolio analysis eliminates the May 2016 data artifact by requir
 ✅ Defensible methodology
 
 **Performance Assessment:**
+
 - **Strong Returns:** 19.13% annualized beats market
 - **High Volatility:** 155% indicates aggressive small-cap strategy
 - **Adequate Risk-Adjustment:** Sharpe 0.12 reflects tradeoff
@@ -305,4 +321,3 @@ The corrected portfolio analysis eliminates the May 2016 data artifact by requir
 
 **Recommendation:**
 This equal-weight portfolio of 2,694 assets is a robust, diversified strategy suitable for aggressive growth investors with 10+ year time horizons and high risk tolerance. The corrected metrics confirm real market performance without data anomalies.
-

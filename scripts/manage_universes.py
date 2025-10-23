@@ -22,10 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.assets.universes import (
-    UniverseConfigLoader,
-    UniverseManager,
-)
+from portfolio_management.assets.universes import UniverseConfigLoader, UniverseManager
 from portfolio_management.core.exceptions import PortfolioManagementError
 
 
@@ -111,7 +108,9 @@ def main() -> None:  # noqa: C901, PLR0912
 
             elif args.command == "show":
                 if args.name not in universes:
-                    logging.error("Universe '%s' not found in configuration.", args.name)
+                    logging.error(
+                        "Universe '%s' not found in configuration.", args.name
+                    )
                     sys.exit(1)
                 definition = universes[args.name]
                 print(f"--- Universe: {args.name} ---")  # noqa: T201

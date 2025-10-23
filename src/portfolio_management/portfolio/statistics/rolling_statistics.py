@@ -8,6 +8,7 @@ when most of the data window overlaps with the previous computation.
 from __future__ import annotations
 
 import hashlib
+
 import numpy as np
 import pandas as pd
 
@@ -44,7 +45,7 @@ class RollingStatistics:
         """
         self.window_size = window_size
         self.annualization_factor = annualization_factor
-        
+
         # Cache state
         self._cached_data: pd.DataFrame | None = None
         self._cached_cov: pd.DataFrame | None = None
@@ -139,7 +140,7 @@ class RollingStatistics:
         self._count = 0
 
     def _retrieve_statistics(
-        self, returns: pd.DataFrame
+        self, returns: pd.DataFrame,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Return statistics from cache or recompute them."""
 
@@ -169,9 +170,7 @@ class RollingStatistics:
         key_string = "|".join(key_components)
         return hashlib.md5(key_string.encode()).hexdigest()
 
-    def _can_incrementally_update(
-        self, cache_key: str, returns: pd.DataFrame
-    ) -> bool:
+    def _can_incrementally_update(self, cache_key: str, returns: pd.DataFrame) -> bool:
         """Determine whether cached state can service the new data."""
 
         if (
@@ -214,7 +213,7 @@ class RollingStatistics:
         )
 
     def _recompute_statistics(
-        self, returns: pd.DataFrame, cache_key: str
+        self, returns: pd.DataFrame, cache_key: str,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Recompute statistics from scratch and refresh the cache."""
 
@@ -271,7 +270,7 @@ class RollingStatistics:
         return mean_returns, cov_matrix
 
     def _update_incrementally(
-        self, returns: pd.DataFrame, cache_key: str
+        self, returns: pd.DataFrame, cache_key: str,
     ) -> tuple[pd.Series, pd.DataFrame]:
         """Update cached statistics for a partially overlapping window."""
 

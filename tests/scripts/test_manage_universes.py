@@ -94,9 +94,7 @@ class TestLazyLoading:
         """Verify that the load command does load the matches CSV."""
         _ = mock_args_load  # Used via monkeypatch
         with patch("scripts.manage_universes.pd.read_csv") as mock_read_csv:
-            with patch(
-                "scripts.manage_universes.UniverseManager"
-            ) as mock_manager:
+            with patch("scripts.manage_universes.UniverseManager") as mock_manager:
                 # Mock the manager to return an empty universe
                 mock_instance = MagicMock()
                 mock_instance.load_universe.return_value = None
@@ -122,7 +120,8 @@ class TestBehaviorPreservation:
                 "config/universes.yaml",
                 "list",
             ],
-            check=False, cwd=Path.cwd(),
+            check=False,
+            cwd=Path.cwd(),
             capture_output=True,
             text=True,
             timeout=10,
@@ -145,7 +144,8 @@ class TestBehaviorPreservation:
                 "show",
                 "core_global",
             ],
-            check=False, cwd=Path.cwd(),
+            check=False,
+            cwd=Path.cwd(),
             capture_output=True,
             text=True,
             timeout=10,
@@ -168,7 +168,8 @@ class TestBehaviorPreservation:
                 "show",
                 "nonexistent_universe",
             ],
-            check=False, cwd=Path.cwd(),
+            check=False,
+            cwd=Path.cwd(),
             capture_output=True,
             text=True,
             timeout=10,

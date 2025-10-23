@@ -65,7 +65,9 @@ def constraints():
 class TestRiskParityWithCache:
     """Tests for RiskParityStrategy with statistics caching."""
 
-    def test_risk_parity_without_cache(self, risk_parity_available, sample_returns, constraints):
+    def test_risk_parity_without_cache(
+        self, risk_parity_available, sample_returns, constraints
+    ):
         """Test risk parity strategy without caching (baseline)."""
         available, RiskParityStrategy = risk_parity_available
         if not available:
@@ -78,7 +80,9 @@ class TestRiskParityWithCache:
         assert len(portfolio.weights) == 4
         assert np.isclose(portfolio.weights.sum(), 1.0)
 
-    def test_risk_parity_with_cache(self, risk_parity_available, sample_returns, constraints):
+    def test_risk_parity_with_cache(
+        self, risk_parity_available, sample_returns, constraints
+    ):
         """Test risk parity strategy with caching enabled."""
         available, RiskParityStrategy = risk_parity_available
         if not available:
@@ -101,7 +105,9 @@ class TestRiskParityWithCache:
         # Results should be identical
         assert np.allclose(portfolio1.weights.values, portfolio2.weights.values)
 
-    def test_risk_parity_cache_consistency(self, risk_parity_available, sample_returns, constraints):
+    def test_risk_parity_cache_consistency(
+        self, risk_parity_available, sample_returns, constraints
+    ):
         """Test that cached and non-cached results are identical."""
         available, RiskParityStrategy = risk_parity_available
         if not available:
@@ -113,8 +119,12 @@ class TestRiskParityWithCache:
 
         # Strategy with cache
         cache = RollingStatistics(window_size=252)
-        strategy_with_cache = RiskParityStrategy(min_periods=100, statistics_cache=cache)
-        portfolio_with_cache = strategy_with_cache.construct(sample_returns, constraints)
+        strategy_with_cache = RiskParityStrategy(
+            min_periods=100, statistics_cache=cache
+        )
+        portfolio_with_cache = strategy_with_cache.construct(
+            sample_returns, constraints
+        )
 
         # Results should be identical (within numerical tolerance)
         assert np.allclose(
@@ -128,7 +138,9 @@ class TestRiskParityWithCache:
 class TestMeanVarianceWithCache:
     """Tests for MeanVarianceStrategy with statistics caching."""
 
-    def test_mean_variance_without_cache(self, mean_variance_available, sample_returns, constraints):
+    def test_mean_variance_without_cache(
+        self, mean_variance_available, sample_returns, constraints
+    ):
         """Test mean variance strategy without caching (baseline)."""
         available, MeanVarianceStrategy = mean_variance_available
         if not available:
@@ -141,7 +153,9 @@ class TestMeanVarianceWithCache:
         assert len(portfolio.weights) > 0
         assert np.isclose(portfolio.weights.sum(), 1.0)
 
-    def test_mean_variance_with_cache(self, mean_variance_available, sample_returns, constraints):
+    def test_mean_variance_with_cache(
+        self, mean_variance_available, sample_returns, constraints
+    ):
         """Test mean variance strategy with caching enabled."""
         available, MeanVarianceStrategy = mean_variance_available
         if not available:
@@ -165,7 +179,9 @@ class TestMeanVarianceWithCache:
         # Results should be identical
         assert np.allclose(portfolio1.weights.values, portfolio2.weights.values)
 
-    def test_mean_variance_cache_consistency(self, mean_variance_available, sample_returns, constraints):
+    def test_mean_variance_cache_consistency(
+        self, mean_variance_available, sample_returns, constraints
+    ):
         """Test that cached and non-cached results are identical."""
         available, MeanVarianceStrategy = mean_variance_available
         if not available:
@@ -177,8 +193,12 @@ class TestMeanVarianceWithCache:
 
         # Strategy with cache
         cache = RollingStatistics(window_size=252)
-        strategy_with_cache = MeanVarianceStrategy(min_periods=100, statistics_cache=cache)
-        portfolio_with_cache = strategy_with_cache.construct(sample_returns, constraints)
+        strategy_with_cache = MeanVarianceStrategy(
+            min_periods=100, statistics_cache=cache
+        )
+        portfolio_with_cache = strategy_with_cache.construct(
+            sample_returns, constraints
+        )
 
         # Results should be identical (within numerical tolerance)
         # Note: Mean-variance optimization can have slight numerical differences
@@ -194,7 +214,9 @@ class TestMeanVarianceWithCache:
 class TestCacheInvalidation:
     """Tests for cache invalidation scenarios."""
 
-    def test_cache_invalidation_on_asset_change(self, risk_parity_available, sample_returns, constraints):
+    def test_cache_invalidation_on_asset_change(
+        self, risk_parity_available, sample_returns, constraints
+    ):
         """Test that cache is invalidated when asset set changes."""
         available, RiskParityStrategy = risk_parity_available
         if not available:
@@ -216,7 +238,9 @@ class TestCacheInvalidation:
         assert cache_key1 != cache_key2
         assert len(portfolio2.weights) == 3
 
-    def test_cache_invalidation_on_date_change(self, risk_parity_available, sample_returns, constraints):
+    def test_cache_invalidation_on_date_change(
+        self, risk_parity_available, sample_returns, constraints
+    ):
         """Test that cache is invalidated when date range changes."""
         available, RiskParityStrategy = risk_parity_available
         if not available:

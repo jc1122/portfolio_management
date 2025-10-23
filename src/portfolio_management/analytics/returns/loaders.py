@@ -216,7 +216,8 @@ class PriceLoader:
             }
 
     def _submit_load_tasks(
-        self, paths: Iterable[Path],
+        self,
+        paths: Iterable[Path],
     ) -> list[tuple[Path, pd.Series | None]]:
         paths = list(paths)
         if not paths:

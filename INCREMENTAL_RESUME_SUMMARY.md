@@ -11,14 +11,15 @@ The data preparation script was always rebuilding everything (Stooq index, instr
 ## Solution Implemented
 
 A hash-based caching system that:
+
 1. Tracks input file state via SHA256 hashes
-2. Compares current state to cached metadata
-3. Skips processing when inputs unchanged and outputs exist
-4. Automatically detects changes and rebuilds when needed
+1. Compares current state to cached metadata
+1. Skips processing when inputs unchanged and outputs exist
+1. Automatically detects changes and rebuilds when needed
 
 ## Performance Results
 
-- **60x speedup** for unchanged inputs (3-5 min → < 5 sec)
+- **60x speedup** for unchanged inputs (3-5 min → \< 5 sec)
 - No performance degradation for changed inputs
 - Minimal overhead from hash computation
 
@@ -59,6 +60,7 @@ Stored in: `data/metadata/.prepare_cache.json` (configurable)
 **Total: 21 tests, all passing**
 
 ### Unit Tests (18 tests)
+
 - `tests/data/test_cache.py`
 - Hash computation (empty dirs, files, modifications)
 - Determinism and edge cases
@@ -67,6 +69,7 @@ Stored in: `data/metadata/.prepare_cache.json` (configurable)
 - Output existence checks
 
 ### Integration Tests (3 tests)
+
 - `tests/scripts/test_prepare_tradeable_incremental.py`
 - Skipping when unchanged
 - Rebuilding when changed
@@ -83,17 +86,20 @@ Stored in: `data/metadata/.prepare_cache.json` (configurable)
 ## Documentation
 
 1. **`docs/incremental_resume.md`** (200+ lines)
+
    - Usage guide
    - Performance impact
    - Change detection details
    - Troubleshooting
    - Future enhancements
 
-2. **Updated `README.md`**
+1. **Updated `README.md`**
+
    - Feature highlight in capabilities
    - Quick start in data preparation workflow
 
-3. **Enhanced script docstring**
+1. **Enhanced script docstring**
+
    - Usage examples
    - Incremental resume explanation
 
@@ -126,6 +132,7 @@ python scripts/prepare_tradeable_data.py --incremental
 ### Logging Output
 
 **When skipping:**
+
 ```
 INFO: Input files unchanged since last run - incremental resume possible
 INFO: Incremental resume: inputs unchanged and outputs exist - skipping processing
@@ -135,6 +142,7 @@ INFO: To force full rebuild, use --force-reindex or omit --incremental
 ```
 
 **When rebuilding:**
+
 ```
 DEBUG: Tradeable directory changed (hash a1b2c3d4 -> e5f6g7h8)
 INFO: Incremental resume: inputs changed or outputs missing - running full pipeline
@@ -147,18 +155,22 @@ DEBUG: Saved cache metadata for future incremental resumes
 From original issue:
 
 - ✅ **Fast execution**: Back-to-back runs with identical inputs complete rapidly
+
   - Target: Seconds instead of minutes
-  - Achieved: < 5 seconds vs 3-5 minutes (60x faster)
+  - Achieved: \< 5 seconds vs 3-5 minutes (60x faster)
 
 - ✅ **Clear logging**: Script logs when cached artifacts reused
+
   - Implemented: Clear INFO-level messages
   - Includes file paths and rebuild instructions
 
 - ✅ **Automatic detection**: When inputs change, recomputes and updates cache
+
   - Implemented: SHA256 hash comparison
   - Detects: New files, deletions, modifications
 
 - ✅ **Test coverage**: Automated tests cover both scenarios
+
   - Implemented: 21 tests (18 unit + 3 integration)
   - Coverage: All code paths tested
 
@@ -167,16 +179,19 @@ From original issue:
 ### What Triggers Rebuild?
 
 1. **Tradeable CSV Changes**
+
    - New CSV file added
    - CSV file deleted
    - CSV file modified (mtime changes)
    - CSV file renamed
 
-2. **Stooq Index Changes**
+1. **Stooq Index Changes**
+
    - Index file content changes
    - Index regenerated via --force-reindex
 
-3. **Output Absence**
+1. **Output Absence**
+
    - Match report missing
    - Unmatched report missing
 
@@ -191,18 +206,22 @@ From original issue:
 ## Known Limitations
 
 1. **Directory-level granularity**
+
    - Can't detect which specific CSV changed
    - Always rebuilds entire dataset when any CSV changes
 
-2. **No partial exports**
+1. **No partial exports**
+
    - Even single-instrument change triggers full rebuild
    - Future enhancement: symbol-level caching
 
-3. **Manual Stooq invalidation required**
+1. **Manual Stooq invalidation required**
+
    - Raw Stooq changes need --force-reindex
    - Cache only tracks built index, not raw files
 
-4. **Single-machine cache**
+1. **Single-machine cache**
+
    - Cache metadata is local
    - Distributed builds need sync mechanism
 
@@ -211,21 +230,22 @@ From original issue:
 Documented in `docs/incremental_resume.md`:
 
 1. Symbol-level caching for partial rebuilds
-2. Stooq directory tracking for auto-invalidation
-3. Cache statistics and metrics
-4. Cache versioning for algorithm changes
-5. Distributed cache support
+1. Stooq directory tracking for auto-invalidation
+1. Cache statistics and metrics
+1. Cache versioning for algorithm changes
+1. Distributed cache support
 
 ## Git Commit History
 
 1. `440383a` - Fix .gitignore and create missing data modules
-2. `1919f87` - Implement incremental resume with caching
-3. `6e3e445` - Add documentation and integration tests
-4. `9e0c71e` - Fix code style issues (ruff compliance)
+1. `1919f87` - Implement incremental resume with caching
+1. `6e3e445` - Add documentation and integration tests
+1. `9e0c71e` - Fix code style issues (ruff compliance)
 
 ## Files Modified/Created
 
 **New Files (11):**
+
 - `src/portfolio_management/data/cache.py`
 - `src/portfolio_management/data/models.py`
 - `src/portfolio_management/data/ingestion.py`
@@ -239,6 +259,7 @@ Documented in `docs/incremental_resume.md`:
 - `docs/incremental_resume.md`
 
 **Modified Files (4):**
+
 - `scripts/prepare_tradeable_data.py`
 - `README.md`
 - `.gitignore`

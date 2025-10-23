@@ -201,7 +201,10 @@ def _stream_stooq_file_for_diagnostics(  # noqa: C901, PLR0912, PLR0915
             # Check for non-monotonic dates (between chunks and within chunk)
             if previous_date is not None and chunk_first_date < previous_date:
                 has_non_monotonic_dates = True
-            if not has_non_monotonic_dates and not valid_dates_in_chunk.is_monotonic_increasing:
+            if (
+                not has_non_monotonic_dates
+                and not valid_dates_in_chunk.is_monotonic_increasing
+            ):
                 has_non_monotonic_dates = True
 
             previous_date = chunk_last_date

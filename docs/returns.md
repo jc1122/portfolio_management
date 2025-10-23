@@ -103,7 +103,7 @@ Adjust the `--cache-size` parameter based on your workflow:
 - **Wide universe workflows** (1000+ assets loaded once): Use default or increase to match asset count for optimal reuse
 - **Long-running workflows** (multiple rounds of loading): Use default to balance memory and reuse
 - **Memory-constrained environments**: Reduce cache size (e.g., `--cache-size 100`) or disable entirely (`--cache-size 0`)
-- **Narrow universes** (< 100 assets with frequent reloads): Use smaller cache (e.g., `--cache-size 100`)
+- **Narrow universes** (\< 100 assets with frequent reloads): Use smaller cache (e.g., `--cache-size 100`)
 
 ### Memory Impact
 

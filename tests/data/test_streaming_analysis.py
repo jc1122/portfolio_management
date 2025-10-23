@@ -169,7 +169,9 @@ def test_stream_stooq_file_duplicate_dates_across_chunks():
         # Make the first row of the second chunk share a date with the last row of the first chunk
         duplicate_date = start_date + datetime.timedelta(days=9999)
         duplicate_date_str = duplicate_date.strftime("%Y%m%d")
-        lines[10000] = f"TEST,D,{duplicate_date_str},000000,101.0,106.0,96.0,103.0,11000,0"
+        lines[10000] = (
+            f"TEST,D,{duplicate_date_str},000000,101.0,106.0,96.0,103.0,11000,0"
+        )
 
         create_test_file(test_file, "\n".join(lines))
 
@@ -197,17 +199,18 @@ def test_stream_stooq_file_large_file():
     """Test streaming with a large file (multiple chunks)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         test_file = pathlib.Path(tmpdir) / "large.txt"
-        
+
         # Create a file with >10000 rows (exceeds chunk size)
         # Use proper date format
         lines = []
         import datetime
+
         start_date = datetime.date(2000, 1, 1)
         for i in range(15000):
             current_date = start_date + datetime.timedelta(days=i)
             date_str = current_date.strftime("%Y%m%d")
             lines.append(f"TEST,D,{date_str},000000,100.0,105.0,95.0,102.0,10000,0")
-        
+
         create_test_file(test_file, "\n".join(lines))
 
         diagnostics, status = _stream_stooq_file_for_diagnostics(test_file)

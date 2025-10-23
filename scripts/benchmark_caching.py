@@ -278,11 +278,11 @@ def main():
     print("\n" + "=" * 80)
     print("Summary")
     print("=" * 80)
-    print(f"\nBenchmark configuration:")
-    print(f"  Universe size: 300 assets")
-    print(f"  Window size: 252 periods")
+    print("\nBenchmark configuration:")
+    print("  Universe size: 300 assets")
+    print("  Window size: 252 periods")
     print(f"  Number of rebalances: {n_rebalances}")
-    print(f"  Overlap between rebalances: ~96% (21/252 periods shift)")
+    print("  Overlap between rebalances: ~96% (21/252 periods shift)")
     print(
         "\nNote: The performance improvement is most significant for strategies",
     )

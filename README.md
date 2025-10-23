@@ -152,7 +152,7 @@ python scripts/prepare_tradeable_data.py \
 The `--incremental` flag enables smart caching that dramatically speeds up repeated runs:
 
 - **First run**: Processes everything normally (≈3-5 minutes for 500 instruments, 70k+ files)
-- **Subsequent runs**: If inputs haven't changed, completes in **< 5 seconds** by reusing cached outputs
+- **Subsequent runs**: If inputs haven't changed, completes in **\< 5 seconds** by reusing cached outputs
 - **Automatic invalidation**: Detects when tradeable CSVs or Stooq index change and rebuilds automatically
 
 To force a full rebuild, use `--force-reindex` or omit `--incremental`.
