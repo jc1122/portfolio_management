@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Import fast IO utilities
-from portfolio_management.data.io.fast_io import read_csv_fast, Backend
+from portfolio_management.data.io.fast_io import Backend, read_csv_fast, select_backend
 
 
 class PriceLoader:
@@ -59,7 +59,9 @@ class PriceLoader:
         if not path.exists():
             raise FileNotFoundError(path)
 
-        if path.suffix.lower() == ".csv":
+        selected_backend = select_backend(self.io_backend)
+
+        if path.suffix.lower() == ".csv" and selected_backend == "pandas":
             df = read_csv_fast(
                 path,
                 backend=self.io_backend,
@@ -69,31 +71,11 @@ class PriceLoader:
                 index_col="date",
             )
         else:
-            raw = read_csv_fast(path, backend=self.io_backend, header=0)
-            if "<DATE>" in raw.columns and "<CLOSE>" in raw.columns:
-                df = (
-                    raw[["<DATE>", "<CLOSE>"]]
-                    .copy()
-                    .rename(
-                        columns={"<DATE>": "date", "<CLOSE>": "close"},
-                    )
-                )
-            elif "DATE" in raw.columns and "CLOSE" in raw.columns:
-                df = (
-                    raw[["DATE", "CLOSE"]]
-                    .copy()
-                    .rename(
-                        columns={"DATE": "date", "CLOSE": "close"},
-                    )
-                )
-            elif "date" in raw.columns and "close" in raw.columns:
-                df = raw[["date", "close"]].copy()
-            else:
-                raise ValueError(
-                    f"Unsupported price file structure for {path}: columns={list(raw.columns)}",
-                )
-            df["date"] = pd.to_datetime(df["date"], errors="coerce")
-            df = df.set_index("date")
+            raw_kwargs = {}
+            if selected_backend == "pandas":
+                raw_kwargs["header"] = 0
+            raw = read_csv_fast(path, backend=self.io_backend, **raw_kwargs)
+            df = self._standardize_price_dataframe(raw, path)
 
         df = df.sort_index()
 
@@ -180,6 +162,29 @@ class PriceLoader:
 
         df = pd.DataFrame(all_prices).sort_index()
         logger.info("Loaded price matrix with shape %s", df.shape)
+        return df
+
+    @staticmethod
+    def _standardize_price_dataframe(raw: pd.DataFrame, path: Path) -> pd.DataFrame:
+        """Normalize various price file column conventions to a standard format."""
+
+        if "<DATE>" in raw.columns and "<CLOSE>" in raw.columns:
+            df = raw[["<DATE>", "<CLOSE>"]].copy().rename(
+                columns={"<DATE>": "date", "<CLOSE>": "close"}
+            )
+        elif "DATE" in raw.columns and "CLOSE" in raw.columns:
+            df = raw[["DATE", "CLOSE"]].copy().rename(
+                columns={"DATE": "date", "CLOSE": "close"}
+            )
+        elif "date" in raw.columns and "close" in raw.columns:
+            df = raw[["date", "close"]].copy()
+        else:
+            raise ValueError(
+                f"Unsupported price file structure for {path}: columns={list(raw.columns)}"
+            )
+
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df = df.set_index("date")
         return df
 
     def _load_price_with_cache(self, path: Path) -> pd.Series:
