@@ -42,6 +42,7 @@ class UniverseDefinition:
     classification_requirements: dict[str, list[str]] = field(default_factory=dict)
     return_config: ReturnConfig = field(default_factory=ReturnConfig)
     constraints: dict[str, int | float] = field(default_factory=dict)
+    preselection: dict[str, Any] | None = None
 
     def validate(self) -> None:
         """Validate the universe definition."""
@@ -87,6 +88,7 @@ class UniverseConfigLoader:
                 ),
                 return_config=return_config,
                 constraints=u_def.get("constraints", {}),
+                preselection=u_def.get("preselection"),
             )
 
             try:

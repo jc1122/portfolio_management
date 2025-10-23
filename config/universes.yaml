@@ -81,6 +81,15 @@ universes:
     constraints:
       min_assets: 20
       max_assets: 35
+    preselection:
+      # Optional: Pre-filter assets using momentum and low-volatility factors
+      method: "combined"  # Options: momentum, low_vol, combined
+      top_k: 25  # Select top 25 assets before portfolio optimization
+      lookback: 252  # 1 year lookback for factor calculation
+      skip: 1  # Skip most recent day (common in momentum strategies)
+      momentum_weight: 0.5  # Weight for momentum factor (when using combined)
+      low_vol_weight: 0.5  # Weight for low-volatility factor (when using combined)
+      min_periods: 60  # Minimum data required for valid calculation
 
   defensive:
     description: "Defensive sleeve (income, precious metals, property)"

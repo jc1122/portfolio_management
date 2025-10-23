@@ -44,6 +44,7 @@ class BacktestEngine:
         prices: pd.DataFrame,
         returns: pd.DataFrame,
         classifications: dict[str, str] | None = None,
+        preselection=None,
     ) -> None:
         """Initialize the backtesting engine.
 
@@ -53,6 +54,7 @@ class BacktestEngine:
             prices: Historical prices (index=dates, columns=tickers).
             returns: Historical returns (index=dates, columns=tickers).
             classifications: Optional asset class mappings for constraints.
+            preselection: Optional Preselection instance for asset filtering.
 
         Raises:
             InsufficientHistoryError: If data doesn't cover backtest period.
@@ -63,6 +65,7 @@ class BacktestEngine:
         self.prices = prices.copy()
         self.returns = returns.copy()
         self.classifications = classifications or {}
+        self.preselection = preselection
 
         # Validate date coverage
         data_start = self.prices.index.min()
@@ -242,6 +245,19 @@ class BacktestEngine:
                 # Not enough history yet, skip rebalance
                 return
 
+            # Apply preselection if configured
+            selected_returns = historical_returns
+            if self.preselection is not None:
+                try:
+                    selected_assets = self.preselection.select_assets(
+                        returns=historical_returns, rebalance_date=date
+                    )
+                    # Filter to selected assets only
+                    selected_returns = historical_returns[selected_assets]
+                except Exception:
+                    # If preselection fails, use all assets
+                    selected_returns = historical_returns
+
             constraints = PortfolioConstraints(
                 max_weight=0.25,
                 min_weight=0.0,
@@ -253,10 +269,15 @@ class BacktestEngine:
             asset_classes = None
             if self.classifications:
                 asset_classes = pd.Series(self.classifications)
+                # Filter to selected assets
+                if self.preselection is not None:
+                    asset_classes = asset_classes[
+                        asset_classes.index.isin(selected_returns.columns)
+                    ]
 
-            # Construct target portfolio
+            # Construct target portfolio (on selected subset)
             portfolio = self.strategy.construct(
-                returns=historical_returns,
+                returns=selected_returns,
                 constraints=constraints,
                 asset_classes=asset_classes,
             )

@@ -6,6 +6,12 @@ This package provides portfolio construction strategies and utilities.
 from .builder import PortfolioConstructor
 from .constraints import PortfolioConstraints
 from .models import Portfolio, StrategyType
+from .preselection import (
+    Preselection,
+    PreselectionConfig,
+    PreselectionMethod,
+    create_preselection_from_dict,
+)
 from .rebalancing import RebalanceConfig
 from .statistics import RollingStatistics
 from .strategies import (
@@ -21,6 +27,11 @@ __all__ = [
     "StrategyType",
     # Constraints
     "PortfolioConstraints",
+    # Preselection
+    "Preselection",
+    "PreselectionConfig",
+    "PreselectionMethod",
+    "create_preselection_from_dict",
     # Rebalancing
     "RebalanceConfig",
     # Statistics

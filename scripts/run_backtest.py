@@ -212,6 +212,42 @@ def create_parser() -> argparse.ArgumentParser:
         help="Risk aversion parameter for mean-variance (higher = more conservative). Default: 1.0",
     )
 
+    # Preselection options
+    parser.add_argument(
+        "--preselect-method",
+        choices=["momentum", "low_vol", "combined"],
+        help="Preselection method (momentum, low_vol, or combined)",
+    )
+    parser.add_argument(
+        "--preselect-top-k",
+        type=int,
+        help="Number of assets to select via preselection (0 or None to disable)",
+    )
+    parser.add_argument(
+        "--preselect-lookback",
+        type=int,
+        default=252,
+        help="Lookback period for preselection factors (days). Default: 252",
+    )
+    parser.add_argument(
+        "--preselect-skip",
+        type=int,
+        default=1,
+        help="Skip most recent N days for momentum calculation. Default: 1",
+    )
+    parser.add_argument(
+        "--preselect-momentum-weight",
+        type=float,
+        default=0.5,
+        help="Weight for momentum in combined preselection (0-1). Default: 0.5",
+    )
+    parser.add_argument(
+        "--preselect-low-vol-weight",
+        type=float,
+        default=0.5,
+        help="Weight for low-volatility in combined preselection (0-1). Default: 0.5",
+    )
+
     # Output options
     parser.add_argument(
         "--output-dir",
@@ -557,6 +593,30 @@ def main() -> int:
             lookback_periods=args.lookback_periods,
         )
 
+        # Create preselection if configured
+        preselection = None
+        if args.preselect_method and args.preselect_top_k:
+            from portfolio_management.portfolio import (
+                Preselection,
+                PreselectionConfig,
+                PreselectionMethod,
+            )
+
+            preselection_config = PreselectionConfig(
+                method=PreselectionMethod(args.preselect_method),
+                top_k=args.preselect_top_k,
+                lookback=args.preselect_lookback,
+                skip=args.preselect_skip,
+                momentum_weight=args.preselect_momentum_weight,
+                low_vol_weight=args.preselect_low_vol_weight,
+            )
+            preselection = Preselection(preselection_config)
+            if args.verbose:
+                print(
+                    f"Preselection enabled: {args.preselect_method} "
+                    f"(top-{args.preselect_top_k})"
+                )
+
         # Run backtest
         if args.verbose:
             pass
@@ -565,6 +625,7 @@ def main() -> int:
             strategy=strategy,
             prices=prices,
             returns=returns,
+            preselection=preselection,
         )
         equity_curve, metrics, rebalance_events = engine.run()
         if args.verbose:
