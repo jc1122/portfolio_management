@@ -8,7 +8,7 @@ from collections import OrderedDict, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
 
@@ -18,6 +18,9 @@ if TYPE_CHECKING:
     from portfolio_management.assets.selection.selection import SelectedAsset
 
 logger = logging.getLogger(__name__)
+
+# Import fast IO utilities
+from portfolio_management.data.io.fast_io import read_csv_fast, Backend
 
 
 class PriceLoader:
@@ -31,12 +34,23 @@ class PriceLoader:
         max_workers: Maximum number of concurrent threads for parallel loading.
         cache_size: Maximum number of price series to cache. Default is 1000.
             Set to 0 to disable caching entirely.
+        io_backend: IO backend for reading CSV files. Options:
+            - 'pandas' (default): Standard pandas CSV reader
+            - 'polars': Use polars for faster CSV parsing (requires polars)
+            - 'pyarrow': Use pyarrow for faster CSV parsing (requires pyarrow)
+            - 'auto': Automatically select fastest available backend
 
     """
 
-    def __init__(self, max_workers: int | None = None, cache_size: int = 1000):
+    def __init__(
+        self,
+        max_workers: int | None = None,
+        cache_size: int = 1000,
+        io_backend: Backend = "pandas",
+    ):
         self.max_workers = max_workers
         self.cache_size = max(0, cache_size)  # Ensure non-negative
+        self.io_backend = io_backend
         self._cache: OrderedDict[Path, pd.Series] = OrderedDict()
         self._cache_lock = Lock()
 
@@ -46,15 +60,16 @@ class PriceLoader:
             raise FileNotFoundError(path)
 
         if path.suffix.lower() == ".csv":
-            df = pd.read_csv(
+            df = read_csv_fast(
                 path,
+                backend=self.io_backend,
                 header=0,
                 usecols=["date", "close"],
                 parse_dates=["date"],
                 index_col="date",
             )
         else:
-            raw = pd.read_csv(path, header=0)
+            raw = read_csv_fast(path, backend=self.io_backend, header=0)
             if "<DATE>" in raw.columns and "<CLOSE>" in raw.columns:
                 df = (
                     raw[["<DATE>", "<CLOSE>"]]

@@ -96,6 +96,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum number of price series to cache (default: 1000, 0 to disable)",
     )
     parser.add_argument(
+        "--io-backend",
+        choices=["pandas", "polars", "pyarrow", "auto"],
+        default="pandas",
+        help="IO backend for CSV reading (default: pandas). "
+        "Options: pandas (default), polars (fast), pyarrow (fast), auto (select best available)",
+    )
+    parser.add_argument(
         "--align-method",
         choices=["outer", "inner"],
         default="outer",
@@ -241,6 +248,7 @@ def run_cli(args: argparse.Namespace) -> int:
 
     price_loader = PriceLoader(
         max_workers=args.loader_workers,
+        io_backend=args.io_backend,
         cache_size=args.cache_size,
     )
     calculator = ReturnCalculator(price_loader=price_loader)
