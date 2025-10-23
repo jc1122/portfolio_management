@@ -190,6 +190,40 @@ class TestValidateCardinalityConstraints:
                     num_assets=100,
                 )
 
+    def test_string_methods_normalize_and_raise(self) -> None:
+        """String methods should normalize to enums before raising."""
+        constraints = CardinalityConstraints(
+            enabled=True,
+            method="miqp",
+            max_assets=30,
+        )
+        portfolio_constraints = PortfolioConstraints()
+
+        with pytest.raises(CardinalityNotImplementedError):
+            validate_cardinality_constraints(
+                constraints,
+                portfolio_constraints,
+                num_assets=100,
+            )
+
+    def test_unknown_method_string_raises(self) -> None:
+        """Unknown string methods raise CardinalityNotImplementedError."""
+        constraints = CardinalityConstraints(
+            enabled=True,
+            method="totally_new_method",
+            max_assets=30,
+        )
+        portfolio_constraints = PortfolioConstraints()
+
+        with pytest.raises(CardinalityNotImplementedError) as exc_info:
+            validate_cardinality_constraints(
+                constraints,
+                portfolio_constraints,
+                num_assets=100,
+            )
+
+        assert "totally_new_method" in str(exc_info.value)
+
     def test_max_assets_exceeds_universe(self) -> None:
         """Test max_assets > num_assets raises error."""
         constraints = CardinalityConstraints(

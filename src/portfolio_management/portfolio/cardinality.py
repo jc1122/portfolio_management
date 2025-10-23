@@ -118,10 +118,18 @@ def validate_cardinality_constraints(
     # Check for unimplemented methods
     from .constraints.models import CardinalityMethod
     
-    if constraints.method != CardinalityMethod.PRESELECTION:
+    try:
+        method = CardinalityMethod(constraints.method)
+    except ValueError as exc:
         raise CardinalityNotImplementedError(
-            method=constraints.method.value,
-            available_methods=["preselection"],
+            method=str(constraints.method),
+            available_methods=[CardinalityMethod.PRESELECTION.value],
+        ) from exc
+
+    if method != CardinalityMethod.PRESELECTION:
+        raise CardinalityNotImplementedError(
+            method=method.value,
+            available_methods=[CardinalityMethod.PRESELECTION.value],
         )
     
     # Validate max_assets vs universe size
