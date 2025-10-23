@@ -30,8 +30,9 @@ jobs:
       - name: Verify critical dependencies
         run: |
           python -c "import pandas; import numpy; import yaml; import scipy; import cvxpy; print('Core dependencies OK')"
-          python -c "import pypfopt; print('PyPortfolioOpt OK')" || echo "Warning: PyPortfolioOpt not available"
-          python -c "import riskparityportfolio; print('riskparityportfolio OK')" || echo "Warning: riskparityportfolio not available"
+          python -c "import empyrical; print('empyrical-reloaded OK')"
+          python -c "import pypfopt; print('PyPortfolioOpt OK')"
+          python -c "import riskparityportfolio; print('riskparityportfolio OK')"
           python -c "import portfolio_management; print('portfolio_management package OK')"
 
       - name: Run pytest suite
