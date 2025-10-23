@@ -22,10 +22,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from ...core.exceptions import AssetSelectionError, DataValidationError
+
+if TYPE_CHECKING:
+    from portfolio_management.macro.models import RegimeConfig
 
 
 @dataclass
@@ -60,6 +64,9 @@ class FilterCriteria:
             Useful for forcing inclusion of specific assets.
         blocklist: Optional set of symbols that must be excluded regardless of other filters.
             Useful for excluding specific assets known to have issues.
+        regime_config: Optional RegimeConfig for macroeconomic regime-based gating.
+            If None, no regime gating is applied. When provided, regime rules may
+            modify selection (currently NoOp stub that leaves selection unchanged).
 
     Example:
         >>> criteria = FilterCriteria(
@@ -84,6 +91,7 @@ class FilterCriteria:
     categories: list[str] | None = None
     allowlist: set[str] | None = None
     blocklist: set[str] | None = None
+    regime_config: RegimeConfig | None = None
 
     def validate(self) -> None:
         """Validate filter criteria parameters.
@@ -126,6 +134,7 @@ class FilterCriteria:
             - Maximum 10-day gaps
             - No filtering by market, region, currency, or category
             - No allow/block lists
+            - No regime gating
 
         Example:
             >>> criteria = FilterCriteria.default()
@@ -145,6 +154,7 @@ class FilterCriteria:
             categories=None,
             allowlist=None,
             blocklist=None,
+            regime_config=None,
         )
 
 

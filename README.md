@@ -8,6 +8,7 @@ Offline-first Python command-line toolkit for constructing and backtesting long-
 - **Incremental resume** for data preparation - skips redundant processing when inputs unchanged, reducing runtime from minutes to seconds.
 - Production-ready asset selection, classification, return preparation, and universe management CLIs with defensive validation and rich logging.
 - Configurable universes defined in YAML, with scriptable validation, export, and comparison workflows.
+- **Macroeconomic signal infrastructure** - provider for loading macro series from Stooq directories and regime gating framework (NoOp stubs ready for future logic implementation).
 - 200+ automated tests (unit, CLI, integration, performance smoke) covering the full data-to-portfolio stack.
 - Portfolio construction module with equal-weight, risk-parity, and mean-variance strategies plus comparison tooling and CLI access.
 - **Factor-based preselection** - deterministic momentum and low-volatility filters to reduce universe size before optimization, with no lookahead bias and configurable via CLI or universe YAML.
@@ -46,6 +47,10 @@ src/portfolio_management/            # Modular package structure
   ├── analytics/                     # Financial analytics (returns)
   │   ├── returns/
   │   └── metrics/
+  ├── macro/                         # Macroeconomic signals & regime gating (NoOp stubs)
+  │   ├── models.py
+  │   ├── provider.py
+  │   └── regime.py
   ├── portfolio/                     # Portfolio construction (strategies, constraints)
   │   ├── strategies/
   │   └── constraints/
@@ -71,6 +76,7 @@ tests/                               # Test structure mirrors packages
   ├── data/
   ├── assets/
   ├── analytics/
+  ├── macro/
   ├── portfolio/
   ├── backtesting/
   ├── reporting/
@@ -80,6 +86,7 @@ tests/                               # Test structure mirrors packages
 
 docs/                                # Living module guides
   ├── backtesting.md
+  ├── macro_signals.md               # Macroeconomic signals & regime gating
   ├── portfolio_construction.md
   ├── preselection.md                # Factor-based asset preselection guide
   ├── returns.md
