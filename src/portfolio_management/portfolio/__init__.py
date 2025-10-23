@@ -5,6 +5,7 @@ This package provides portfolio construction strategies and utilities.
 
 from .builder import PortfolioConstructor
 from .constraints import PortfolioConstraints
+from .membership import MembershipPolicy, apply_membership_policy
 from .models import Portfolio, StrategyType
 from .rebalancing import RebalanceConfig
 from .statistics import RollingStatistics
@@ -21,6 +22,9 @@ __all__ = [
     "StrategyType",
     # Constraints
     "PortfolioConstraints",
+    # Membership
+    "MembershipPolicy",
+    "apply_membership_policy",
     # Rebalancing
     "RebalanceConfig",
     # Statistics
