@@ -18,6 +18,7 @@ from typing import Any
 import pandas as pd
 import yaml
 
+from portfolio_management.analytics.indicators import IndicatorConfig
 from portfolio_management.analytics.returns import ReturnCalculator, ReturnConfig
 
 from ...core.exceptions import (
@@ -42,11 +43,13 @@ class UniverseDefinition:
     classification_requirements: dict[str, list[str]] = field(default_factory=dict)
     return_config: ReturnConfig = field(default_factory=ReturnConfig)
     constraints: dict[str, int | float] = field(default_factory=dict)
+    technical_indicators: IndicatorConfig = field(default_factory=IndicatorConfig.disabled)
 
     def validate(self) -> None:
         """Validate the universe definition."""
         self.filter_criteria.validate()
         self.return_config.validate()
+        self.technical_indicators.validate()
         # Add more validation rules as needed
 
 
@@ -73,6 +76,12 @@ class UniverseConfigLoader:
             try:
                 filter_criteria = FilterCriteria(**u_def.get("filter_criteria", {}))
                 return_config = ReturnConfig(**u_def.get("return_config", {}))
+                # Parse technical_indicators configuration if present
+                indicators_def = u_def.get("technical_indicators", {})
+                if indicators_def:
+                    technical_indicators = IndicatorConfig(**indicators_def)
+                else:
+                    technical_indicators = IndicatorConfig.disabled()
             except (TypeError, ValueError) as exc:
                 raise ConfigurationError(
                     f"Invalid configuration for universe '{name}': {exc}",
@@ -87,6 +96,7 @@ class UniverseConfigLoader:
                 ),
                 return_config=return_config,
                 constraints=u_def.get("constraints", {}),
+                technical_indicators=technical_indicators,
             )
 
             try:
