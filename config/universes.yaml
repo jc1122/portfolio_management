@@ -205,3 +205,37 @@ universes:
     constraints:
       min_assets: 40
       max_assets: 60
+
+  # Example universe with technical indicators (stub/no-op implementation)
+  equity_with_indicators:
+    description: "Equity sleeve with technical indicator filtering (no-op stub)"
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 756
+      markets: ["LSE", "GBR-LSE"]
+      currencies: ["GBP"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+    classification_requirements:
+      asset_class: ["equity"]
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 5
+      align_method: "outer"
+      min_coverage: 0.85
+    constraints:
+      min_assets: 20
+      max_assets: 40
+    # Technical indicators configuration (currently using no-op provider)
+    # This prepares for future integration with ta-lib, ta, or similar libraries
+    technical_indicators:
+      enabled: true
+      provider: "noop"  # Options: 'noop', 'talib', 'ta' (only 'noop' currently supported)
+      params:
+        window: 20        # Example parameter for future indicator implementations
+        threshold: 0.5    # Example threshold for signal filtering

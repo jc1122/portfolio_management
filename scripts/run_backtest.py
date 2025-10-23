@@ -39,6 +39,11 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
+from portfolio_management.analytics.indicators import (
+    FilterHook,
+    IndicatorConfig,
+    NoOpIndicatorProvider,
+)
 from portfolio_management.backtesting import (
     BacktestConfig,
     BacktestEngine,
@@ -246,6 +251,20 @@ def create_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.5,
         help="Weight for low-volatility in combined preselection (0-1). Default: 0.5",
+    )
+
+    # Technical indicators
+    parser.add_argument(
+        "--enable-indicators",
+        action="store_true",
+        help="Enable technical indicator filtering (currently no-op stub)",
+    )
+    parser.add_argument(
+        "--indicator-provider",
+        type=str,
+        default="noop",
+        choices=["noop"],
+        help="Indicator provider to use. Default: noop (currently only option)",
     )
 
     # Output options
@@ -564,6 +583,37 @@ def main() -> int:
         if args.verbose:
             pass
 
+        # Apply technical indicator filtering if enabled
+        if args.enable_indicators:
+            if args.verbose:
+                print(
+                    f"Applying technical indicator filtering (provider: {args.indicator_provider})...",
+                )
+            indicator_config = IndicatorConfig(
+                enabled=True,
+                provider=args.indicator_provider,
+                params={},
+            )
+            provider = NoOpIndicatorProvider()
+            filter_hook = FilterHook(indicator_config, provider)
+            filtered_assets = filter_hook.filter_assets(prices, assets)
+
+            if args.verbose:
+                print(
+                    f"  Assets after indicator filtering: {len(filtered_assets)} (from {len(assets)})",
+                )
+
+            # Reload data with filtered assets
+            if filtered_assets != assets:
+                prices, returns = load_data(
+                    args.prices_file,
+                    args.returns_file,
+                    filtered_assets,
+                    start_date=args.start_date,
+                    end_date=args.end_date,
+                )
+                assets = filtered_assets
+
         # Create strategy
         if args.verbose:
             pass
@@ -614,7 +664,7 @@ def main() -> int:
             if args.verbose:
                 print(
                     f"Preselection enabled: {args.preselect_method} "
-                    f"(top-{args.preselect_top_k})"
+                    f"(top-{args.preselect_top_k})",
                 )
 
         # Run backtest
