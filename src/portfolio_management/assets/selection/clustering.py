@@ -105,19 +105,38 @@ def _load_price_data(
             logger.warning(f"Price file not found: {full_path}")
             return None
 
-        # Read CSV with date parsing
-        df = pd.read_csv(
-            full_path,
-            parse_dates=["Date"],
-            index_col="Date",
-        )
+        # Try to detect format by reading first line
+        with open(full_path) as f:
+            header = f.readline().strip()
 
-        if "Close" not in df.columns:
-            logger.warning(f"Close column not found in {stooq_path}")
-            return None
+        # Check if it's Stooq format with <DATE> column
+        if "<DATE>" in header:
+            # Stooq format: <TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOL>
+            df = pd.read_csv(full_path)
+            if "<DATE>" not in df.columns or "<CLOSE>" not in df.columns:
+                logger.warning(f"Expected Stooq columns not found in {stooq_path}")
+                return None
 
-        # Return close prices as a Series
-        return df["Close"]
+            # Convert date to datetime and set as index
+            df["Date"] = pd.to_datetime(df["<DATE>"], format="%Y%m%d")
+            df = df.set_index("Date")
+
+            # Return close prices as a Series
+            return df["<CLOSE>"]
+        else:
+            # Standard format with Date and Close columns
+            df = pd.read_csv(
+                full_path,
+                parse_dates=["Date"],
+                index_col="Date",
+            )
+
+            if "Close" not in df.columns:
+                logger.warning(f"Close column not found in {stooq_path}")
+                return None
+
+            # Return close prices as a Series
+            return df["Close"]
 
     except Exception as e:
         logger.warning(f"Failed to load price data from {stooq_path}: {e}")
@@ -165,7 +184,7 @@ def _calculate_returns_matrix(
     )
 
     # Calculate returns (percentage change)
-    returns_df = prices_df.pct_change().dropna()
+    returns_df = prices_df.pct_change(fill_method=None).dropna()
 
     # Check for sufficient overlapping data
     valid_symbols = []
