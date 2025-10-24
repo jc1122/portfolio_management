@@ -301,9 +301,7 @@ class TestOptimizerStubs:
         """Create sample returns data."""
         dates = pd.date_range("2020-01-01", periods=100, freq="D")
         assets = ["AAPL", "MSFT", "GOOGL"]
-        data = {
-            asset: [0.001 * (i % 3 - 1) for i in range(100)] for asset in assets
-        }
+        data = {asset: [0.001 * (i % 3 - 1) for i in range(100)] for asset in assets}
         return pd.DataFrame(data, index=dates)
 
     @pytest.fixture

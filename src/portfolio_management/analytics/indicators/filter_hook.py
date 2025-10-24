@@ -39,6 +39,7 @@ class FilterHook:
         ... }, index=pd.date_range('2020-01-01', periods=3))
         >>> filtered = hook.filter_assets(prices, ['AAPL', 'MSFT'])
         >>> print(filtered)  # ['AAPL', 'MSFT'] - no-op includes all
+
     """
 
     def __init__(self, config: IndicatorConfig, provider: IndicatorProvider):
@@ -47,6 +48,7 @@ class FilterHook:
         Args:
             config: Indicator configuration
             provider: Indicator provider implementation
+
         """
         self.config = config
         self.provider = provider
@@ -57,6 +59,7 @@ class FilterHook:
 
         Raises:
             ValueError: If configuration is invalid
+
         """
         self.config.validate()
 
@@ -87,6 +90,7 @@ class FilterHook:
             ... }, index=pd.date_range('2020-01-01', periods=3))
             >>> filtered = hook.filter_assets(prices, ['AAPL', 'MSFT'])
             >>> print(filtered)  # ['AAPL', 'MSFT']
+
         """
         # If indicators disabled, return all assets
         if not self.config.enabled:
@@ -94,7 +98,7 @@ class FilterHook:
             return assets
 
         logger.info(
-            f"Filtering {len(assets)} assets using {self.config.provider} provider"
+            f"Filtering {len(assets)} assets using {self.config.provider} provider",
         )
 
         filtered_assets = []
@@ -125,17 +129,21 @@ class FilterHook:
 
                 if include:
                     filtered_assets.append(asset)
-                    logger.debug(f"Asset {asset} passed filter (signal: {latest_signal})")
+                    logger.debug(
+                        f"Asset {asset} passed filter (signal: {latest_signal})",
+                    )
                 else:
-                    logger.debug(f"Asset {asset} excluded by filter (signal: {latest_signal})")
+                    logger.debug(
+                        f"Asset {asset} excluded by filter (signal: {latest_signal})",
+                    )
 
             except Exception as e:
                 logger.error(
-                    f"Error computing indicator for asset {asset}: {e}, excluding"
+                    f"Error computing indicator for asset {asset}: {e}, excluding",
                 )
                 continue
 
         logger.info(
-            f"Technical indicator filtering: {len(assets)} -> {len(filtered_assets)} assets"
+            f"Technical indicator filtering: {len(assets)} -> {len(filtered_assets)} assets",
         )
         return filtered_assets

@@ -8,7 +8,7 @@ from collections import OrderedDict, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -167,20 +167,23 @@ class PriceLoader:
     @staticmethod
     def _standardize_price_dataframe(raw: pd.DataFrame, path: Path) -> pd.DataFrame:
         """Normalize various price file column conventions to a standard format."""
-
         if "<DATE>" in raw.columns and "<CLOSE>" in raw.columns:
-            df = raw[["<DATE>", "<CLOSE>"]].copy().rename(
-                columns={"<DATE>": "date", "<CLOSE>": "close"}
+            df = (
+                raw[["<DATE>", "<CLOSE>"]]
+                .copy()
+                .rename(columns={"<DATE>": "date", "<CLOSE>": "close"})
             )
         elif "DATE" in raw.columns and "CLOSE" in raw.columns:
-            df = raw[["DATE", "CLOSE"]].copy().rename(
-                columns={"DATE": "date", "CLOSE": "close"}
+            df = (
+                raw[["DATE", "CLOSE"]]
+                .copy()
+                .rename(columns={"DATE": "date", "CLOSE": "close"})
             )
         elif "date" in raw.columns and "close" in raw.columns:
             df = raw[["date", "close"]].copy()
         else:
             raise ValueError(
-                f"Unsupported price file structure for {path}: columns={list(raw.columns)}"
+                f"Unsupported price file structure for {path}: columns={list(raw.columns)}",
             )
 
         df["date"] = pd.to_datetime(df["date"], errors="coerce")

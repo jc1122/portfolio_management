@@ -10,13 +10,12 @@ import pickle
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management.data.factor_caching import CacheMetadata, FactorCache
+from portfolio_management.data.factor_caching import FactorCache
 
 
 @pytest.fixture
@@ -460,9 +459,7 @@ class TestCacheAgeExpiration:
 class TestCacheStatistics:
     """Test cache statistics tracking accuracy."""
 
-    def test_statistics_accuracy_over_many_operations(
-        self, cache_dir, sample_returns
-    ):
+    def test_statistics_accuracy_over_many_operations(self, cache_dir, sample_returns):
         """Test cache statistics remain accurate over 100+ operations."""
         cache = FactorCache(cache_dir, enabled=True)
         configs = [
@@ -668,9 +665,7 @@ class TestFirstRunSecondRun:
     def test_first_run_all_misses(self, cache_dir, sample_returns):
         """Test first run has all cache misses."""
         cache = FactorCache(cache_dir, enabled=True)
-        configs = [
-            {"method": "momentum", "lookback": i} for i in range(100, 200, 25)
-        ]
+        configs = [{"method": "momentum", "lookback": i} for i in range(100, 200, 25)]
 
         for config in configs:
             cached = cache.get_factor_scores(
@@ -685,9 +680,7 @@ class TestFirstRunSecondRun:
     def test_second_run_all_hits(self, cache_dir, sample_returns):
         """Test second run has all cache hits."""
         cache = FactorCache(cache_dir, enabled=True)
-        configs = [
-            {"method": "momentum", "lookback": i} for i in range(100, 200, 25)
-        ]
+        configs = [{"method": "momentum", "lookback": i} for i in range(100, 200, 25)]
         scores = pd.Series(np.random.randn(10), index=sample_returns.columns)
 
         # First run - cache everything
@@ -711,9 +704,7 @@ class TestFirstRunSecondRun:
         assert stats["hits"] == len(configs)
         assert stats["misses"] == 0
 
-    def test_partial_data_change_some_hit_some_miss(
-        self, cache_dir, sample_returns
-    ):
+    def test_partial_data_change_some_hit_some_miss(self, cache_dir, sample_returns):
         """Test partial data change causes some hits, some misses."""
         cache = FactorCache(cache_dir, enabled=True)
         scores = pd.Series(np.random.randn(10), index=sample_returns.columns)
@@ -735,7 +726,5 @@ class TestFirstRunSecondRun:
         modified.iloc[:100, :] += 0.01  # Change first 100 rows
 
         # Should miss with modified data
-        cached = cache.get_factor_scores(
-            modified, config, "2020-01-01", "2020-12-31"
-        )
+        cached = cache.get_factor_scores(modified, config, "2020-01-01", "2020-12-31")
         assert cached is None

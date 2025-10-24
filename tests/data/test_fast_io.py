@@ -8,7 +8,6 @@ import pandas as pd
 import pytest
 
 from portfolio_management.data.io.fast_io import (
-    Backend,
     get_available_backends,
     is_backend_available,
     read_csv_fast,
@@ -63,7 +62,7 @@ def test_select_backend_unavailable_fallback():
     # Request a backend that might not be available
     selected = select_backend("polars")
     assert selected in ["pandas", "polars"]  # Falls back if not available
-    
+
     selected = select_backend("pyarrow")
     assert selected in ["pandas", "pyarrow"]  # Falls back if not available
 
@@ -128,22 +127,24 @@ def test_read_csv_fast_with_usecols(sample_csv: Path):
 def test_backend_consistency(sample_csv: Path):
     """Test that all backends produce identical results."""
     df_pandas = read_csv_fast(sample_csv, backend="pandas")
-    
+
     backends_to_test = ["pandas"]
     if is_backend_available("polars"):
         backends_to_test.append("polars")
     if is_backend_available("pyarrow"):
         backends_to_test.append("pyarrow")
-    
+
     for backend in backends_to_test[1:]:  # Skip pandas since it's the baseline
         df_other = read_csv_fast(sample_csv, backend=backend)
-        
+
         # Compare shape
         assert df_other.shape == df_pandas.shape, f"{backend} produced different shape"
-        
+
         # Compare columns
-        assert list(df_other.columns) == list(df_pandas.columns), f"{backend} produced different columns"
-        
+        assert list(df_other.columns) == list(
+            df_pandas.columns
+        ), f"{backend} produced different columns"
+
         # Compare values (allowing for floating point differences)
         pd.testing.assert_frame_equal(
             df_pandas,

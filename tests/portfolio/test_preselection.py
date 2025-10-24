@@ -1,7 +1,6 @@
 """Tests for factor-based asset preselection."""
 
 import datetime
-from decimal import Decimal
 
 import numpy as np
 import pandas as pd

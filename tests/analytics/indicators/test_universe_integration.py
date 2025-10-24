@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from portfolio_management.assets.universes import UniverseConfigLoader, UniverseDefinition
+from portfolio_management.assets.universes import (
+    UniverseConfigLoader,
+)
 
 
 class TestUniverseIndicatorConfiguration:
@@ -25,16 +27,16 @@ universes:
       method: "simple"
       frequency: "monthly"
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = Path(f.name)
-        
+
         try:
             universes = UniverseConfigLoader.load_config(config_path)
-            
+
             assert "test_universe" in universes
             universe = universes["test_universe"]
-            
+
             # Should have default disabled indicators
             assert universe.technical_indicators.enabled is False
             assert universe.technical_indicators.provider == "noop"
@@ -57,14 +59,14 @@ universes:
       enabled: false
       provider: "noop"
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = Path(f.name)
-        
+
         try:
             universes = UniverseConfigLoader.load_config(config_path)
             universe = universes["test_universe"]
-            
+
             assert universe.technical_indicators.enabled is False
             assert universe.technical_indicators.provider == "noop"
         finally:
@@ -89,14 +91,14 @@ universes:
         window: 20
         threshold: 0.5
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = Path(f.name)
-        
+
         try:
             universes = UniverseConfigLoader.load_config(config_path)
             universe = universes["test_universe"]
-            
+
             assert universe.technical_indicators.enabled is True
             assert universe.technical_indicators.provider == "noop"
             assert universe.technical_indicators.params["window"] == 20
@@ -120,13 +122,13 @@ universes:
       enabled: true
       provider: "invalid_provider"
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = Path(f.name)
-        
+
         try:
             from portfolio_management.core.exceptions import ConfigurationError
-            
+
             with pytest.raises(ConfigurationError, match="failed validation"):
                 UniverseConfigLoader.load_config(config_path)
         finally:
@@ -150,13 +152,13 @@ universes:
       params:
         window: -5
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = Path(f.name)
-        
+
         try:
             from portfolio_management.core.exceptions import ConfigurationError
-            
+
             with pytest.raises(ConfigurationError, match="failed validation"):
                 UniverseConfigLoader.load_config(config_path)
         finally:
@@ -166,15 +168,15 @@ universes:
         """Test that existing universe config still loads correctly."""
         # This tests backward compatibility
         config_path = Path("config/universes.yaml")
-        
+
         if not config_path.exists():
             pytest.skip("Main universe config not found")
-        
+
         universes = UniverseConfigLoader.load_config(config_path)
-        
+
         # Should load successfully
         assert len(universes) > 0
-        
+
         # All universes should have technical_indicators field
         for name, universe in universes.items():
             assert hasattr(universe, "technical_indicators")
@@ -184,16 +186,16 @@ universes:
     def test_equity_with_indicators_universe(self):
         """Test the example equity_with_indicators universe from config."""
         config_path = Path("config/universes.yaml")
-        
+
         if not config_path.exists():
             pytest.skip("Main universe config not found")
-        
+
         universes = UniverseConfigLoader.load_config(config_path)
-        
+
         # Check if equity_with_indicators exists
         if "equity_with_indicators" in universes:
             universe = universes["equity_with_indicators"]
-            
+
             assert universe.technical_indicators.enabled is True
             assert universe.technical_indicators.provider == "noop"
             assert "window" in universe.technical_indicators.params
@@ -217,24 +219,21 @@ universes:
                     "technical_indicators": {
                         "enabled": True,
                         "provider": "noop",
-                        "params": {
-                            "window": 20,
-                            "threshold": 0.7
-                        }
-                    }
+                        "params": {"window": 20, "threshold": 0.7},
+                    },
                 }
             }
         }
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(original_config, f)
             config_path = Path(f.name)
-        
+
         try:
             # Load configuration
             universes = UniverseConfigLoader.load_config(config_path)
             universe = universes["test_universe"]
-            
+
             # Verify all fields preserved
             assert universe.description == "Test roundtrip"
             assert universe.technical_indicators.enabled is True

@@ -93,19 +93,19 @@ class Preselection:
 
     def _validate_config(self) -> None:
         """Validate configuration parameters.
-        
+
         Raises:
             ValueError: If any parameter is invalid, with actionable error message
-        
+
         """
         # Validate top_k
         if self.config.top_k is not None and self.config.top_k < 0:
             raise ValueError(
                 f"top_k must be >= 0, got {self.config.top_k}. "
                 "Set to None or 0 to disable preselection, or use a positive integer. "
-                "Example: PreselectionConfig(top_k=30)"
+                "Example: PreselectionConfig(top_k=30)",
             )
-        
+
         # Warn if top_k is too small
         if self.config.top_k is not None and 0 < self.config.top_k < 10:
             warnings.warn(
@@ -116,16 +116,16 @@ class Preselection:
                 UserWarning,
                 stacklevel=3,
             )
-        
+
         # Validate lookback
         if self.config.lookback < 1:
             raise ValueError(
                 f"lookback must be >= 1, got {self.config.lookback}. "
                 "Lookback defines the number of periods to use for factor calculation. "
                 "Common values: 63 days (3 months), 126 days (6 months), 252 days (1 year). "
-                "Example: PreselectionConfig(lookback=252)"
+                "Example: PreselectionConfig(lookback=252)",
             )
-        
+
         # Warn if lookback is too short
         if self.config.lookback < 63:
             warnings.warn(
@@ -136,42 +136,42 @@ class Preselection:
                 UserWarning,
                 stacklevel=3,
             )
-        
+
         # Validate skip
         if self.config.skip < 0:
             raise ValueError(
                 f"skip must be >= 0, got {self.config.skip}. "
                 "Skip defines the number of most recent periods to exclude from calculation. "
                 "Common practice: skip=1 to avoid short-term reversals. "
-                "Example: PreselectionConfig(skip=1)"
+                "Example: PreselectionConfig(skip=1)",
             )
-        
+
         # Validate skip < lookback
         if self.config.skip >= self.config.lookback:
             raise ValueError(
                 f"skip ({self.config.skip}) must be < lookback ({self.config.lookback}). "
                 "You cannot skip more periods than your lookback window. "
                 "To fix: reduce skip or increase lookback. "
-                "Example: PreselectionConfig(lookback=252, skip=1)"
+                "Example: PreselectionConfig(lookback=252, skip=1)",
             )
-        
+
         # Validate min_periods
         if self.config.min_periods < 1:
             raise ValueError(
                 f"min_periods must be >= 1, got {self.config.min_periods}. "
                 "min_periods defines the minimum number of valid observations required. "
                 "It should be at least 1 to ensure meaningful calculations. "
-                "Example: PreselectionConfig(min_periods=60)"
+                "Example: PreselectionConfig(min_periods=60)",
             )
-        
+
         if self.config.min_periods > self.config.lookback:
             raise ValueError(
                 f"min_periods ({self.config.min_periods}) must be <= lookback ({self.config.lookback}). "
                 "You cannot require more periods than your lookback window. "
                 "To fix: reduce min_periods or increase lookback. "
-                "Example: PreselectionConfig(lookback=252, min_periods=60)"
+                "Example: PreselectionConfig(lookback=252, min_periods=60)",
             )
-        
+
         # Validate combined method weights
         if self.config.method == PreselectionMethod.COMBINED:
             total_weight = self.config.momentum_weight + self.config.low_vol_weight
@@ -181,7 +181,7 @@ class Preselection:
                     f"(momentum_weight={self.config.momentum_weight}, "
                     f"low_vol_weight={self.config.low_vol_weight}). "
                     "To fix: adjust weights so they sum to 1.0. "
-                    "Example: PreselectionConfig(momentum_weight=0.6, low_vol_weight=0.4)"
+                    "Example: PreselectionConfig(momentum_weight=0.6, low_vol_weight=0.4)",
                 )
 
     def select_assets(
@@ -217,49 +217,49 @@ class Preselection:
                 "returns DataFrame is empty or None. "
                 "To fix: provide a non-empty DataFrame with returns data. "
                 "Expected format: DataFrame with dates as index, assets as columns. "
-                "Example: returns.shape = (1000, 50) for 1000 days, 50 assets."
+                "Example: returns.shape = (1000, 50) for 1000 days, 50 assets.",
             )
-        
+
         if not isinstance(returns, pd.DataFrame):
             raise ValueError(
                 f"returns must be a pandas DataFrame, got {type(returns).__name__}. "
                 "To fix: convert your data to a DataFrame. "
-                "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)"
+                "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)",
             )
-        
+
         if len(returns.columns) == 0:
             raise ValueError(
                 "returns DataFrame has no columns (no assets). "
                 "To fix: ensure returns DataFrame has asset columns. "
-                "Example: returns.columns = ['AAPL', 'MSFT', 'GOOGL']"
+                "Example: returns.columns = ['AAPL', 'MSFT', 'GOOGL']",
             )
-        
+
         # Validate rebalance_date if provided
         if rebalance_date is not None:
             if not isinstance(rebalance_date, datetime.date):
                 raise ValueError(
                     f"rebalance_date must be a datetime.date, got {type(rebalance_date).__name__}. "
                     "To fix: use datetime.date object. "
-                    "Example: from datetime import date; rebalance_date = date(2023, 1, 1)"
+                    "Example: from datetime import date; rebalance_date = date(2023, 1, 1)",
                 )
-            
+
             # Check if rebalance_date is within or after data range
             max_date = returns.index.max()
             if isinstance(max_date, pd.Timestamp):
                 max_date = max_date.date()
-            
+
             if rebalance_date > max_date:
                 raise ValueError(
                     f"rebalance_date ({rebalance_date}) is after the last available date ({max_date}). "
                     "To fix: use a rebalance_date within your data range. "
-                    f"Available date range: {returns.index.min()} to {max_date}"
+                    f"Available date range: {returns.index.min()} to {max_date}",
                 )
-        
+
         # If no top_k or top_k <= 0, return all assets
         if self.config.top_k is None or self.config.top_k <= 0:
             logger.info(
                 f"Preselection disabled (top_k={self.config.top_k}), "
-                f"returning all {len(returns.columns)} assets"
+                f"returning all {len(returns.columns)} assets",
             )
             return sorted(returns.columns.tolist())
 
@@ -288,7 +288,7 @@ class Preselection:
 
         # Compute factor scores (with caching if enabled)
         scores = self._get_or_compute_scores(returns, available_returns, rebalance_date)
-        
+
         # Handle edge case: all NaN scores
         if scores.isna().all():
             warnings.warn(
@@ -338,7 +338,10 @@ class Preselection:
         # Try to get from cache
         if self.cache is not None:
             cached_scores = self.cache.get_factor_scores(
-                full_returns, cache_config, start_date, end_date,
+                full_returns,
+                cache_config,
+                start_date,
+                end_date,
             )
             if cached_scores is not None:
                 return cached_scores
@@ -356,7 +359,11 @@ class Preselection:
         # Cache the scores
         if self.cache is not None:
             self.cache.put_factor_scores(
-                scores, full_returns, cache_config, start_date, end_date,
+                scores,
+                full_returns,
+                cache_config,
+                start_date,
+                end_date,
             )
 
         return scores
@@ -486,19 +493,19 @@ class Preselection:
             # No valid assets - return empty list (edge case handled)
             logger.warning(
                 "No valid scores after filtering NaN values. "
-                "Returning empty asset list."
+                "Returning empty asset list.",
             )
             return []
 
         # Determine how many to select
         k = min(self.config.top_k or len(valid_scores), len(valid_scores))
-        
+
         # Log if we have fewer assets than requested
         if len(valid_scores) < (self.config.top_k or 0):
             logger.warning(
                 f"Only {len(valid_scores)} valid assets available, "
                 f"less than requested top_k={self.config.top_k}. "
-                "Returning all valid assets."
+                "Returning all valid assets.",
             )
 
         # Sort by score (descending) then by ticker (ascending) for determinism
@@ -521,11 +528,12 @@ class Preselection:
                 {"score": candidates, "symbol": candidates.index},
             )
             candidates_df = candidates_df.sort_values(
-                by=["score", "symbol"], ascending=[False, True],
+                by=["score", "symbol"],
+                ascending=[False, True],
             )
             selected = candidates_df.head(k)["symbol"].tolist()
             logger.debug(
-                f"Broke ties at cutoff: {len(candidates)} candidates -> {k} selected"
+                f"Broke ties at cutoff: {len(candidates)} candidates -> {k} selected",
             )
         else:
             selected = candidates.index.tolist()

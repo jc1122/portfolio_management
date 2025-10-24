@@ -7,6 +7,7 @@ This document presents comprehensive benchmarks validating the fast IO implement
 ### Key Findings
 
 ✅ **Speedups Validated:**
+
 - Small datasets (100 assets): **2-3x faster**
 - Medium datasets (500 assets): **3-4x faster**
 - Large datasets (1000+ assets): **4-5x faster**
@@ -28,9 +29,9 @@ This document presents comprehensive benchmarks validating the fast IO implement
 | Medium | 500 | 10 | ~1.25M | Medium universe |
 | Large | 1000 | 20 | ~5M | Large universe |
 | Extra Large | 5000 | 20 | ~25M | Very large universe |
-| Very Large* | 10000 | 20 | ~50M | Maximum scale test |
+| Very Large\* | 10000 | 20 | ~50M | Maximum scale test |
 
-*Very Large tests may be skipped if time/memory constraints exist.
+\*Very Large tests may be skipped if time/memory constraints exist.
 
 ### File Formats
 
@@ -40,11 +41,11 @@ This document presents comprehensive benchmarks validating the fast IO implement
 ### Operations Benchmarked
 
 1. **CSV Reading:** Load price data from CSV files
-2. **Parquet Reading:** Load price data from Parquet files
-3. **Parquet Writing:** Write processed data to Parquet format
-4. **Multiple File Loading:** Simulate loading entire portfolios
-5. **Memory Usage:** Peak memory consumption per backend
-6. **Result Equivalence:** Verify all backends produce identical output
+1. **Parquet Reading:** Load price data from Parquet files
+1. **Parquet Writing:** Write processed data to Parquet format
+1. **Multiple File Loading:** Simulate loading entire portfolios
+1. **Memory Usage:** Peak memory consumption per backend
+1. **Result Equivalence:** Verify all backends produce identical output
 
 ### Backends Tested
 
@@ -142,6 +143,7 @@ pd.testing.assert_frame_equal(df_pandas, df_pyarrow, check_dtype=False)
 ```
 
 ✅ **100% equivalence verified** across:
+
 - All dataset sizes
 - All backends
 - All numeric columns (within floating-point tolerance: rtol=1e-10)
@@ -165,6 +167,7 @@ pd.testing.assert_frame_equal(df_pandas, df_pyarrow, check_dtype=False)
 ### Parquet Break-Even
 
 Parquet provides immediate benefits even for single files due to:
+
 - Columnar storage (only read needed columns)
 - Built-in compression (faster disk I/O)
 - Schema preservation (no parsing needed)
@@ -227,24 +230,28 @@ Do you have >50 assets?
 ### Recommended Configurations
 
 #### Development/Prototyping
+
 ```python
 # Use pandas for simplicity
 loader = PriceLoader(io_backend='pandas')
 ```
 
 #### Production/Large Datasets
+
 ```python
 # Use polars for speed
 loader = PriceLoader(io_backend='polars')
 ```
 
 #### Mixed Workload
+
 ```python
 # Auto-select best available
 loader = PriceLoader(io_backend='auto')
 ```
 
 #### Parquet-Heavy Workflow
+
 ```python
 # Use pyarrow for Parquet
 loader = PriceLoader(io_backend='pyarrow')
@@ -253,6 +260,7 @@ loader = PriceLoader(io_backend='pyarrow')
 ### CLI Usage
 
 #### Standard (pandas)
+
 ```bash
 python scripts/calculate_returns.py \
     --assets universe.csv \
@@ -261,6 +269,7 @@ python scripts/calculate_returns.py \
 ```
 
 #### Fast (polars)
+
 ```bash
 python scripts/calculate_returns.py \
     --assets universe.csv \
@@ -270,6 +279,7 @@ python scripts/calculate_returns.py \
 ```
 
 #### Auto-detect
+
 ```bash
 python scripts/calculate_returns.py \
     --assets universe.csv \
@@ -281,12 +291,14 @@ python scripts/calculate_returns.py \
 ## Installation
 
 ### Standard Installation
+
 ```bash
 # Pandas only (no fast IO)
 pip install -e .
 ```
 
 ### With Fast IO Backends
+
 ```bash
 # All fast IO backends
 pip install -e ".[fast-io]"
@@ -297,6 +309,7 @@ pip install pyarrow     # Recommended for Parquet
 ```
 
 ### Verification
+
 ```bash
 # Check available backends
 python -c "from portfolio_management.data.io.fast_io import get_available_backends; print(get_available_backends())"
@@ -307,6 +320,7 @@ python -c "from portfolio_management.data.io.fast_io import get_available_backen
 ## Running Benchmarks
 
 ### Full Benchmark Suite
+
 ```bash
 # Run all benchmarks
 python benchmarks/benchmark_fast_io.py --all
@@ -316,6 +330,7 @@ python benchmarks/benchmark_fast_io.py --all --output-json results.json
 ```
 
 ### Specific Benchmarks
+
 ```bash
 # CSV only
 python benchmarks/benchmark_fast_io.py --csv
@@ -331,6 +346,7 @@ python benchmarks/benchmark_fast_io.py --equivalence
 ```
 
 ### Requirements for Full Benchmarking
+
 ```bash
 # Install benchmark dependencies
 pip install psutil  # For memory profiling
@@ -342,18 +358,22 @@ pip install polars pyarrow  # For all backends
 ### Known Limitations
 
 1. **Very Large Files (>2GB):**
+
    - All backends handle well, but memory usage scales with file size
    - Consider chunked reading for files >5GB
 
-2. **Complex Data Types:**
+1. **Complex Data Types:**
+
    - Custom objects may not serialize identically across backends
    - Stick to numeric, string, and datetime types for best compatibility
 
-3. **Windows Line Endings:**
+1. **Windows Line Endings:**
+
    - All backends handle CRLF/LF correctly
    - No known issues
 
-4. **Unicode/Encoding:**
+1. **Unicode/Encoding:**
+
    - Specify `encoding='utf-8'` explicitly if data contains special characters
    - All backends support UTF-8
 
@@ -372,26 +392,30 @@ pip install polars pyarrow  # For all backends
 ### For Maximum Speed
 
 1. **Use Polars for CSV:**
+
    ```python
    loader = PriceLoader(io_backend='polars', max_workers=8)
    ```
 
-2. **Use Parquet Instead of CSV:**
+1. **Use Parquet Instead of CSV:**
+
    ```python
    # Convert once
    df.to_parquet('prices.parquet')
-   
+
    # Read repeatedly (5-10x faster)
    df = read_parquet_fast('prices.parquet', backend='pyarrow')
    ```
 
-3. **Parallel Loading:**
+1. **Parallel Loading:**
+
    ```python
    # Use max_workers for parallel file loading
    loader = PriceLoader(io_backend='polars', max_workers=8)
    ```
 
-4. **Cache Results:**
+1. **Cache Results:**
+
    ```python
    # Enable LRU cache
    loader = PriceLoader(io_backend='polars', cache_size=1000)
@@ -400,12 +424,15 @@ pip install polars pyarrow  # For all backends
 ### For Memory Efficiency
 
 1. **Use Polars (5-10% less memory)**
-2. **Read Only Needed Columns:**
+
+1. **Read Only Needed Columns:**
+
    ```python
    df = read_csv_fast('prices.csv', backend='polars', columns=['date', 'close'])
    ```
 
-3. **Process in Chunks:**
+1. **Process in Chunks:**
+
    ```python
    # For very large files
    for chunk in pd.read_csv('large.csv', chunksize=10000):
@@ -440,6 +467,7 @@ pip install polars pyarrow  # For all backends
 ### Q: How do I know if polars is being used?
 
 **A:** Check logs:
+
 ```
 DEBUG: Using polars backend for fast IO
 ```
@@ -447,6 +475,7 @@ DEBUG: Using polars backend for fast IO
 ### Q: Can I mix backends?
 
 **A:** Yes. You can specify different backends for different operations:
+
 ```python
 df1 = read_csv_fast('file1.csv', backend='polars')
 df2 = read_parquet_fast('file2.parquet', backend='pyarrow')
@@ -475,7 +504,7 @@ The fast IO implementation successfully delivers on its performance claims:
 
 | Scenario | Recommended Backend | Reason |
 |----------|-------------------|---------|
-| Small datasets (<50 assets) | pandas | Simple, no extra deps |
+| Small datasets (\<50 assets) | pandas | Simple, no extra deps |
 | Large datasets (50-500 assets) | polars | 3-4x faster |
 | Very large datasets (>500 assets) | polars | 4-5x faster |
 | Parquet-heavy workflow | pyarrow | Best Parquet support |
@@ -487,10 +516,10 @@ The fast IO implementation successfully delivers on its performance claims:
 ### Next Steps
 
 1. **Install fast IO backends:** `pip install polars pyarrow`
-2. **Update configs:** Add `--io-backend polars` to production scripts
-3. **Convert to Parquet:** For frequently-read datasets
-4. **Monitor performance:** Track speedups in your specific workloads
-5. **Report issues:** File bugs if speedups are not as expected
+1. **Update configs:** Add `--io-backend polars` to production scripts
+1. **Convert to Parquet:** For frequently-read datasets
+1. **Monitor performance:** Track speedups in your specific workloads
+1. **Report issues:** File bugs if speedups are not as expected
 
 ## References
 
@@ -515,9 +544,9 @@ The fast IO implementation successfully delivers on its performance claims:
 
 ### Complete Results Table
 
-[Results would be populated by running: `python benchmarks/benchmark_fast_io.py --all --output-json benchmark_results.json`]
+\[Results would be populated by running: `python benchmarks/benchmark_fast_io.py --all --output-json benchmark_results.json`\]
 
----
+______________________________________________________________________
 
 *Last updated: 2025-10-24*
 *Benchmark version: 1.0*

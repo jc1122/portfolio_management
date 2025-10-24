@@ -9,20 +9,24 @@ This implementation adds a complete technical indicator filtering framework with
 ### 1. Core Interfaces and Classes
 
 **IndicatorProvider Interface** (`src/portfolio_management/analytics/indicators/providers.py`)
+
 - Abstract base class defining `compute(series, params) -> pd.Series` contract
 - Extensible for different indicator libraries (TA-Lib, ta, custom)
 
 **NoOpIndicatorProvider** (stub implementation)
+
 - Returns all-True passthrough signals
 - No actual filtering performed
 - Used for testing and preparation
 
 **FilterHook** (`src/portfolio_management/analytics/indicators/filter_hook.py`)
+
 - Applies indicator-based filtering to asset lists
 - Handles missing data and error cases gracefully
 - Integrates with universe configuration
 
 **IndicatorConfig** (`src/portfolio_management/analytics/indicators/config.py`)
+
 - Configuration dataclass for indicator parameters
 - Validates provider types (noop, talib, ta) and parameter ranges
 - Factory methods: `disabled()`, `noop(params)`
@@ -30,11 +34,13 @@ This implementation adds a complete technical indicator filtering framework with
 ### 2. Universe Configuration Integration
 
 **UniverseDefinition Extended**
+
 - Added `technical_indicators: IndicatorConfig` field
 - Backward compatible (defaults to disabled)
 - Validation integrated into universe loading
 
 **Universe YAML Schema**
+
 ```yaml
 technical_indicators:
   enabled: true          # Enable/disable indicator filtering
@@ -45,12 +51,14 @@ technical_indicators:
 ```
 
 **Example Universe Added** (`config/universes.yaml`)
+
 - `equity_with_indicators` universe demonstrates configuration
 - No-op provider enabled for testing
 
 ### 3. CLI Integration
 
 **run_backtest.py Enhancements**
+
 - `--enable-indicators` flag to enable indicator filtering
 - `--indicator-provider {noop}` flag to select provider
 - Filtering applied between data loading and backtest execution
@@ -59,12 +67,14 @@ technical_indicators:
 ### 4. Tests
 
 **40 Comprehensive Tests** (all passing)
+
 - `test_providers.py` - NoOpIndicatorProvider behavior (6 tests)
 - `test_config.py` - IndicatorConfig validation (16 tests)
 - `test_filter_hook.py` - FilterHook filtering logic (10 tests)
 - `test_universe_integration.py` - Configuration roundtrip (8 tests)
 
 **Coverage:**
+
 - Interface contracts
 - Stub passthrough behavior
 - Configuration validation
@@ -75,6 +85,7 @@ technical_indicators:
 ### 5. Documentation
 
 **Comprehensive Guide** (`docs/technical_indicators.md`)
+
 - Architecture overview
 - Configuration examples (YAML and CLI)
 - Extension points for adding real indicators
@@ -85,26 +96,31 @@ technical_indicators:
 ## Key Design Decisions
 
 ### 1. Stub-First Approach
+
 - Implement interfaces and infrastructure first
 - Add real indicators later without breaking changes
 - Validates integration before heavy dependencies
 
 ### 2. Configuration-Driven
+
 - All indicator settings in YAML or CLI
 - No hardcoded indicator logic
 - Easy to enable/disable per universe
 
 ### 3. Provider Pattern
+
 - Abstract provider interface
 - Swap implementations without changing client code
 - Support multiple indicator libraries
 
 ### 4. Backward Compatibility
+
 - Existing universes work without changes
 - Technical indicators default to disabled
 - No breaking API changes
 
 ### 5. Defensive Programming
+
 - Graceful handling of missing assets
 - Error handling for provider failures
 - Validation at configuration load time
@@ -112,6 +128,7 @@ technical_indicators:
 ## Usage Examples
 
 ### Universe Configuration
+
 ```yaml
 universes:
   my_universe:
@@ -127,6 +144,7 @@ universes:
 ```
 
 ### CLI Usage
+
 ```bash
 # Enable indicator filtering
 python scripts/run_backtest.py equal_weight --enable-indicators
@@ -138,6 +156,7 @@ python scripts/run_backtest.py risk_parity \
 ```
 
 ### Programmatic Usage
+
 ```python
 from portfolio_management.analytics.indicators import (
     IndicatorConfig,
@@ -163,6 +182,7 @@ filtered_assets = hook.filter_assets(prices_df, asset_list)
 ### Adding Real Indicators (e.g., RSI)
 
 1. **Create Provider Implementation**
+
 ```python
 class TalibIndicatorProvider(IndicatorProvider):
     def compute(self, series: pd.Series, params: dict[str, Any]) -> pd.Series:
@@ -174,19 +194,23 @@ class TalibIndicatorProvider(IndicatorProvider):
 ```
 
 2. **Update Configuration Validation** (config.py)
+
 - Add 'talib' to supported providers
 - Add RSI-specific parameter validation
 
 3. **Update CLI** (run_backtest.py)
+
 - Add 'talib' to --indicator-provider choices
 - Instantiate TalibIndicatorProvider when selected
 
 4. **Add Tests**
+
 - Test RSI computation
 - Test threshold filtering
 - Test edge cases
 
 5. **Update Documentation**
+
 - Document RSI parameters
 - Add usage examples
 - Update extension points
@@ -194,12 +218,14 @@ class TalibIndicatorProvider(IndicatorProvider):
 ## Testing Validation
 
 ### Test Results
+
 ```
 $ pytest tests/analytics/indicators/ -v
 ============================== 40 passed in 0.11s ===============================
 ```
 
 ### Test Coverage
+
 - ✅ Provider interface compliance
 - ✅ Stub passthrough behavior
 - ✅ Configuration validation (valid/invalid cases)
@@ -211,6 +237,7 @@ $ pytest tests/analytics/indicators/ -v
 - ✅ Integration with existing system
 
 ### Integration Validation
+
 ```bash
 # Verify CLI flags present
 $ python scripts/run_backtest.py --help | grep indicator
@@ -233,6 +260,7 @@ All imports successful
 ## Files Modified
 
 ### New Files (14)
+
 ```
 src/portfolio_management/analytics/indicators/__init__.py
 src/portfolio_management/analytics/indicators/providers.py
@@ -247,6 +275,7 @@ docs/technical_indicators.md
 ```
 
 ### Modified Files (4)
+
 ```
 src/portfolio_management/analytics/__init__.py
 src/portfolio_management/assets/universes/universes.py
@@ -256,32 +285,32 @@ config/universes.yaml
 
 ## Acceptance Criteria Status
 
-- [x] Users can enable "technical_indicators" block in YAML/CLI without changing selection outputs (stub)
-- [x] Clear extension points documented for adding real indicators later
-- [x] Configuration is parsed and validated correctly
-- [x] Pathways are invoked but computation returns passthrough
-- [x] Tests cover configuration roundtrip and stub invocation
-- [x] All existing tests still pass (no regressions)
+- \[x\] Users can enable "technical_indicators" block in YAML/CLI without changing selection outputs (stub)
+- \[x\] Clear extension points documented for adding real indicators later
+- \[x\] Configuration is parsed and validated correctly
+- \[x\] Pathways are invoked but computation returns passthrough
+- \[x\] Tests cover configuration roundtrip and stub invocation
+- \[x\] All existing tests still pass (no regressions)
 
 ## Next Steps
 
 To integrate real technical indicators:
 
 1. **Choose indicator library** (TA-Lib, ta, pandas-ta)
-2. **Install dependencies** (e.g., `pip install TA-Lib`)
-3. **Implement provider** (e.g., TalibIndicatorProvider)
-4. **Add provider-specific tests**
-5. **Update documentation** with real indicator examples
-6. **Backtest validation** comparing with/without indicators
+1. **Install dependencies** (e.g., `pip install TA-Lib`)
+1. **Implement provider** (e.g., TalibIndicatorProvider)
+1. **Add provider-specific tests**
+1. **Update documentation** with real indicator examples
+1. **Backtest validation** comparing with/without indicators
 
 ## Benefits
 
 1. **Infrastructure Ready** - All plumbing in place for indicators
-2. **No Dependencies** - No heavy TA libraries needed yet
-3. **Tested Framework** - 40 tests ensure stability
-4. **Flexible Design** - Easy to add new indicators/providers
-5. **Backward Compatible** - Existing code unaffected
-6. **Well Documented** - Clear path for future work
+1. **No Dependencies** - No heavy TA libraries needed yet
+1. **Tested Framework** - 40 tests ensure stability
+1. **Flexible Design** - Easy to add new indicators/providers
+1. **Backward Compatible** - Existing code unaffected
+1. **Well Documented** - Clear path for future work
 
 ## Conclusion
 

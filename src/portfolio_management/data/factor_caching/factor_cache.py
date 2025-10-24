@@ -125,17 +125,17 @@ class FactorCache:
                 raise ValueError(
                     f"cache_dir must be a Path or str, got {type(cache_dir).__name__}. "
                     "To fix: use pathlib.Path or string. "
-                    "Example: cache_dir = Path('.cache/factors')"
+                    "Example: cache_dir = Path('.cache/factors')",
                 )
-        
+
         # Validate max_cache_age_days
         if max_cache_age_days is not None and max_cache_age_days < 0:
             raise ValueError(
                 f"max_cache_age_days must be >= 0, got {max_cache_age_days}. "
                 "To fix: use None for no age limit or a non-negative integer. "
-                "Example: max_cache_age_days=7 (expire after 7 days)"
+                "Example: max_cache_age_days=7 (expire after 7 days)",
             )
-        
+
         self.cache_dir = cache_dir
         self.enabled = enabled
         self.max_cache_age_days = max_cache_age_days
@@ -147,7 +147,7 @@ class FactorCache:
                 self.data_dir = cache_dir / "data"
                 self.metadata_dir.mkdir(parents=True, exist_ok=True)
                 self.data_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 # Test write permissions
                 test_file = self.data_dir / ".write_test"
                 try:
@@ -157,13 +157,13 @@ class FactorCache:
                     raise OSError(
                         f"Cache directory {cache_dir} is not writable: {e}. "
                         "To fix: ensure the directory has write permissions or choose a different directory. "
-                        "Example: cache_dir = Path('~/.cache/portfolio').expanduser()"
+                        "Example: cache_dir = Path('~/.cache/portfolio').expanduser()",
                     ) from e
-                    
+
             except OSError as e:
                 logger.error(
                     f"Failed to create cache directories at {cache_dir}: {e}. "
-                    "Disabling cache."
+                    "Disabling cache.",
                 )
                 self.enabled = False
                 warnings.warn(
@@ -274,7 +274,7 @@ class FactorCache:
                 metadata = CacheMetadata.from_dict(json.load(f))
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning(
-                f"Corrupted metadata for factor scores (key: {cache_key[:8]}...): {e}"
+                f"Corrupted metadata for factor scores (key: {cache_key[:8]}...): {e}",
             )
             self._stats["misses"] += 1
             return None
@@ -377,13 +377,13 @@ class FactorCache:
                 metadata_path.unlink()
             if data_path.exists():
                 data_path.unlink()
-            
+
             # Log warning and continue (don't crash)
             logger.warning(
                 f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}. "
                 "Cache write failed but continuing without caching. "
                 "Possible causes: disk full, permission denied, quota exceeded. "
-                "Consider: checking disk space, freeing up space, or disabling cache."
+                "Consider: checking disk space, freeing up space, or disabling cache.",
             )
             warnings.warn(
                 "Cache write failed. Continuing without caching. "
@@ -440,7 +440,7 @@ class FactorCache:
                 metadata = CacheMetadata.from_dict(json.load(f))
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning(
-                f"Corrupted metadata for PIT eligibility (key: {cache_key[:8]}...): {e}"
+                f"Corrupted metadata for PIT eligibility (key: {cache_key[:8]}...): {e}",
             )
             self._stats["misses"] += 1
             return None
@@ -529,13 +529,13 @@ class FactorCache:
                 metadata_path.unlink()
             if data_path.exists():
                 data_path.unlink()
-            
+
             # Log warning and continue (don't crash)
             logger.warning(
                 f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}. "
                 "Cache write failed but continuing without caching. "
                 "Possible causes: disk full, permission denied, quota exceeded. "
-                "Consider: checking disk space, freeing up space, or disabling cache."
+                "Consider: checking disk space, freeing up space, or disabling cache.",
             )
             warnings.warn(
                 "Cache write failed. Continuing without caching. "

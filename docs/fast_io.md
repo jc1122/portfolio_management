@@ -154,6 +154,7 @@ Benchmark results from synthetic datasets mimicking the `long_history_1000` univ
 | pyarrow | 4.45s      | 2.75x   |
 
 **Key Insights:**
+
 - Polars provides the best performance (~5x faster than pandas)
 - PyArrow offers good performance (~3x faster than pandas)
 - Speedup is consistent across different workload sizes
@@ -174,30 +175,34 @@ This will benchmark all available backends on your system with synthetic data.
 When using `--io-backend auto`, the system selects backends in this order:
 
 1. **polars** (if available) - fastest CSV parsing
-2. **pyarrow** (if available) - fast CSV and excellent Parquet
-3. **pandas** (always available) - reliable default
+1. **pyarrow** (if available) - fast CSV and excellent Parquet
+1. **pandas** (always available) - reliable default
 
 ### When to Use Each Backend
 
 **pandas** (default):
+
 - Maximum compatibility
 - No additional dependencies
 - Sufficient performance for small/medium datasets
 - Recommended for production when dependencies are a concern
 
 **polars**:
+
 - Maximum CSV reading performance
 - Large universes (500-1000+ assets)
 - Long histories (5-10+ years)
 - Development/research workflows where speed matters
 
 **pyarrow**:
+
 - Good CSV performance
 - Excellent Parquet support
 - Often already installed (pandas dependency)
 - Good middle ground between speed and compatibility
 
 **auto**:
+
 - Let the system choose
 - Useful when code runs in different environments
 - Ensures best available performance
@@ -209,6 +214,7 @@ When using `--io-backend auto`, the system selects backends in this order:
 ✅ **All backends produce identical pandas DataFrames**
 
 The fast IO backends are transparent to the rest of the system:
+
 - Same column names and types
 - Same index structure
 - Same numerical values (within floating-point precision)
@@ -225,7 +231,7 @@ def test_backend_consistency(sample_csv):
     df_pandas = read_csv_fast(sample_csv, backend="pandas")
     df_polars = read_csv_fast(sample_csv, backend="polars")
     df_pyarrow = read_csv_fast(sample_csv, backend="pyarrow")
-    
+
     # All produce identical results
     pd.testing.assert_frame_equal(df_pandas, df_polars, check_dtype=False)
     pd.testing.assert_frame_equal(df_pandas, df_pyarrow, check_dtype=False)
@@ -234,8 +240,8 @@ def test_backend_consistency(sample_csv):
 ### Known Limitations
 
 1. **Dtype differences**: Fast backends may produce slightly different dtypes (e.g., int32 vs int64), but values are identical
-2. **Column selection**: Some fast backends have different parameter names for column selection
-3. **Parse options**: Advanced pandas parameters may not be supported by all backends
+1. **Column selection**: Some fast backends have different parameter names for column selection
+1. **Parse options**: Advanced pandas parameters may not be supported by all backends
 
 ## Implementation Details
 
@@ -253,6 +259,7 @@ portfolio_management/
 ### Key Components
 
 **`fast_io.py`**: Core fast IO module
+
 - `get_available_backends()`: Check which backends are installed
 - `is_backend_available(backend)`: Test specific backend availability
 - `read_csv_fast(path, backend)`: Read CSV with specified backend
@@ -260,6 +267,7 @@ portfolio_management/
 - `select_backend(requested)`: Select best available backend
 
 **`PriceLoader`**: Updated to support io_backend parameter
+
 - Accepts `io_backend` parameter in constructor
 - Uses fast IO when loading price files
 - Maintains LRU cache regardless of backend
@@ -268,11 +276,13 @@ portfolio_management/
 ### Error Handling
 
 If a requested backend is not available:
+
 1. Log warning message with installation instructions
-2. Automatically fall back to pandas
-3. Continue execution without errors
+1. Automatically fall back to pandas
+1. Continue execution without errors
 
 Example:
+
 ```
 WARNING: Polars backend requested but not available - falling back to pandas.
          Install with: pip install polars
@@ -283,10 +293,10 @@ WARNING: Polars backend requested but not available - falling back to pandas.
 Planned improvements for the fast IO system:
 
 1. **Environment variable support**: `PORTFOLIO_FAST_IO` to set default backend
-2. **Parquet exports**: Option to export processed data as Parquet for faster loading
-3. **Lazy loading**: Polars lazy API for memory-efficient processing
-4. **Streaming operations**: Process large files in chunks
-5. **Compression**: Automatic gzip/zstd compression for disk space savings
+1. **Parquet exports**: Option to export processed data as Parquet for faster loading
+1. **Lazy loading**: Polars lazy API for memory-efficient processing
+1. **Streaming operations**: Process large files in chunks
+1. **Compression**: Automatic gzip/zstd compression for disk space savings
 
 ## Troubleshooting
 
@@ -295,6 +305,7 @@ Planned improvements for the fast IO system:
 **Problem**: Backend requested but warning appears
 
 **Solution**: Install the backend:
+
 ```bash
 pip install polars  # or pyarrow
 ```
@@ -303,13 +314,14 @@ pip install polars  # or pyarrow
 
 **Problem**: Numerical differences between backends
 
-**Solution**: This is normal floating-point behavior. Differences should be < 1e-10. If larger, file an issue.
+**Solution**: This is normal floating-point behavior. Differences should be \< 1e-10. If larger, file an issue.
 
 ### Performance not as expected
 
 **Problem**: Fast backend not faster than pandas
 
-**Solution**: 
+**Solution**:
+
 - Fast backends shine on large files (>1MB)
 - Ensure file is not cached in OS disk cache
 - Run multiple iterations to warm up
@@ -319,7 +331,8 @@ pip install polars  # or pyarrow
 
 **Problem**: `ImportError` when using fast backends
 
-**Solution**: 
+**Solution**:
+
 - Verify backend is installed: `pip list | grep polars`
 - Check Python version compatibility (3.10+)
 - Reinstall if needed: `pip install --force-reinstall polars`
@@ -388,6 +401,6 @@ print(f"Polars is {speedup:.2f}x faster")
 If you have questions or encounter issues with fast IO:
 
 1. Check this documentation
-2. Run benchmarks to verify setup
-3. Check logs for warning messages
-4. File an issue with benchmark results
+1. Run benchmarks to verify setup
+1. Check logs for warning messages
+1. File an issue with benchmark results

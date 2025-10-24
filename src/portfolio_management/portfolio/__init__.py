@@ -12,11 +12,7 @@ from .cardinality import (
     optimize_with_cardinality_relaxation,
     validate_cardinality_constraints,
 )
-from .constraints import (
-    CardinalityConstraints,
-    CardinalityMethod,
-    PortfolioConstraints,
-)
+from .constraints import CardinalityConstraints, CardinalityMethod, PortfolioConstraints
 from .membership import MembershipPolicy, apply_membership_policy
 from .models import Portfolio, StrategyType
 from .preselection import (

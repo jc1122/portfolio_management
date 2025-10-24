@@ -11,7 +11,7 @@ class TestIndicatorConfig:
     def test_default_disabled(self):
         """Test default configuration is disabled."""
         config = IndicatorConfig()
-        
+
         assert config.enabled is False
         assert config.provider == "noop"
         assert config.params == {}
@@ -19,7 +19,7 @@ class TestIndicatorConfig:
     def test_disabled_factory(self):
         """Test disabled() factory method."""
         config = IndicatorConfig.disabled()
-        
+
         assert config.enabled is False
         assert config.provider == "noop"
         assert config.params == {}
@@ -27,7 +27,7 @@ class TestIndicatorConfig:
     def test_noop_factory(self):
         """Test noop() factory method."""
         config = IndicatorConfig.noop()
-        
+
         assert config.enabled is True
         assert config.provider == "noop"
         assert config.params == {}
@@ -36,7 +36,7 @@ class TestIndicatorConfig:
         """Test noop() factory with parameters."""
         params = {"window": 20, "threshold": 0.5}
         config = IndicatorConfig.noop(params)
-        
+
         assert config.enabled is True
         assert config.provider == "noop"
         assert config.params == params
@@ -54,7 +54,7 @@ class TestIndicatorConfig:
     def test_validate_invalid_provider(self):
         """Test validation fails for unsupported provider when enabled."""
         config = IndicatorConfig(enabled=True, provider="unsupported")
-        
+
         with pytest.raises(ValueError, match="Unsupported indicator provider"):
             config.validate()
 
@@ -66,45 +66,33 @@ class TestIndicatorConfig:
 
     def test_validate_invalid_window(self):
         """Test validation fails for invalid window parameter."""
-        config = IndicatorConfig(
-            enabled=True, 
-            provider="noop", 
-            params={"window": 0}
-        )
-        
+        config = IndicatorConfig(enabled=True, provider="noop", params={"window": 0})
+
         with pytest.raises(ValueError, match="Invalid window parameter"):
             config.validate()
 
     def test_validate_negative_window(self):
         """Test validation fails for negative window."""
-        config = IndicatorConfig(
-            enabled=True,
-            provider="noop",
-            params={"window": -5}
-        )
-        
+        config = IndicatorConfig(enabled=True, provider="noop", params={"window": -5})
+
         with pytest.raises(ValueError, match="Invalid window parameter"):
             config.validate()
 
     def test_validate_invalid_threshold(self):
         """Test validation fails for threshold out of range."""
         config = IndicatorConfig(
-            enabled=True,
-            provider="noop",
-            params={"threshold": 1.5}
+            enabled=True, provider="noop", params={"threshold": 1.5}
         )
-        
+
         with pytest.raises(ValueError, match="Invalid threshold parameter"):
             config.validate()
 
     def test_validate_negative_threshold(self):
         """Test validation fails for negative threshold."""
         config = IndicatorConfig(
-            enabled=True,
-            provider="noop",
-            params={"threshold": -0.1}
+            enabled=True, provider="noop", params={"threshold": -0.1}
         )
-        
+
         with pytest.raises(ValueError, match="Invalid threshold parameter"):
             config.validate()
 
@@ -112,9 +100,7 @@ class TestIndicatorConfig:
         """Test validation passes for valid threshold values."""
         for threshold in [0.0, 0.5, 1.0]:
             config = IndicatorConfig(
-                enabled=True,
-                provider="noop",
-                params={"threshold": threshold}
+                enabled=True, provider="noop", params={"threshold": threshold}
             )
             config.validate()  # Should not raise
 
@@ -122,9 +108,7 @@ class TestIndicatorConfig:
         """Test validation passes for valid window values."""
         for window in [1, 20, 50, 100, 200]:
             config = IndicatorConfig(
-                enabled=True,
-                provider="noop",
-                params={"window": window}
+                enabled=True, provider="noop", params={"window": window}
             )
             config.validate()  # Should not raise
 
@@ -137,8 +121,8 @@ class TestIndicatorConfig:
                 "window": 20,
                 "threshold": 0.5,
                 "custom_param": "value",
-                "another_param": 123
-            }
+                "another_param": 123,
+            },
         )
         config.validate()  # Should not raise
 
@@ -148,7 +132,7 @@ class TestIndicatorConfig:
         config.enabled = True
         config.provider = "talib"
         config.params = {"window": 20}
-        
+
         assert config.enabled is True
         assert config.provider == "talib"
         assert config.params == {"window": 20}

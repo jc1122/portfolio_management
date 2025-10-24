@@ -14,8 +14,6 @@ Tests cover:
 
 from __future__ import annotations
 
-import datetime
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -26,7 +24,6 @@ from portfolio_management.portfolio.preselection import (
     PreselectionConfig,
     PreselectionMethod,
 )
-
 
 # ============================================================================
 # Fixtures for Edge Case Scenarios
@@ -171,56 +168,58 @@ class TestRankingTies:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(tied_returns)
-        
+
         # Should select DIFF_D (highest) and TIED_A (first alphabetically)
         assert len(selected) == 2
         assert "DIFF_D" in selected
         # Among tied assets (TIED_A, TIED_B, TIED_C), pick alphabetically
         assert "TIED_A" in selected or all(
             # Or if there's a tie at cutoff, symbols should be sorted
-            s in ["TIED_A", "TIED_B", "TIED_C"] for s in selected if s != "DIFF_D"
+            s in ["TIED_A", "TIED_B", "TIED_C"]
+            for s in selected
+            if s != "DIFF_D"
         )
 
     def test_multiple_assets_tied_at_boundary(self):
         """Multiple assets tied at selection boundary."""
         dates = pd.date_range("2023-01-01", "2023-12-31", freq="D")
         n = len(dates)
-        
+
         # Create 35 assets where 5 are tied at boundary (ranks 28-32)
         # when top_k=30
         returns_dict = {}
         # Top 27 assets (clearly above cutoff)
         for i in range(27):
             returns_dict[f"TOP_{i:02d}"] = [0.003 + i * 0.0001] * n
-        
+
         # 5 tied assets at boundary (ranks 28-32)
         for letter in ["Z", "A", "M", "B", "Y"]:
             returns_dict[f"TIE_{letter}"] = [0.002] * n
-        
+
         # Bottom 3 assets (clearly below cutoff)
         for i in range(3):
             returns_dict[f"BOT_{i:02d}"] = [0.001 - i * 0.0001] * n
-        
+
         returns = pd.DataFrame(returns_dict, index=dates)
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=30,
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should get exactly 30 assets
         assert len(selected) == 30
-        
+
         # All top 27 should be selected
         top_assets = [f"TOP_{i:02d}" for i in range(27)]
         assert all(asset in selected for asset in top_assets)
-        
+
         # Among tied assets, should pick first 3 alphabetically
         tied_selected = [s for s in selected if s.startswith("TIE_")]
         assert len(tied_selected) == 3
@@ -235,9 +234,9 @@ class TestRankingTies:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(all_identical_returns)
-        
+
         # Should select 3 assets, alphabetically first
         assert len(selected) == 3
         assert selected == ["ASSET_A", "ASSET_B", "ASSET_M"]
@@ -250,12 +249,12 @@ class TestRankingTies:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         # Run multiple times to ensure determinism
         selected1 = preselection.select_assets(numerical_precision_ties)
         selected2 = preselection.select_assets(numerical_precision_ties)
         selected3 = preselection.select_assets(numerical_precision_ties)
-        
+
         # All runs should produce identical results
         assert selected1 == selected2 == selected3
         assert len(selected1) == 3
@@ -272,13 +271,10 @@ class TestRankingTies:
             low_vol_weight=0.5,
         )
         preselection = Preselection(config)
-        
+
         # Run 10 times
-        results = [
-            preselection.select_assets(tied_returns)
-            for _ in range(10)
-        ]
-        
+        results = [preselection.select_assets(tied_returns) for _ in range(10)]
+
         # All results should be identical
         assert all(r == results[0] for r in results)
 
@@ -301,7 +297,7 @@ class TestEmptyMinimalResults:
             },
             index=dates_short,
         )
-        
+
         # Require 100 periods but only have 30
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
@@ -310,7 +306,7 @@ class TestEmptyMinimalResults:
             min_periods=100,
         )
         preselection = Preselection(config)
-        
+
         # Should raise InsufficientDataError
         with pytest.raises(InsufficientDataError):
             preselection.select_assets(returns)
@@ -324,13 +320,13 @@ class TestEmptyMinimalResults:
             min_periods=365,
         )
         preselection = Preselection(config)
-        
+
         # All assets have some NaN, so with strict min_periods
         # this should handle gracefully
         # The implementation will filter data and compute on available
         # Some assets might produce NaN scores
         selected = preselection.select_assets(sparse_valid_data)
-        
+
         # Should only select assets with valid data
         # VALID_A and VALID_B should be selected
         assert all(s.startswith("VALID_") for s in selected)
@@ -344,7 +340,7 @@ class TestEmptyMinimalResults:
             min_periods=60,
         )
         preselection = Preselection(config)
-        
+
         # Create data where only one asset is valid
         dates = pd.date_range("2023-01-01", "2023-12-31", freq="D")
         returns = pd.DataFrame(
@@ -355,9 +351,9 @@ class TestEmptyMinimalResults:
             },
             index=dates,
         )
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should select the one valid asset
         assert len(selected) == 1
         assert selected == ["VALID_ONE"]
@@ -372,16 +368,16 @@ class TestEmptyMinimalResults:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=1,
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should select exactly 1 asset
         assert len(selected) == 1
         # Should be deterministic
@@ -401,16 +397,16 @@ class TestEmptyMinimalResults:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=10,  # Request more than available
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should return all 3 valid assets
         assert len(selected) == 3
         assert set(selected) == {"VALID_A", "VALID_B", "VALID_C"}
@@ -436,7 +432,7 @@ class TestCombinedFactorEdgeCases:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=2,
@@ -445,10 +441,10 @@ class TestCombinedFactorEdgeCases:
             low_vol_weight=0.5,
         )
         preselection = Preselection(config)
-        
+
         # Should handle gracefully (momentum all same, vol all zero)
         selected = preselection.select_assets(returns)
-        
+
         # Should still select assets (tie-breaking by symbol)
         assert len(selected) == 2
         assert selected == sorted(selected)
@@ -464,7 +460,7 @@ class TestCombinedFactorEdgeCases:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=2,
@@ -474,9 +470,9 @@ class TestCombinedFactorEdgeCases:
             min_periods=1,  # Allow minimal data
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # When all data is NaN, standardization returns zeros (neutral scores)
         # and tie-breaking by symbol selects first alphabetically
         # This is expected behavior - no crash, deterministic selection
@@ -493,7 +489,7 @@ class TestCombinedFactorEdgeCases:
             },
             index=dates_1year,
         )
-        
+
         # 99% momentum, 1% vol
         config_mom = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
@@ -504,7 +500,7 @@ class TestCombinedFactorEdgeCases:
         )
         preselection_mom = Preselection(config_mom)
         selected_mom = preselection_mom.select_assets(returns)
-        
+
         # 1% momentum, 99% vol
         config_vol = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
@@ -515,7 +511,7 @@ class TestCombinedFactorEdgeCases:
         )
         preselection_vol = Preselection(config_vol)
         selected_vol = preselection_vol.select_assets(returns)
-        
+
         # Both should work without errors
         assert len(selected_mom) == 2
         assert len(selected_vol) == 2
@@ -530,9 +526,9 @@ class TestCombinedFactorEdgeCases:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(mixed_volatility)
-        
+
         # Should handle extreme differences (0.001 vs 0.1 std)
         assert len(selected) == 2
         # LOW_VOL should be selected
@@ -555,9 +551,9 @@ class TestDataQualityIssues:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(all_zero_returns)
-        
+
         # Should handle gracefully, all assets have same momentum (0)
         assert len(selected) == 2
         # Tie-breaking by symbol
@@ -570,12 +566,14 @@ class TestDataQualityIssues:
         # First 200 days are NaN, last part has data
         returns = pd.DataFrame(
             {
-                "ASSET_A": [np.nan] * 200 + list(np.random.normal(0.001, 0.01, n - 200)),
-                "ASSET_B": [np.nan] * 200 + list(np.random.normal(0.001, 0.01, n - 200)),
+                "ASSET_A": [np.nan] * 200
+                + list(np.random.normal(0.001, 0.01, n - 200)),
+                "ASSET_B": [np.nan] * 200
+                + list(np.random.normal(0.001, 0.01, n - 200)),
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=2,
@@ -583,7 +581,7 @@ class TestDataQualityIssues:
             min_periods=60,
         )
         preselection = Preselection(config)
-        
+
         # Should work on the available data
         selected = preselection.select_assets(returns)
         assert len(selected) == 2
@@ -600,7 +598,7 @@ class TestDataQualityIssues:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=1,
@@ -608,7 +606,7 @@ class TestDataQualityIssues:
             min_periods=1,
         )
         preselection = Preselection(config)
-        
+
         # Should work with minimal data
         selected = preselection.select_assets(returns)
         # Might return empty if calculation fails
@@ -623,10 +621,10 @@ class TestDataQualityIssues:
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         # Should handle outliers without crashing
         selected = preselection.select_assets(extreme_outliers)
-        
+
         assert len(selected) == 2
         # Results should be deterministic
         selected2 = preselection.select_assets(extreme_outliers)
@@ -643,9 +641,9 @@ class TestDataQualityIssues:
             min_periods=60,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(sparse_valid_data)
-        
+
         # Should only select assets with sufficient valid data
         # VALID_A and VALID_B should definitely be selected
         assert all(s.startswith("VALID_") for s in selected if "VALID" in s)
@@ -668,7 +666,7 @@ class TestConfigurationBoundaries:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=2,
@@ -676,9 +674,9 @@ class TestConfigurationBoundaries:
             min_periods=100,  # Equal to lookback
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should work correctly
         assert len(selected) == 2
 
@@ -691,7 +689,7 @@ class TestConfigurationBoundaries:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=2,
@@ -699,9 +697,9 @@ class TestConfigurationBoundaries:
             skip=99,  # lookback - 1
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should work (using only 1 period for momentum)
         assert len(selected) == 2
 
@@ -715,16 +713,16 @@ class TestConfigurationBoundaries:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=0,  # Disabled
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should return all assets when disabled
         assert len(selected) == 3
         assert set(selected) == {"ASSET_A", "ASSET_B", "ASSET_C"}
@@ -738,16 +736,16 @@ class TestConfigurationBoundaries:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=100,  # Much larger than 2 assets
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should return all available assets
         assert len(selected) == 2
         assert set(selected) == {"ASSET_A", "ASSET_B"}
@@ -762,16 +760,16 @@ class TestConfigurationBoundaries:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=1,
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should return exactly 1 asset
         assert len(selected) == 1
         # Should be deterministic
@@ -797,9 +795,9 @@ class TestZScoreEdgeCases:
             low_vol_weight=0.5,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(all_identical_returns)
-        
+
         # Should handle zero variance gracefully
         assert len(selected) == 3
         # Tie-breaking by symbol
@@ -816,7 +814,7 @@ class TestZScoreEdgeCases:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=2,
@@ -825,9 +823,9 @@ class TestZScoreEdgeCases:
             low_vol_weight=0.5,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should handle outlier correctly
         assert len(selected) == 2
         # OUTLIER should likely be selected due to high momentum
@@ -843,7 +841,7 @@ class TestZScoreEdgeCases:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=2,
@@ -853,9 +851,9 @@ class TestZScoreEdgeCases:
             min_periods=1,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # When all data is NaN, standardization returns neutral scores (zeros)
         # Tie-breaking by symbol is deterministic
         # This validates no crash occurs and behavior is deterministic
@@ -875,7 +873,7 @@ class TestZScoreEdgeCases:
             },
             index=dates,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=2,
@@ -885,10 +883,10 @@ class TestZScoreEdgeCases:
             min_periods=1,
         )
         preselection = Preselection(config)
-        
+
         # Should handle minimal data gracefully
         selected = preselection.select_assets(returns)
-        
+
         # Might return empty or partial results
         assert isinstance(selected, list)
         assert len(selected) <= 2
@@ -915,7 +913,7 @@ class TestValidationAndDeterminism:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.COMBINED,
             top_k=3,
@@ -924,14 +922,14 @@ class TestValidationAndDeterminism:
             momentum_weight=0.6,
             low_vol_weight=0.4,
         )
-        
+
         # Run 20 times
         results = []
         for _ in range(20):
             preselection = Preselection(config)
             selected = preselection.select_assets(returns)
             results.append(selected)
-        
+
         # All results should be identical
         assert all(r == results[0] for r in results)
 
@@ -939,7 +937,7 @@ class TestValidationAndDeterminism:
         """Validate no silent failures on various edge cases."""
         dates = pd.date_range("2023-01-01", "2023-12-31", freq="D")
         n = len(dates)
-        
+
         # Test various edge cases don't cause silent failures
         edge_cases = [
             # All zeros
@@ -949,16 +947,18 @@ class TestValidationAndDeterminism:
             # Single point
             pd.DataFrame({"A": [np.nan] * (n - 1) + [0.01]}, index=dates),
             # Extreme values (ensure length matches by using list comprehension)
-            pd.DataFrame({"A": [1.0 if i % 2 == 0 else -1.0 for i in range(n)]}, index=dates),
+            pd.DataFrame(
+                {"A": [1.0 if i % 2 == 0 else -1.0 for i in range(n)]}, index=dates
+            ),
         ]
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=1,
             lookback=50,
             min_periods=1,
         )
-        
+
         for returns in edge_cases:
             preselection = Preselection(config)
             # Should not crash, should return list (possibly empty)
@@ -977,15 +977,15 @@ class TestValidationAndDeterminism:
             },
             index=dates_1year,
         )
-        
+
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
             top_k=3,
             lookback=100,
         )
         preselection = Preselection(config)
-        
+
         selected = preselection.select_assets(returns)
-        
+
         # Should be sorted alphabetically
         assert selected == sorted(selected)

@@ -133,9 +133,9 @@ Cumulative time comparison:
 
 - Single one-off backtest (overhead not worth it)
 - Data changes frequently every run (0% hit rate)
-- Disk space is constrained (<500MB available)
+- Disk space is constrained (\<500MB available)
 - Each run uses unique parameters (parameter sweep scenario)
-- Universe size < 100 assets (minimal benefit, ~8% overhead)
+- Universe size \< 100 assets (minimal benefit, ~8% overhead)
 
 ### Recommended Settings
 
@@ -534,8 +534,8 @@ python benchmarks/benchmark_cache_performance.py
 Results will be written to `docs/performance/caching_benchmarks.md`.
 
 **Note:** Actual results may vary based on:
+
 - Hardware specifications (CPU, RAM, disk speed)
 - System load during benchmark execution
 - Python version and library versions
 - Operating system and file system type
-

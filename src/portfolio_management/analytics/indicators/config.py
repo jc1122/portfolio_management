@@ -38,6 +38,7 @@ class IndicatorConfig:
         ...     rsi_period: int = 14
         ...     overbought_threshold: float = 70.0
         ...     oversold_threshold: float = 30.0
+
     """
 
     enabled: bool = False
@@ -53,21 +54,26 @@ class IndicatorConfig:
         Example:
             >>> config = IndicatorConfig(provider='unsupported')
             >>> config.validate()  # Raises ValueError
+
         """
         if self.enabled and self.provider not in ("noop", "talib", "ta"):
             raise ValueError(
                 f"Unsupported indicator provider: {self.provider}. "
-                f"Supported providers: 'noop', 'talib', 'ta'"
+                f"Supported providers: 'noop', 'talib', 'ta'",
             )
 
         # Validate common parameters if present
         if "window" in self.params and self.params["window"] <= 0:
-            raise ValueError(f"Invalid window parameter: {self.params['window']} (must be positive)")
+            raise ValueError(
+                f"Invalid window parameter: {self.params['window']} (must be positive)",
+            )
 
         if "threshold" in self.params:
             threshold = self.params["threshold"]
             if not 0 <= threshold <= 1:
-                raise ValueError(f"Invalid threshold parameter: {threshold} (must be in [0, 1])")
+                raise ValueError(
+                    f"Invalid threshold parameter: {threshold} (must be in [0, 1])",
+                )
 
     @classmethod
     def disabled(cls) -> IndicatorConfig:
@@ -79,6 +85,7 @@ class IndicatorConfig:
         Example:
             >>> config = IndicatorConfig.disabled()
             >>> assert config.enabled is False
+
         """
         return cls(enabled=False, provider="noop", params={})
 
@@ -96,5 +103,6 @@ class IndicatorConfig:
             >>> config = IndicatorConfig.noop({'window': 20})
             >>> assert config.enabled is True
             >>> assert config.provider == 'noop'
+
         """
         return cls(enabled=True, provider="noop", params=params or {})

@@ -1,0 +1,95 @@
+# Configuration for the Multi-Factor Combined Strategy Example
+#
+# This file defines a custom universe for a multi-factor strategy that
+# combines momentum and low-volatility signals. It demonstrates how to
+# configure the 'combined' preselection method and assign weights to
+# each factor.
+#
+# Example usage with `run_backtest.py`:
+# python scripts/run_backtest.py equal_weight \
+#   --universe-file config/multifactor_strategy_config.yaml \
+#   --universe-name multifactor_combined \
+#   --start-date 2010-01-01 \
+#   --end-date 2023-12-31
+
+universes:
+  multifactor_combined:
+    description: "Multi-factor strategy combining momentum (60%) and low-volatility (40%)."
+
+    # Use the same asset list as the other examples for consistency.
+    assets: &long_history_1000_assets [
+      "A", "AA", "AAL", "AAP", "AAPL", "ABBV", "ABC", "ABT", "ACGL", "ACN",
+      "ADBE", "ADI", "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AIG",
+      "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALK", "ALL", "ALLE", "AMAT", "AMCR",
+      "AMD", "AME", "AMGN", "AMP", "AMT", "AMZN", "ANET", "ANSS", "AON", "AOS",
+      "APA", "APD", "APH", "APTV", "ARE", "ATO", "AVB", "AVY", "AWK", "AXP",
+      "AZO", "BA", "BAC", "BALL", "BAX", "BBWI", "BBY", "BDX", "BEN", "BF-B",
+      "BG", "BIIB", "BIO", "BK", "BKNG", "BKR", "BLK", "BMY", "BR", "BRO",
+      "BSX", "BWA", "BXP", "C", "CAG", "CAH", "CARR", "CAT", "CB", "CBOE",
+      "CBRE", "CCI", "CCL", "CDAY", "CDNS", "CDW", "CE", "CEG", "CF", "CFG",
+      "CHD", "CHRW", "CHTR", "CI", "CINF", "CL", "CLX", "CMA", "CMCSA", "CME",
+      "CMG", "CMI", "CMS", "CNC", "CNP", "COF", "COO", "COP", "COST", "CPB",
+      "CPRT", "CPT", "CRL", "CRM", "CSCO", "CSGP", "CSX", "CTAS", "CTLT", "CTRA",
+      "CTSH", "CVS", "CVX", "CZR", "D", "DAL", "DD", "DE", "DFS", "DG",
+      "DGX", "DHI", "DHR", "DIS", "DISH", "DLR", "DLTR", "DOV", "DOW", "DPZ",
+      "DRI", "DTE", "DUK", "DVA", "DVN", "DXC", "DXCM", "EA", "EBAY", "ECL",
+      "ED", "EFX", "EIX", "EL", "ELV", "EMN", "EMR", "ENPH", "EOG", "EPAM",
+      "EQIX", "EQR", "EQT", "ERJ", "ES", "ESS", "ETN", "ETR", "ETSY", "EVRG",
+      "EW", "EXC", "EXPD", "EXPE", "EXR", "F", "FANG", "FAST", "FCX", "FDS",
+      "FDX", "FE", "FFIV", "FICO", "FIS", "FISV", "FITB", "FLT", "FMC", "FOX",
+      "FOXA", "FRT", "FSLR", "FTNT", "FTV", "GD", "GE", "GEHC", "GEN", "GILD",
+      "GIS", "GL", "GLW", "GM", "GNRC", "GOOG", "GOOGL", "GPC", "GPN", "GRMN",
+      "GS", "GWW", "HAL", "HAS", "HBAN", "HCA", "HD", "HES", "HIG", "HII",
+      "HLT", "HOLX", "HON", "HPE", "HPQ", "HRL", "HSIC", "HST", "HSY", "HUM",
+      "HWM", "IBM", "ICE", "IDXX", "IEX", "IFF", "ILMN", "INCY", "INTC", "INTU",
+      "INVH", "IP", "IPG", "IQV", "IRM", "ISRG", "IT", "ITW", "IVZ", "J",
+      "JBL", "JCI", "JEF", "JNJ", "JNPR", "JPM", "K", "KDP", "KEY", "KEYS",
+      "KHC", "KIM", "KLAC", "KMB", "KMI", "KMX", "KO", "KR", "KVUE", "L",
+      "LDOS", "LEN", "LH", "LHX", "LIN", "LKQ", "LLY", "LMT", "LNC", "LNT",
+      "LOW", "LULU", "LUV", "LVS", "LW", "LYB", "LYV", "MA", "MAA", "MAR",
+      "MAS", "MCD", "MCHP", "MCK", "MCO", "MDLZ", "MDT", "MET", "META", "MGM",
+      "MHK", "MKC", "MKTX", "MLM", "MMC", "MMM", "MNST", "MO", "MOH", "MOS",
+      "MPC", "MPWR", "MRK", "MRNA", "MRO", "MS", "MSCI", "MSFT", "MSI", "MTB",
+      "MTCH", "MTD", "MU", "NCLH", "NDAQ", "NEE", "NEM", "NFLX", "NI", "NKE",
+      "NOC", "NOW", "NRG", "NSC", "NTAP", "NTRS", "NUE", "NVDA", "NVR", "NWS",
+      "NWSA", "NXPI", "O", "ODFL", "OGN", "OKE", "OMC", "ON", "ORCL", "ORLY",
+      "OTIS", "OXY", "PANW", "PARA", "PAYC", "PAYX", "PCAR", "PCG", "PEAK", "PEG",
+      "PEP", "PFE", "PFG", "PG", "PGR", "PH", "PHM", "PKG", "PLD", "PM",
+      "PNC", "PNR", "PNW", "PODD", "POOL", "PPG", "PPL", "PRU", "PSA", "PSX",
+      "PTC", "PWR", "PXD", "PYPL", "QCOM", "QRVO", "RCL", "REG", "REGN", "RF",
+      "RHI", "RJF", "RL", "RMD", "ROK", "ROL", "ROP", "ROST", "RSG", "RTX",
+      "SBAC", "SBUX", "SCHW", "SJM", "SLB", "SNA", "SNPS", "SO", "SPG", "SPGI",
+      "SRE", "STE", "STLD", "STT", "STX", "STZ", "SWK", "SWKS", "SYF", "SYK",
+      "SYY", "T", "TAP", "TDG", "TDY", "TECH", "TEL", "TER", "TFC", "TFX",
+      "TGT", "TJX", "TMO", "TMUS", "TPR", "TRGP", "TRMB", "TROW", "TRV", "TSCO",
+      "TSLA", "TSN", "TT", "TTWO", "TXN", "TXT", "UAL", "UDR", "UHS", "ULTA",
+      "UNH", "UNP", "UPS", "URI", "USB", "V", "VFC", "VICI", "VLO", "VMC",
+      "VRSK", "VRSN", "VRTX", "VTR", "VTRS", "VZ", "WAB", "WBA", "WBD", "WDC",
+      "WEC", "WELL", "WFC", "WHR", "WM", "WMB", "WMT", "WRB", "WRK", "WST",
+      "WTW", "WY", "WYNN", "XEL", "XOM", "XRAY", "XYL", "YUM", "ZBH", "ZBRA",
+      "ZION", "ZTS"
+    ]
+
+    # Point-in-Time (PIT) Eligibility Configuration
+    pit_eligibility:
+      enabled: true
+      min_history_days: 252
+
+    # Preselection Configuration (Combined Factors)
+    preselection:
+      method: "combined"
+      top_k: 25
+      lookback: 252
+
+      # Factor Weights: Define the contribution of each factor to the final score.
+      # The weights should sum to 1.0.
+      momentum_weight: 0.6  # 60% weight to momentum
+      low_vol_weight: 0.4   # 40% weight to low-volatility
+
+      min_periods: 126
+
+    # No membership policy is defined for this example to isolate the
+    # effect of the combined factor scoring. You could add one here
+    # to control turnover, similar to the other examples.
+    membership_policy:
+      enabled: false

@@ -4,8 +4,8 @@
 
 This document describes the design for cardinality-constrained portfolio optimization, including current implementation (preselection) and future extension points for optimizer-integrated cardinality.
 
-**Status**: Design phase with stubs for future implementation  
-**Current Implementation**: Preselection (factor-based filtering)  
+**Status**: Design phase with stubs for future implementation
+**Current Implementation**: Preselection (factor-based filtering)
 **Future Extensions**: MIQP, heuristics, relaxation methods
 
 ## What Are Cardinality Constraints?
@@ -14,13 +14,14 @@ Cardinality constraints limit the number of non-zero positions in a portfolio. T
 
 - **Transaction Cost Management**: Fewer positions = lower rebalancing costs
 - **Operational Simplicity**: Easier to manage and monitor smaller portfolios
-- **Minimum Investment Sizes**: Enforce practical position sizes (e.g., no positions < $1,000)
+- **Minimum Investment Sizes**: Enforce practical position sizes (e.g., no positions \< $1,000)
 - **Tax Efficiency**: Limit number of tax lots to track
 - **Compliance**: Some mandates require concentrated portfolios
 
 ### Mathematical Formulation
 
 Standard mean-variance optimization:
+
 ```
 minimize    w'Σw
 subject to  w'μ >= r_target
@@ -29,6 +30,7 @@ subject to  w'μ >= r_target
 ```
 
 With cardinality constraint:
+
 ```
 Additional:  ||w||_0 <= K    (at most K non-zero positions)
             w_i >= w_min or w_i = 0  (minimum position size)
@@ -43,12 +45,14 @@ This becomes a **Mixed-Integer Quadratic Program (MIQP)**, which is NP-hard.
 **Implementation**: `src/portfolio_management/portfolio/preselection.py`
 
 **How it works**:
+
 1. Compute factor scores (momentum, low-volatility, or combined)
-2. Rank assets by factor scores
-3. Select top-K assets deterministically
-4. Pass filtered universe to continuous optimizer
+1. Rank assets by factor scores
+1. Select top-K assets deterministically
+1. Pass filtered universe to continuous optimizer
 
 **Advantages**:
+
 - ✅ Fast: Linear time complexity O(N)
 - ✅ Deterministic and reproducible
 - ✅ Factor-driven: Interpretable asset selection
@@ -56,11 +60,13 @@ This becomes a **Mixed-Integer Quadratic Program (MIQP)**, which is NP-hard.
 - ✅ No special solver requirements
 
 **Limitations**:
+
 - ❌ Two-stage process: Factor selection may not align with portfolio objectives
 - ❌ May miss globally optimal sparse portfolios
 - ❌ Factor assumptions (e.g., momentum predicts returns) may not hold
 
 **Example**:
+
 ```python
 from portfolio_management.portfolio import (
     Preselection,
@@ -94,6 +100,7 @@ Three approaches are designed but not yet implemented:
 **Approach**: Solve optimization with binary variables for asset selection
 
 **Formulation**:
+
 ```
 minimize    w'Σw
 subject to  w'μ >= r_target
@@ -105,22 +112,26 @@ subject to  w'μ >= r_target
 ```
 
 **Advantages**:
+
 - ✅ Globally optimal solution (for convex objectives)
 - ✅ Single-stage optimization
 - ✅ Directly aligns sparsity with portfolio objectives
 
 **Limitations**:
+
 - ❌ Computationally expensive: NP-hard problem
 - ❌ Requires commercial solver (Gurobi or CPLEX)
 - ❌ Scales poorly: >200 assets may not converge
 - ❌ License costs for commercial solvers
 
 **Recommended Use Cases**:
-- Small universes (<100 assets)
+
+- Small universes (\<100 assets)
 - Research and strategy development
 - When optimality is critical
 
 **Implementation Requirements**:
+
 - Gurobi or CPLEX Python bindings
 - License for commercial solver
 - Big-M formulation for binary constraints
@@ -133,42 +144,50 @@ subject to  w'μ >= r_target
 **Potential Algorithms**:
 
 1. **Greedy Forward Selection**:
+
    - Start with empty portfolio
    - Iteratively add asset with best marginal contribution
    - Stop at K assets
 
-2. **Greedy Backward Elimination**:
+1. **Greedy Backward Elimination**:
+
    - Start with full portfolio
    - Iteratively remove asset with least contribution
    - Stop at K assets
 
-3. **Local Search**:
+1. **Local Search**:
+
    - Start with initial solution (e.g., from preselection)
    - Iteratively swap assets to improve objective
    - Accept moves that reduce risk or increase Sharpe ratio
 
-4. **Threshold-Based**:
+1. **Threshold-Based**:
+
    - Optimize without cardinality constraint
    - Threshold small weights to zero
    - Re-optimize with remaining assets
 
 **Advantages**:
+
 - ✅ Fast: Polynomial time complexity
 - ✅ No special solver required
 - ✅ Good approximate solutions (typically within 5-10% of optimal)
 - ✅ Scalable to large universes (>500 assets)
 
 **Limitations**:
+
 - ❌ Suboptimal: May get stuck in local optima
 - ❌ Solution quality depends on initialization
 - ❌ No optimality guarantees
 
 **Recommended Use Cases**:
+
 - Medium to large universes (100-1000 assets)
 - Production environments without commercial solvers
 - When speed is more important than optimality
 
 **Implementation Requirements**:
+
 - Custom Python algorithms
 - Multiple random restarts for robustness
 - Warm-start from preselection
@@ -179,6 +198,7 @@ subject to  w'μ >= r_target
 **Approach**: Solve continuous relaxation with sparsity penalty, then round
 
 **Process**:
+
 1. Solve continuous optimization with L1 or elastic-net penalty:
    ```
    minimize    w'Σw + λ*||w||_1
@@ -186,27 +206,31 @@ subject to  w'μ >= r_target
                Σw_i = 1
                w_i >= 0
    ```
-2. Threshold weights: Keep top-K by magnitude
-3. Re-normalize and optionally re-optimize
+1. Threshold weights: Keep top-K by magnitude
+1. Re-normalize and optionally re-optimize
 
 **Advantages**:
+
 - ✅ Fast: Similar to standard continuous optimization
 - ✅ No special solver required
 - ✅ Smooth optimization landscape
 - ✅ Mature optimization libraries available
 
 **Limitations**:
+
 - ❌ Two-stage process (optimize, then round)
 - ❌ Rounding may degrade solution quality
 - ❌ Penalty parameter (λ) requires tuning
 - ❌ Hard cardinality constraint only approximated
 
 **Recommended Use Cases**:
+
 - When MIQP solver not available
 - Exploratory analysis with varying sparsity levels
 - Warm-start for other methods
 
 **Implementation Requirements**:
+
 - Extend CVXPY formulations with L1 penalty
 - Rounding heuristics
 - Parameter tuning utilities
@@ -222,7 +246,7 @@ Located in `src/portfolio_management/portfolio/constraints/models.py`:
 @dataclass(frozen=True)
 class CardinalityConstraints:
     """Cardinality constraints for portfolio optimization.
-    
+
     Attributes:
         enabled: Whether cardinality constraints are active
         method: Method for enforcing cardinality
@@ -230,7 +254,7 @@ class CardinalityConstraints:
         min_position_size: Minimum weight for non-zero positions
         group_limits: Optional per-group position limits
         enforce_in_optimizer: Whether to enforce within optimizer
-    
+
     """
     enabled: bool = False
     method: CardinalityMethod = CardinalityMethod.PRESELECTION
@@ -302,18 +326,22 @@ constraints = CardinalityConstraints(
 The codebase provides clear extension points for cardinality optimization:
 
 1. **Optimizer Functions** (in `cardinality.py`):
+
    - `optimize_with_cardinality_miqp()` - MIQP implementation
    - `optimize_with_cardinality_heuristic()` - Heuristic algorithms
    - `optimize_with_cardinality_relaxation()` - Continuous relaxation
 
-2. **Validation** (in `cardinality.py`):
+1. **Validation** (in `cardinality.py`):
+
    - `validate_cardinality_constraints()` - Check feasibility
    - Returns `CardinalityNotImplementedError` for non-preselection methods
 
-3. **Factory** (in `cardinality.py`):
+1. **Factory** (in `cardinality.py`):
+
    - `get_cardinality_optimizer()` - Returns appropriate optimizer function
 
-4. **Integration Points** (strategy classes):
+1. **Integration Points** (strategy classes):
+
    - Extend `PortfolioStrategy.construct()` to accept `CardinalityConstraints`
    - Call appropriate optimizer based on `method` field
    - Fall back to preselection for current implementation
@@ -323,21 +351,25 @@ The codebase provides clear extension points for cardinality optimization:
 When implementing future methods:
 
 1. **Unit Tests**:
+
    - Test each optimizer function independently
    - Validate constraint satisfaction
    - Test edge cases (empty universe, infeasible constraints)
 
-2. **Integration Tests**:
+1. **Integration Tests**:
+
    - Compare solutions across methods
    - Verify computational complexity
    - Test with real historical data
 
-3. **Performance Tests**:
+1. **Performance Tests**:
+
    - Benchmark runtime vs universe size
    - Measure solution quality vs MIQP baseline
    - Profile memory usage
 
-4. **Regression Tests**:
+1. **Regression Tests**:
+
    - Ensure preselection path still works
    - Verify backward compatibility
    - Test feature flag behavior
@@ -349,8 +381,8 @@ When implementing future methods:
 | Criterion | Preselection | MIQP | Heuristic | Relaxation |
 |-----------|-------------|------|-----------|------------|
 | **Optimality** | Approximate | Optimal | Near-optimal | Approximate |
-| **Speed (100 assets)** | <1s | 10-60s | 1-5s | 1-3s |
-| **Speed (500 assets)** | <2s | May not converge | 5-30s | 3-10s |
+| **Speed (100 assets)** | \<1s | 10-60s | 1-5s | 1-3s |
+| **Speed (500 assets)** | \<2s | May not converge | 5-30s | 3-10s |
 | **Solver Required** | No | Gurobi/CPLEX | No | No |
 | **Interpretability** | High | Low | Medium | Medium |
 | **Implementation Effort** | ✅ Done | 2-3 weeks | 3-4 weeks | 1-2 weeks |
@@ -359,24 +391,28 @@ When implementing future methods:
 ### Recommendations
 
 **Use Preselection When**:
+
 - Production environment without commercial solvers
 - Factor-based selection aligns with investment philosophy
 - Speed and reliability are critical
 - Universe size is large (>500 assets)
 
 **Consider MIQP When**:
-- Small universe (<100 assets)
+
+- Small universe (\<100 assets)
 - Research and strategy development
 - Have access to Gurobi/CPLEX license
 - Optimality is worth computation time
 
 **Consider Heuristics When**:
+
 - Medium universe (100-500 assets)
 - No commercial solver available
 - Good-enough solutions acceptable
 - Need faster than MIQP
 
 **Consider Relaxation When**:
+
 - Quick prototyping
 - Warm-start for other methods
 - Exploring trade-offs between sparsity and performance
@@ -450,98 +486,103 @@ except CardinalityNotImplementedError as e:
 
 ### Academic Literature
 
-1. **Bertsimas, D., & Shioda, R. (2009)**  
-   "Algorithm for cardinality-constrained quadratic optimization"  
+1. **Bertsimas, D., & Shioda, R. (2009)**
+   "Algorithm for cardinality-constrained quadratic optimization"
    _Computational Optimization and Applications_, 43(1), 1-22.
 
-2. **Bienstock, D. (1996)**  
-   "Computational study of a family of mixed-integer quadratic programming problems"  
+1. **Bienstock, D. (1996)**
+   "Computational study of a family of mixed-integer quadratic programming problems"
    _Mathematical Programming_, 74(2), 121-140.
 
-3. **Fastrich, B., Paterlini, S., & Winker, P. (2014)**  
-   "Constructing optimal sparse portfolios using regularization methods"  
+1. **Fastrich, B., Paterlini, S., & Winker, P. (2014)**
+   "Constructing optimal sparse portfolios using regularization methods"
    _Computational Management Science_, 12(3), 417-434.
 
-4. **Shaw, D. X., Liu, S., & Kopman, L. (2008)**  
-   "Lagrangian relaxation procedure for cardinality-constrained portfolio optimization"  
+1. **Shaw, D. X., Liu, S., & Kopman, L. (2008)**
+   "Lagrangian relaxation procedure for cardinality-constrained portfolio optimization"
    _Optimization Methods and Software_, 23(3), 411-420.
 
-5. **Cesarone, F., Scozzari, A., & Tardella, F. (2013)**  
-   "A new method for mean-variance portfolio optimization with cardinality constraints"  
+1. **Cesarone, F., Scozzari, A., & Tardella, F. (2013)**
+   "A new method for mean-variance portfolio optimization with cardinality constraints"
    _Annals of Operations Research_, 205(1), 213-234.
 
 ### Software and Tools
 
-- **Gurobi**: https://www.gurobi.com/  
+- **Gurobi**: https://www.gurobi.com/
   Commercial MIQP solver with Python bindings
 
-- **CPLEX**: https://www.ibm.com/analytics/cplex-optimizer  
+- **CPLEX**: https://www.ibm.com/analytics/cplex-optimizer
   IBM commercial MIQP solver
 
-- **PyPortfolioOpt**: https://pyportfolioopt.readthedocs.io/  
+- **PyPortfolioOpt**: https://pyportfolioopt.readthedocs.io/
   Open-source portfolio optimization (no cardinality support)
 
-- **CVXPY**: https://www.cvxpy.org/  
+- **CVXPY**: https://www.cvxpy.org/
   Python-embedded modeling language for convex optimization
 
 ## Implementation Roadmap
 
 ### Phase 1: Design & Stubs (Current)
-- [x] Define `CardinalityConstraints` dataclass
-- [x] Define `CardinalityMethod` enum
-- [x] Create stub functions with comprehensive documentation
-- [x] Define `CardinalityNotImplementedError`
-- [x] Add validation utilities
-- [x] Document trade-offs and design decisions
+
+- \[x\] Define `CardinalityConstraints` dataclass
+- \[x\] Define `CardinalityMethod` enum
+- \[x\] Create stub functions with comprehensive documentation
+- \[x\] Define `CardinalityNotImplementedError`
+- \[x\] Add validation utilities
+- \[x\] Document trade-offs and design decisions
 
 ### Phase 2: MIQP Implementation (Future)
-- [ ] Integrate Gurobi/CPLEX Python bindings
-- [ ] Implement `optimize_with_cardinality_miqp()`
-- [ ] Add big-M constraint formulation
-- [ ] Write unit tests
-- [ ] Benchmark performance
-- [ ] Document solver setup
+
+- \[ \] Integrate Gurobi/CPLEX Python bindings
+- \[ \] Implement `optimize_with_cardinality_miqp()`
+- \[ \] Add big-M constraint formulation
+- \[ \] Write unit tests
+- \[ \] Benchmark performance
+- \[ \] Document solver setup
 
 ### Phase 3: Heuristic Implementation (Future)
-- [ ] Implement greedy forward selection
-- [ ] Implement greedy backward elimination
-- [ ] Implement local search algorithm
-- [ ] Add multiple restart logic
-- [ ] Write unit and integration tests
-- [ ] Compare against MIQP baseline
+
+- \[ \] Implement greedy forward selection
+- \[ \] Implement greedy backward elimination
+- \[ \] Implement local search algorithm
+- \[ \] Add multiple restart logic
+- \[ \] Write unit and integration tests
+- \[ \] Compare against MIQP baseline
 
 ### Phase 4: Relaxation Implementation (Future)
-- [ ] Extend CVXPY models with L1 penalty
-- [ ] Implement rounding heuristics
-- [ ] Add parameter tuning utilities
-- [ ] Write tests
-- [ ] Compare against other methods
+
+- \[ \] Extend CVXPY models with L1 penalty
+- \[ \] Implement rounding heuristics
+- \[ \] Add parameter tuning utilities
+- \[ \] Write tests
+- \[ \] Compare against other methods
 
 ### Phase 5: Production Integration (Future)
-- [ ] Update strategy classes to accept cardinality constraints
-- [ ] Add CLI flags for cardinality configuration
-- [ ] Update universe YAML schema
-- [ ] Write end-to-end integration tests
-- [ ] Update user documentation
+
+- \[ \] Update strategy classes to accept cardinality constraints
+- \[ \] Add CLI flags for cardinality configuration
+- \[ \] Update universe YAML schema
+- \[ \] Write end-to-end integration tests
+- \[ \] Update user documentation
 
 ## FAQ
 
-**Q: Why not implement MIQP now?**  
+**Q: Why not implement MIQP now?**
 A: Requires commercial solver license (Gurobi/CPLEX) which may not be available in all environments. Preselection provides a good alternative without dependencies.
 
-**Q: Can I use both preselection and cardinality constraints?**  
+**Q: Can I use both preselection and cardinality constraints?**
 A: Yes! You can use preselection to reduce universe size, then apply integrated cardinality within the optimizer (when implemented).
 
-**Q: What's the difference between max_assets and preselection top_k?**  
+**Q: What's the difference between max_assets and preselection top_k?**
 A: `top_k` is factor-based filtering before optimization. `max_assets` is a constraint during optimization. They can be different values.
 
-**Q: How do group_limits work?**  
+**Q: How do group_limits work?**
 A: They enforce position limits per asset class (e.g., max 20 equity positions, max 10 bond positions), in addition to overall `max_assets`.
 
-**Q: What if my constraints are infeasible?**  
+**Q: What if my constraints are infeasible?**
 A: `validate_cardinality_constraints()` will raise `ValueError` with a clear message about the infeasibility.
 
-**Q: Can I implement custom cardinality methods?**  
+**Q: Can I implement custom cardinality methods?**
 A: Yes! Follow the signature of stub functions in `cardinality.py` and add your method to `CardinalityMethod` enum.
 
 ## Conclusion
@@ -549,9 +590,9 @@ A: Yes! Follow the signature of stub functions in `cardinality.py` and add your 
 This design establishes a clear path for cardinality-constrained optimization while maintaining backward compatibility with the current preselection approach. The stub implementations provide:
 
 1. **Type-safe interfaces** for future extensions
-2. **Clear documentation** of trade-offs and design decisions
-3. **Validation utilities** to catch configuration errors early
-4. **Extension points** that minimize future code changes
-5. **Production-ready preselection** as the current implementation
+1. **Clear documentation** of trade-offs and design decisions
+1. **Validation utilities** to catch configuration errors early
+1. **Extension points** that minimize future code changes
+1. **Production-ready preselection** as the current implementation
 
 Future implementers can follow the roadmap to add MIQP, heuristic, or relaxation methods without breaking existing code.

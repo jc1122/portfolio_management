@@ -19,12 +19,14 @@ Selects assets with the highest cumulative returns over a lookback period.
 **Formula**: Cumulative return = (1+r₁) × (1+r₂) × ... × (1+rₙ) - 1
 
 **Parameters**:
+
 - `lookback`: Number of periods to look back (default: 252 days = 1 year)
 - `skip`: Number of most recent periods to skip (default: 1)
   - Common practice: skip most recent day to avoid short-term reversals
   - Example: with `lookback=252, skip=1`, uses 12-month return excluding last day (aka "12-1 momentum")
 
 **Example**:
+
 ```python
 from portfolio_management.portfolio import Preselection, PreselectionConfig, PreselectionMethod
 
@@ -47,9 +49,11 @@ Selects assets with the lowest realized volatility over a lookback period.
 Higher scores indicate lower volatility (more attractive for defensive strategies).
 
 **Parameters**:
+
 - `lookback`: Number of periods for volatility calculation (default: 252 days)
 
 **Example**:
+
 ```python
 config = PreselectionConfig(
     method=PreselectionMethod.LOW_VOL,
@@ -65,18 +69,21 @@ selected_assets = preselection.select_assets(returns, rebalance_date)
 Combines momentum and low-volatility factors using weighted Z-scores.
 
 **Process**:
+
 1. Compute momentum scores for all assets
-2. Compute low-volatility scores for all assets
-3. Standardize each factor to Z-scores (mean=0, std=1)
-4. Combine: `combined_score = w₁ × momentum_z + w₂ × low_vol_z`
-5. Select top-K assets by combined score
+1. Compute low-volatility scores for all assets
+1. Standardize each factor to Z-scores (mean=0, std=1)
+1. Combine: `combined_score = w₁ × momentum_z + w₂ × low_vol_z`
+1. Select top-K assets by combined score
 
 **Parameters**:
+
 - `momentum_weight`: Weight for momentum factor (default: 0.5)
 - `low_vol_weight`: Weight for low-volatility factor (default: 0.5)
 - Weights must sum to 1.0
 
 **Example**:
+
 ```python
 config = PreselectionConfig(
     method=PreselectionMethod.COMBINED,
@@ -92,19 +99,21 @@ selected_assets = preselection.select_assets(returns, rebalance_date)
 ## Deterministic Tie-Breaking
 
 When multiple assets have identical scores at the cutoff point, ties are broken alphabetically by asset symbol. This ensures:
+
 - Reproducible results across runs
 - Consistent behavior in backtests
 - No random selection bias
 
 **Example**:
 If selecting top-5 assets and ranks 4-7 all have score 0.15:
+
 1. Asset D (score 0.20)
-2. Asset A (score 0.18)
-3. Asset B (score 0.16)
-4. **Asset C (score 0.15)** ← Selected (first alphabetically)
-5. Asset E (score 0.15) ← Not selected
-6. Asset F (score 0.15) ← Not selected
-7. Asset G (score 0.14)
+1. Asset A (score 0.18)
+1. Asset B (score 0.16)
+1. **Asset C (score 0.15)** ← Selected (first alphabetically)
+1. Asset E (score 0.15) ← Not selected
+1. Asset F (score 0.15) ← Not selected
+1. Asset G (score 0.14)
 
 ## No Lookahead Guarantee
 
@@ -226,10 +235,11 @@ equity_curve, metrics, events = engine.run()
 ```
 
 The engine automatically applies preselection at each rebalance:
+
 1. Compute factor scores using data up to rebalance date
-2. Select top-K assets
-3. Pass filtered returns to portfolio strategy
-4. Optimize portfolio on selected subset only
+1. Select top-K assets
+1. Pass filtered returns to portfolio strategy
+1. Optimize portfolio on selected subset only
 
 **No changes to portfolio strategies are required** - preselection is applied transparently before strategy execution.
 
@@ -302,17 +312,19 @@ config = PreselectionConfig(
 - **Low-volatility**: O(N × L)
 - **Combined**: O(N × L) (both factors computed in parallel)
 
-For typical parameters (N=500, L=252), preselection adds <1 second per rebalance.
+For typical parameters (N=500, L=252), preselection adds \<1 second per rebalance.
 
 ### Memory Usage
 
 Preselection operates on the returns DataFrame directly without creating large intermediate structures. Memory usage is proportional to:
+
 - Number of assets × Lookback period × 8 bytes (float64)
 - Example: 500 assets × 252 days ≈ 1 MB
 
 ### Optimization Impact
 
 Reducing universe from N to K assets:
+
 - Mean-variance optimization: O(N³) → O(K³)
 - Risk parity: O(N²) → O(K²)
 
@@ -323,49 +335,58 @@ Example: 500 → 50 assets = 1000× speedup for mean-variance.
 ### Insufficient Data
 
 If an asset has fewer than `min_periods` returns:
+
 - Factor score is set to NaN
 - Asset is excluded from selection
 
 ### All NaN Scores
 
 If all assets have insufficient data:
+
 - Returns empty list
 - Backtest will fail (no assets to invest in)
 
 ### Top-K Exceeds Universe Size
 
 If `top_k` > number of valid assets:
+
 - Returns all valid assets
 - No error raised
 
 ### Tied Scores at Cutoff
 
 Multiple assets with identical scores at position K:
+
 - Ties broken alphabetically by symbol
 - First K (alphabetically) selected
 
 ## Best Practices
 
-1. **Lookback Period**: 
+1. **Lookback Period**:
+
    - Use 252 days (1 year) for annual rebalancing
    - Use 63 days (3 months) for quarterly rebalancing
    - Align lookback with rebalance frequency
 
-2. **Skip Period**:
+1. **Skip Period**:
+
    - Always skip at least 1 day (avoid short-term noise)
    - For momentum, skip 1-21 days (1 day to 1 month)
 
-3. **Top-K Selection**:
-   - Too small (K<20): High concentration risk
+1. **Top-K Selection**:
+
+   - Too small (K\<20): High concentration risk
    - Too large (K>100): Loses preselection benefit
    - Sweet spot: 20-50 assets for most strategies
 
-4. **Combined Weights**:
+1. **Combined Weights**:
+
    - Equal (0.5/0.5): Balanced approach
    - Momentum-heavy (0.7/0.3): Growth-oriented
    - Vol-heavy (0.3/0.7): Defensive
 
-5. **Validation**:
+1. **Validation**:
+
    - Always test preselection in backtest first
    - Compare vs. no preselection to measure impact
    - Check turnover (high turnover = higher costs)
@@ -374,11 +395,12 @@ Multiple assets with identical scores at position K:
 
 1. **Factor Timing**: Preselection assumes factors persist across rebalance periods. May not work well with short rebalance frequencies.
 
-2. **Transaction Costs**: Preselection adds turnover (assets enter/exit selected set). Factor this into cost model.
+1. **Transaction Costs**: Preselection adds turnover (assets enter/exit selected set). Factor this into cost model.
 
-3. **Survivorship Bias**: Preselection on recent performance can amplify survivorship bias if dead assets aren't in the universe.
+1. **Survivorship Bias**: Preselection on recent performance can amplify survivorship bias if dead assets aren't in the universe.
 
-4. **Strategy Compatibility**: Works best with:
+1. **Strategy Compatibility**: Works best with:
+
    - Equal-weight (no optimization needed)
    - Risk parity (scales well to smaller universes)
    - Mean-variance (benefits from universe reduction)
@@ -386,6 +408,7 @@ Multiple assets with identical scores at position K:
 ## Testing
 
 Comprehensive test suite covers:
+
 - Factor computation accuracy
 - Deterministic tie-breaking
 - No-lookahead validation
@@ -393,6 +416,7 @@ Comprehensive test suite covers:
 - Integration with strategies
 
 Run tests:
+
 ```bash
 pytest tests/portfolio/test_preselection.py -v
 ```

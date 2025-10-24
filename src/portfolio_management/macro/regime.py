@@ -14,7 +14,6 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import pandas as pd
 
     from portfolio_management.assets.selection import SelectedAsset
     from portfolio_management.macro.models import RegimeConfig

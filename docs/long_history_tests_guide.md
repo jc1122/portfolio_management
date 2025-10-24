@@ -9,11 +9,11 @@ The long-history integration tests provide comprehensive validation of the portf
 ### What These Tests Validate
 
 1. **Feature Integration** - All features work together without conflicts
-2. **Determinism** - Results are reproducible across multiple runs
-3. **Backward Compatibility** - New features don't break existing functionality
-4. **Market Regime Handling** - System behaves correctly in crisis and normal periods
-5. **Performance** - Execution completes in reasonable time
-6. **Correctness** - Constraints and policies are honored
+1. **Determinism** - Results are reproducible across multiple runs
+1. **Backward Compatibility** - New features don't break existing functionality
+1. **Market Regime Handling** - System behaves correctly in crisis and normal periods
+1. **Performance** - Execution completes in reasonable time
+1. **Correctness** - Constraints and policies are honored
 
 ### Why 20 Years?
 
@@ -79,6 +79,7 @@ TestPerformanceMetrics
 | COMBINED | Weighted combination | Balanced approach |
 
 **Parameters:**
+
 - `top_k`: Number of assets to select (20-50 typical)
 - `lookback`: Historical period for calculation (252 days typical)
 - `skip`: Recent period to skip for momentum (21 days typical)
@@ -124,16 +125,19 @@ preselection = Preselection(config, cache=factor_cache)
 ### Equal Weight Strategy
 
 **Characteristics:**
+
 - All selected assets have weight 1/N
 - No optimization required
 - Fast execution (2-5 minutes)
 - Deterministic results
 
 **With Preselection:**
+
 - Portfolio size = `top_k` assets
 - Assets change at each rebalance based on factor ranks
 
 **With Membership Policy:**
+
 - Gradual portfolio evolution
 - Reduced turnover vs baseline
 - Smoother transitions
@@ -141,17 +145,20 @@ preselection = Preselection(config, cache=factor_cache)
 ### Mean-Variance Strategy
 
 **Characteristics:**
+
 - Optimizes Sharpe ratio (return/risk)
 - Concentrated portfolios (10-30 active positions)
 - Some assets may have zero weight
 - Slower execution (5-10 minutes)
 
 **Potential Issues:**
+
 - May fail if too few assets (min ~15 recommended)
 - Sensitive to estimation error
 - Can produce extreme weights (constraints help)
 
 **With Preselection:**
+
 - Preselection filters to top_k
 - Optimization selects subset of filtered assets
 - Typical active positions: 50-70% of top_k
@@ -159,12 +166,14 @@ preselection = Preselection(config, cache=factor_cache)
 ### Risk Parity Strategy
 
 **Characteristics:**
+
 - Equal risk contribution from each asset
 - Balanced portfolios
 - No single asset >30% typically
 - Moderate execution time (5-10 minutes)
 
 **With Preselection:**
+
 - Balances risk across selected assets
 - More stable than mean-variance
 - Diversification benefits
@@ -176,6 +185,7 @@ preselection = Preselection(config, cache=factor_cache)
 **Purpose:** Validate long-term stability
 
 **Expected:**
+
 - Multiple market regimes captured
 - Hundreds of rebalancing events
 - All features tested together
@@ -188,6 +198,7 @@ preselection = Preselection(config, cache=factor_cache)
 **Purpose:** Stress test during market crash
 
 **Expected:**
+
 - Negative returns likely
 - Large drawdowns (>30% possible)
 - Low volatility strategies should help
@@ -200,6 +211,7 @@ preselection = Preselection(config, cache=factor_cache)
 **Purpose:** Validate rapid shock response
 
 **Expected:**
+
 - Sharp March 2020 drawdown
 - Fast recovery through 2021
 - Monthly rebalancing captures volatility
@@ -212,6 +224,7 @@ preselection = Preselection(config, cache=factor_cache)
 **Purpose:** Test in positive market
 
 **Expected:**
+
 - Positive returns initially
 - 2022 correction captured
 - Momentum strategies should perform
@@ -226,6 +239,7 @@ preselection = Preselection(config, cache=factor_cache)
 **Test:** Run same configuration 3 times
 
 **Success Criteria:**
+
 ```python
 assert total_return_run1 == total_return_run2 == total_return_run3
 assert sharpe_ratio_run1 == sharpe_ratio_run2 == sharpe_ratio_run3
@@ -239,6 +253,7 @@ assert equity_curve_run1.equals(equity_curve_run2)
 **Test:** Compare results with/without features
 
 **Success Criteria:**
+
 ```python
 # When features disabled, should match baseline
 assert equity_curve_disabled.equals(equity_curve_baseline)
@@ -251,6 +266,7 @@ assert equity_curve_disabled.equals(equity_curve_baseline)
 **Test:** Compare cached vs uncached runs
 
 **Success Criteria:**
+
 ```python
 assert equity_curve_cached.equals(equity_curve_uncached)
 assert cache_stats['hits'] > 0  # Cache was used
@@ -263,6 +279,7 @@ assert cache_stats['hits'] > 0  # Cache was used
 **Test:** Verify no lookahead bias
 
 **Success Criteria:**
+
 ```python
 # Early rebalances have fewer eligible assets
 assert len(first_event.new_weights) <= len(last_event.new_weights)
@@ -275,6 +292,7 @@ assert len(first_event.new_weights) <= len(last_event.new_weights)
 **Test:** Verify all constraints honored
 
 **Success Criteria:**
+
 ```python
 # Preselection top_k
 assert len(event.new_weights) <= top_k
@@ -290,15 +308,17 @@ assert len(removed_assets) <= max_removed_assets
 
 ### Execution Times
 
-**Target:** Each test completes in <20 minutes
+**Target:** Each test completes in \<20 minutes
 
 **Actual (approximate):**
+
 - Equal Weight: 2-5 minutes
 - Mean-Variance: 5-10 minutes
 - Risk Parity: 5-10 minutes
 - Determinism (3x runs): 5-15 minutes
 
 **Factors Affecting Speed:**
+
 - Number of assets
 - Rebalance frequency (monthly slower than quarterly)
 - Strategy complexity
@@ -307,14 +327,17 @@ assert len(removed_assets) <= max_removed_assets
 ### Cache Performance
 
 **First Run:**
+
 - Hits: 0%
 - All computations cached
 
 **Second Run (identical config):**
+
 - Hits: 80-100%
 - Significant speedup
 
 **Memory Usage:**
+
 - Cache size: ~10-100 MB typical
 - Peak memory: ~500 MB - 2 GB
 
@@ -458,29 +481,32 @@ Risk Parity + Low Vol: 387.91s
 ### Expected Metrics
 
 **Total Return:** Varies widely based on period and strategy
+
 - 2005-2025: Positive expected (despite crises)
 - Crisis periods: Negative typical
 - Bull markets: Strongly positive
 
 **Sharpe Ratio:**
-- >1.0: Good risk-adjusted return
+
+- > 1.0: Good risk-adjusted return
 - 0.5-1.0: Acceptable
-- <0.5: Poor
+- \<0.5: Poor
 
 **Max Drawdown:**
-- <20%: Excellent
+
+- \<20%: Excellent
 - 20-40%: Normal for equity strategies
-- >40%: High risk (expected during crises)
+- > 40%: High risk (expected during crises)
 
 ## Next Steps
 
 After running tests:
 
 1. **Review Results:** Check all tests passed
-2. **Examine Performance:** Verify execution times acceptable
-3. **Check Edge Cases:** Look for warnings or edge case handling
-4. **Document Findings:** Record any new edge cases discovered
-5. **Update Tests:** Add new test cases for new features
+1. **Examine Performance:** Verify execution times acceptable
+1. **Check Edge Cases:** Look for warnings or edge case handling
+1. **Document Findings:** Record any new edge cases discovered
+1. **Update Tests:** Add new test cases for new features
 
 ## Related Documentation
 
@@ -502,6 +528,7 @@ After running tests:
 ### Test Data Refresh
 
 Long-history data should be refreshed:
+
 - Annually (add new year of data)
 - When new assets added to universe
 - If data quality issues found
@@ -509,6 +536,7 @@ Long-history data should be refreshed:
 ### Continuous Integration
 
 Tests marked as `@pytest.mark.slow` should run:
+
 - In nightly CI builds (not on every commit)
 - Before releases
 - When backtest code changes
