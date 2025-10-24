@@ -598,38 +598,50 @@ def run_comprehensive_benchmarks(
 
         # Parquet Benchmarks
         if run_parquet:
-            print("\n" + "=" * 80)
-            print("Parquet Reading Benchmarks")
-            print("=" * 80)
+            # Check if any Parquet backend is available
+            has_parquet = is_backend_available('pyarrow') or is_backend_available('fastparquet')
 
-            # Single large file
-            parquet_path = tmpdir_path / "large.parquet"
-            print(f"\nCreating large Parquet file: {parquet_path}")
-            file_size_mb, df_large = create_synthetic_parquet_file(
-                parquet_path, num_days=5040
-            )
-            print(f"File size: {file_size_mb:.2f} MB")
+            if not has_parquet:
+                print("\n" + "=" * 80)
+                print("Parquet Reading Benchmarks - SKIPPED")
+                print("=" * 80)
+                print("\n⚠️  No Parquet backend available. Install with:")
+                print("    pip install pyarrow")
+                print("    # or")
+                print("    pip install fastparquet")
+            else:
+                print("\n" + "=" * 80)
+                print("Parquet Reading Benchmarks")
+                print("=" * 80)
 
-            for backend in available:
+                # Single large file
+                parquet_path = tmpdir_path / "large.parquet"
+                print(f"\nCreating large Parquet file: {parquet_path}")
+                file_size_mb, df_large = create_synthetic_parquet_file(
+                    parquet_path, num_days=5040
+                )
+                print(f"File size: {file_size_mb:.2f} MB")
+
+                for backend in available:
+                    try:
+                        print(f"\nBenchmarking {backend}...")
+                        result = benchmark_parquet_read_single(
+                            parquet_path, backend=backend, iterations=5
+                        )
+                        results.append(result)
+                    except Exception as e:
+                        print(f"  ❌ {backend} failed: {e}")
+
+                # Parquet writing benchmark (pandas only)
+                print("\n--- Parquet Writing Benchmark ---")
                 try:
-                    print(f"\nBenchmarking {backend}...")
-                    result = benchmark_parquet_read_single(
-                        parquet_path, backend=backend, iterations=5
+                    write_path = tmpdir_path / "write_test.parquet"
+                    result = benchmark_parquet_write(
+                        write_path, df_large, backend="pandas", iterations=5
                     )
                     results.append(result)
                 except Exception as e:
-                    print(f"  ❌ {backend} failed: {e}")
-
-            # Parquet writing benchmark (pandas only)
-            print("\n--- Parquet Writing Benchmark ---")
-            try:
-                write_path = tmpdir_path / "write_test.parquet"
-                result = benchmark_parquet_write(
-                    write_path, df_large, backend="pandas", iterations=5
-                )
-                results.append(result)
-            except Exception as e:
-                print(f"  ❌ Write benchmark failed: {e}")
+                    print(f"  ❌ Write benchmark failed: {e}")
 
         # Equivalence verification
         equivalence_results = {}
