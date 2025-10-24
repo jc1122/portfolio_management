@@ -35,6 +35,7 @@ from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -716,13 +717,54 @@ def validate_configuration(
     """
     all_warnings = []
 
+    universe_preselection = universe_config.get("preselection", {}) if universe_config else {}
+    preselection_enabled = bool(args.preselect_method or args.preselect_top_k)
+    if not preselection_enabled:
+        preselection_enabled = bool(
+            universe_preselection.get("method") and universe_preselection.get("top_k")
+        )
+
+    preselection_top_k = args.preselect_top_k
+    if preselection_top_k is None:
+        preselection_top_k = universe_preselection.get("top_k")
+
+    universe_membership = universe_config.get("membership_policy", {}) if universe_config else {}
+    membership_enabled = bool(args.membership_enabled)
+    membership_config: dict[str, Any] | None = None
+    if membership_enabled:
+        membership_config = {
+            "buffer_rank": args.membership_buffer_rank,
+            "min_holding_periods": args.membership_min_hold,
+            "max_turnover": float(args.membership_max_turnover)
+            if args.membership_max_turnover
+            else None,
+        }
+    elif universe_membership.get("enabled", False):
+        membership_enabled = True
+        membership_config = {
+            "buffer_rank": universe_membership.get("buffer_rank"),
+            "min_holding_periods": universe_membership.get("min_holding_periods"),
+            "max_turnover": universe_membership.get("max_turnover"),
+        }
+        if membership_config["max_turnover"] is not None:
+            membership_config["max_turnover"] = float(membership_config["max_turnover"])
+
     # 1. Validate preselection config
-    if args.preselect_method or args.preselect_top_k:
+    if preselection_enabled:
         result = validate_preselection_config(
-            top_k=args.preselect_top_k,
-            lookback=args.preselect_lookback,
-            skip=args.preselect_skip,
-            method=args.preselect_method,
+            top_k=preselection_top_k,
+            lookback=
+            args.preselect_lookback
+            if args.preselect_lookback is not None
+            else universe_preselection.get("lookback"),
+            skip=
+            args.preselect_skip
+            if args.preselect_skip is not None
+            else universe_preselection.get("skip"),
+            method=
+            args.preselect_method
+            if args.preselect_method
+            else universe_preselection.get("method"),
             strict=args.strict,
         )
         all_warnings.extend(result.warnings)
@@ -732,14 +774,12 @@ def validate_configuration(
             )
 
     # 2. Validate membership config
-    if args.membership_enabled:
+    if membership_enabled and membership_config is not None:
         result = validate_membership_config(
-            buffer_rank=args.membership_buffer_rank,
-            top_k=args.preselect_top_k,
-            min_holding_periods=args.membership_min_hold,
-            max_turnover=float(args.membership_max_turnover)
-            if args.membership_max_turnover
-            else None,
+            buffer_rank=membership_config.get("buffer_rank"),
+            top_k=preselection_top_k,
+            min_holding_periods=membership_config.get("min_holding_periods"),
+            max_turnover=membership_config.get("max_turnover"),
             strict=args.strict,
         )
         all_warnings.extend(result.warnings)
@@ -778,10 +818,11 @@ def validate_configuration(
 
     # 5. Check feature compatibility
     result = validate_feature_compatibility(
-        preselection_enabled=bool(args.preselect_method or args.preselect_top_k),
-        preselection_top_k=args.preselect_top_k,
-        membership_enabled=args.membership_enabled,
-        membership_buffer_rank=args.membership_buffer_rank,
+        preselection_enabled=preselection_enabled,
+        preselection_top_k=preselection_top_k,
+        membership_enabled=membership_enabled,
+        membership_buffer_rank=
+        membership_config.get("buffer_rank") if membership_config else None,
         cache_enabled=args.enable_cache,
         universe_size=universe_size,
         strict=args.strict,
@@ -791,13 +832,15 @@ def validate_configuration(
     # 6. Check optimality
     config_dict = {
         "preselection": {
-            "top_k": args.preselect_top_k,
-            "lookback": args.preselect_lookback,
+            "top_k": preselection_top_k,
+            "lookback":
+            args.preselect_lookback
+            if args.preselect_lookback is not None
+            else universe_preselection.get("lookback"),
         },
         "membership": {
-            "buffer_rank": args.membership_buffer_rank
-            if args.membership_enabled
-            else None,
+            "buffer_rank":
+            membership_config.get("buffer_rank") if membership_config else None,
         },
         "universe": {"size": universe_size},
         "cache": {"enabled": args.enable_cache},
@@ -814,6 +857,16 @@ def validate_configuration(
     all_warnings.extend(result.warnings)
 
     # Print warnings (unless suppressed)
+    if args.strict and all_warnings:
+        warning_summary = "\n".join(
+            f"  - {w.parameter}: {w.message} (severity={w.severity})"
+            for w in all_warnings
+        )
+        raise ConfigurationError(
+            "Strict mode enabled. Configuration warnings treated as errors:\n"
+            + warning_summary
+        )
+
     if all_warnings and not args.ignore_warnings:
         print_validation_warnings(all_warnings, verbose=args.verbose)
 

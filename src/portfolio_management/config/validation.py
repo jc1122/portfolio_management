@@ -13,6 +13,7 @@ Validation Categories:
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
 import shutil
@@ -138,7 +139,7 @@ def get_sensible_defaults() -> dict[str, Any]:
         Dictionary of default values organized by feature
 
     """
-    return DEFAULTS.copy()
+    return copy.deepcopy(DEFAULTS)
 
 
 # =============================================================================
