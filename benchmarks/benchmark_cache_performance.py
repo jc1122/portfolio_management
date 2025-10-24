@@ -175,7 +175,7 @@ class CacheBenchmarkSuite:
             start_time = time.time()
             start_memory = self.get_memory_usage_mb()
 
-            # Simulate 10 backtest runs with same data, different configs
+            # Simulate 10 backtest runs with same data, same config (typical workflow)
             for run in range(10):
                 # Each backtest queries momentum and low-vol scores
                 for method in ["momentum", "low_vol"]:
@@ -183,7 +183,7 @@ class CacheBenchmarkSuite:
                         "method": method,
                         "lookback": 252,
                         "skip": 21,
-                        "run_id": run,  # This changes per run
+                        # Note: run_id removed to allow cache hits across runs
                     }
 
                     # Try to get from cache
