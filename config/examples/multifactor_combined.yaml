@@ -1,0 +1,56 @@
+# Multi-Factor Combined Preselection Universe
+#
+# This example demonstrates a more sophisticated preselection strategy that
+# combines both momentum and low-volatility factors. The factors are
+# standardized (as Z-scores) and then combined using the specified weights.
+#
+# Strategy: A balanced factor strategy aiming for risk-adjusted returns.
+# Use Case: Core equity holding that tilts towards both momentum and low-vol.
+# Key Features:
+# - Combined momentum and low-volatility preselection.
+# - Customizable weights for each factor.
+
+universes:
+  multifactor_combined:
+    description: "A universe selected by a weighted combination of momentum and low-volatility factors."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 504
+      min_price_rows: 480
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      # Focusing on individual stocks for factor strategies.
+      categories:
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+        - "nasdaq stocks/1"
+        - "nasdaq stocks/2"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 24
+
+    preselection:
+      # --- Combined Multi-Factor Preselection ---
+      method: "combined"              # Use the combined factor method.
+      top_k: 40                       # Select the top 40 assets based on the combined score.
+      lookback: 252                   # Use a 1-year lookback for both factors.
+      skip: 5                         # Skip the last 5 trading days for the momentum calculation.
+      min_periods: 126                # Require 6 months of data for a valid score.
+
+      # --- Factor Weights ---
+      # The weights must sum to 1.0.
+      # Here, we give a slight tilt towards momentum.
+      momentum_weight: 0.6            # 60% weight to momentum.
+      low_vol_weight: 0.4             # 40% weight to low-volatility.
+
+    constraints:
+      min_assets: 25
+      max_assets: 40

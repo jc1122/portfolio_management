@@ -1,0 +1,50 @@
+# Performance-Optimized Example: Fast I/O for Big Datasets
+#
+# This example is for situations where the initial dataset of all possible
+# assets is very large (e.g., hundreds of thousands of instruments). In this
+# case, reading the entire dataset into memory can be slow or impossible.
+# The solution is to use streaming, or "chunked" I/O.
+#
+# Strategy: Any, when the input data is very large.
+# Use Case: Working with comprehensive datasets like all global stocks.
+# Key Features:
+# - A reminder to use chunked I/O via command-line flags.
+
+universes:
+  fast_io_big_datasets:
+    description: "A configuration for working with very large initial datasets."
+
+    filter_criteria:
+      # These criteria will be applied to each chunk of the data as it is read.
+      data_status: ["ok"]
+      min_history_days: 252
+      min_price_rows: 252
+      markets: ["NYSE", "NSQ", "LSE", "TSE", "FRA", "HKG"] # Global exchanges
+      currencies: ["USD", "GBP", "EUR", "JPY", "HKD"]
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 12
+
+    constraints:
+      min_assets: 1000
+      max_assets: 10000
+
+# --- Performance Notes ---
+# When the initial asset list is very large, you should use the streaming
+# I/O feature of the asset selection script. This is enabled with the
+# `--chunk-size` command-line argument. This is not part of the YAML file,
+# but is used when you run the pipeline.
+#
+# For example, when running the `manage_universes.py` script:
+#
+# python scripts/manage_universes.py load fast_io_big_datasets --chunk-size 5000
+#
+# This tells the asset selection step to process the master asset list in
+# chunks of 5000 rows, which dramatically reduces memory usage.

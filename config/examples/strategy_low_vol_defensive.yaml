@@ -1,0 +1,52 @@
+# Strategy-Specific Example: Low-Volatility Defensive
+#
+# This example is for a defensive strategy that aims to reduce drawdowns by
+# investing in low-volatility assets. It can also include other defensive asset
+# classes like gold or government bonds.
+#
+# Strategy: Defensive, multi-asset, low-volatility.
+# Use Case: A portfolio sleeve designed to be resilient during market downturns.
+# Key Features:
+# - Preselection for low volatility.
+# - Includes multiple defensive asset classes.
+
+universes:
+  strategy_low_vol_defensive:
+    description: "A defensive, low-volatility strategy including multiple asset classes."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 700
+      markets: ["LSE", "NYSE", "NSQ"]
+      currencies: ["GBP", "USD"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nyse etfs"
+        - "nasdaq etfs"
+
+    classification_requirements:
+      # --- Defensive Asset Classes ---
+      # Include equities, but also other defensive assets.
+      asset_class: ["equity", "commodity", "fixed_income"]
+      # Filter for specific sub-classes.
+      sub_class: ["dividend", "low_volatility", "gold", "government_bond"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 36
+
+    preselection:
+      # --- Low-Volatility Factor ---
+      method: "low_vol"
+      top_k: 30
+      lookback: 252
+      min_periods: 126
+
+    constraints:
+      min_assets: 15
+      max_assets: 30

@@ -1,0 +1,78 @@
+# Strategy-Specific Example: Sector-Neutral with Preselection
+#
+# This example demonstrates how to build a sector-neutral strategy. Since the
+# preselection works on the entire universe, we can simulate a sector-neutral
+# approach by defining a separate universe for each sector. We then select the
+# top momentum stocks from each one.
+#
+# Strategy: Sector-Neutral Momentum.
+# Use Case: A market-neutral or sector-rotation strategy.
+# Key Features:
+# - A separate universe for each target sector.
+# - Momentum preselection applied within each sector.
+# - The final portfolio would be a combination of these universes.
+
+universes:
+  # --- Technology Sector ---
+  sector_tech_momentum:
+    description: "Top momentum stocks from the Technology sector."
+    filter_criteria:
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+    classification_requirements:
+      sector: ["Technology"]
+    preselection:
+      method: "momentum"
+      top_k: 5 # Select top 5 from this sector.
+      lookback: 252
+      skip: 21
+    constraints: { min_assets: 2, max_assets: 5 }
+
+  # --- Healthcare Sector ---
+  sector_healthcare_momentum:
+    description: "Top momentum stocks from the Healthcare sector."
+    filter_criteria:
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+    classification_requirements:
+      sector: ["Healthcare"]
+    preselection:
+      method: "momentum"
+      top_k: 5
+      lookback: 252
+      skip: 21
+    constraints: { min_assets: 2, max_assets: 5 }
+
+  # --- Financials Sector ---
+  sector_financials_momentum:
+    description: "Top momentum stocks from the Financials sector."
+    filter_criteria:
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+    classification_requirements:
+      sector: ["Financial Services"]
+    preselection:
+      method: "momentum"
+      top_k: 5
+      lookback: 252
+      skip: 21
+    constraints: { min_assets: 2, max_assets: 5 }
+
+  # --- Industrials Sector ---
+  sector_industrials_momentum:
+    description: "Top momentum stocks from the Industrials sector."
+    filter_criteria:
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+    classification_requirements:
+      sector: ["Industrials"]
+    preselection:
+      method: "momentum"
+      top_k: 5
+      lookback: 252
+      skip: 21
+    constraints: { min_assets: 2, max_assets: 5 }
+
+# Note: To run a fully sector-neutral backtest, you would need to run a
+# backtest for each of these universes and then combine the results, or
+# create a custom script that loads all of them.
