@@ -125,23 +125,27 @@ class FactorCache:
         self._stats = {"hits": 0, "misses": 0, "puts": 0}
 
     def _compute_dataset_hash(self, data: pd.DataFrame) -> str:
-        """Compute a stable hash for the entire dataset."""
+        """Compute hash of dataset (returns matrix).
 
-        hasher = hashlib.sha256()
-        hasher.update(str(data.shape).encode())
-
-        if data.empty:
-            hasher.update("|".join(map(str, data.columns)).encode())
-            hasher.update("|".join(map(str, data.index)).encode())
-            return hasher.hexdigest()[:16]
-
-        column_hash = pd.util.hash_pandas_object(pd.Index(data.columns), index=False)
-        data_hash = pd.util.hash_pandas_object(data, index=True)
-
-        hasher.update(column_hash.values.tobytes())
-        hasher.update(data_hash.values.tobytes())
-
-        return hasher.hexdigest()[:16]
+        Uses pandas built-in hashing for robust detection of data changes.
+        Falls back to shape+columns if hashing fails (e.g., unhashable dtypes).
+        """
+        try:
+            # Use pandas built-in hashing for robust change detection
+            hash_values = pd.util.hash_pandas_object(data, index=True)
+            # Combine all hashes into single hash
+            combined = str(hash_values.sum()) + str(hash_values.std())
+            return hashlib.sha256(combined.encode()).hexdigest()[:16]
+        except (TypeError, ValueError):
+            # Fallback for unhashable types
+            hash_components = [
+                str(data.shape),
+                ",".join(sorted(data.columns.astype(str))),
+                str(data.index.min()),
+                str(data.index.max()),
+            ]
+            combined = "|".join(hash_components)
+            return hashlib.sha256(combined.encode()).hexdigest()[:16]
 
     def _compute_config_hash(self, config: dict[str, Any]) -> str:
         """Compute hash of configuration parameters."""
@@ -433,6 +437,14 @@ class FactorCache:
     def get_stats(self) -> dict[str, int]:
         """Get cache statistics."""
         return self._stats.copy()
+
+    def reset_stats(self) -> None:
+        """Reset cache statistics to zero.
+
+        Useful for testing or when you want to track statistics for a specific
+        time period without clearing the cache itself.
+        """
+        self._stats = {"hits": 0, "misses": 0, "puts": 0}
 
     def print_stats(self) -> None:
         """Print cache statistics."""
