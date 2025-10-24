@@ -78,16 +78,67 @@ universes:
   # Aggressive portfolio with larger universe
   aggressive_50:
     description: "Aggressive 50-asset portfolio with top-30 selection"
-    # Note: Full 50-asset list abbreviated for brevity
+    # Full asset list with 50 tickers
     assets:
+      # Top US Tech & Growth
       - AAPL
       - MSFT
       - GOOGL
       - AMZN
       - META
-      # ... additional 45 assets would be listed here
+      - NVDA
+      - TSLA
+      - ADBE
+      - CRM
+      - NFLX
+      # Semiconductors
+      - INTC
+      - AMD
+      - MU
+      - QCOM
+      - AVGO
+      # Financial Services
+      - JPM
+      - BAC
+      - WFC
+      - GS
+      - MS
+      # Healthcare
+      - JNJ
+      - PFE
+      - UNH
+      - ABBV
+      - MRK
+      # Energy
+      - XOM
+      - CVX
+      - COP
+      - SLB
+      - EOG
+      # Consumer
+      - PG
+      - KO
+      - PEP
+      - WMT
+      - HD
+      - NKE
+      - MCD
+      - SBUX
+      # Industrial
+      - CAT
+      - BA
+      - UNP
+      - HON
+      - MMM
+      # Communications
+      - CSCO
+      - ORCL
+      - IBM
+      - VZ
+      - T
 
     # ✅ Optimal configuration for larger universe
+    # Selects top 30 assets from this 50-asset universe
     preselection:
       method: combined  # Momentum + low-volatility
       top_k: 30  # Select top 30 from 50
@@ -97,10 +148,12 @@ universes:
       low_vol_weight: 0.4
       min_periods: 63
 
-    # ✅ Buffer rank provides good hysteresis (60% higher than top_k)
+    # ✅ Buffer rank provides good hysteresis
+    # buffer_rank=48 is 60% higher than top_k=30 (30 * 1.6 = 48)
+    # This means assets ranked 31-48 will be retained if currently held
     membership_policy:
       enabled: true
-      buffer_rank: 48  # 60% higher than top_k (30)
+      buffer_rank: 48  # 30 * 1.6 = 48 (60% higher than top_k)
       min_holding_periods: 2
       max_turnover: 0.4
       max_new_assets: 8
