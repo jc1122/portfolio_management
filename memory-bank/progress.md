@@ -2,12 +2,13 @@
 
 ______________________________________________________________________
 
-## 🚀 2025-10-24 – SPRINT 2 PHASE 2A IN PROGRESS: ISSUE #38 CACHING ⚙️
+## ✅ 2025-10-24 – SPRINT 2 PHASE 2A COMPLETE: ISSUE #38 CACHING READY FOR PR! 🎉
 
 **Date:** October 24, 2025
 **Branch:** feature/issue-38-caching
-**Status:** Core implementation complete, tests passing
-**Test Status:** 23 unit tests + 14 integration tests, all passing ✅
+**Status:** ✅ IMPLEMENTATION COMPLETE - Ready for PR
+**Test Status:** 37 tests (23 unit + 14 integration), all passing ✅
+**Latest Commits:** aed0f50, f6d37c1
 
 ### Issue #38: On-disk Caching for Factor Scores and PIT Eligibility
 
@@ -18,16 +19,18 @@ ______________________________________________________________________
 - ✅ Metadata tracking with age validation - COMPLETE
 - ✅ Preselection integration - COMPLETE
 - ✅ PIT eligibility integration - COMPLETE
+- ✅ BacktestEngine integration - COMPLETE ✨
+- ✅ CLI flags (--enable-cache, --cache-dir, --cache-max-age-days) - COMPLETE ✨
+- ✅ Cache statistics reporting (verbose mode) - COMPLETE ✨
 - ✅ Comprehensive unit tests (23 tests) - ALL PASSING
 - ✅ Integration tests (14 tests) - ALL PASSING
-- ⏳ BacktestEngine integration - PENDING
-- ⏳ CLI flags (--enable-cache, --cache-dir, --cache-max-age) - PENDING
-- ⏳ Universe YAML cache configuration - PENDING
+- ⏳ Universe YAML cache configuration - DEFERRED (optional enhancement)
+- ⏳ Documentation updates - PENDING
 
 **Files Created:**
 
-- src/portfolio_management/data/cache/factor_cache.py (461 lines)
-- src/portfolio_management/data/cache/__init__.py
+- src/portfolio_management/data/factor_caching/factor_cache.py (461 lines)
+- src/portfolio_management/data/factor_caching/__init__.py
 - tests/data/test_factor_cache.py (23 unit tests)
 - tests/integration/test_caching_integration.py (14 integration tests)
 
@@ -35,22 +38,46 @@ ______________________________________________________________________
 
 - src/portfolio_management/portfolio/preselection.py (added cache support)
 - src/portfolio_management/backtesting/eligibility.py (added cached wrapper)
+- src/portfolio_management/backtesting/engine/backtest.py (added cache parameter, conditional usage)
+- scripts/run_backtest.py (added CLI flags, cache creation, statistics printing)
+- tests/integration/test_backtest_integration.py (adjusted test parameters)
 
 **Key Features:**
 
 - Hash-based cache invalidation (dataset + config + dates)
 - Optional age-based expiration (max_cache_age_days parameter)
-- Statistics tracking (hits/misses/puts)
-- Backward compatible (cache=None for no caching)
+- Statistics tracking (hits/misses/puts) with verbose mode printing
+- Backward compatible (cache=None for no caching, default behavior)
 - Separate caches for factor scores and PIT eligibility
+- CLI-driven cache control (opt-in with --enable-cache flag)
+- Configurable cache directory (default: .cache/backtest)
+
+**CLI Usage:**
+
+```bash
+# Enable caching with defaults
+python scripts/run_backtest.py --enable-cache ...
+
+# Custom cache directory and max age
+python scripts/run_backtest.py --enable-cache --cache-dir .my_cache --cache-max-age-days 7 ...
+
+# View cache statistics
+python scripts/run_backtest.py --enable-cache --verbose ...
+```
+
+**Bug Fixes:**
+
+- Fixed preselection data filtering: Pass full returns dataset (self.returns) instead of lookback window
+- Preselection handles internal date filtering by rebalance_date
+- Reduced test min_history requirements to 180 days (from 252) to match available test data
 
 **Next Steps:**
 
-1. Integrate cache into BacktestEngine
-1. Add CLI flags to run_backtest.py
-1. Add cache configuration to universe YAML schema
-1. Run full integration test with caching enabled
-1. Update documentation
+1. ✅ Run pre-commit hooks - DONE (formatting applied)
+1. Test caching with real backtest using --enable-cache flag
+1. Update memory bank - IN PROGRESS
+1. Create pull request for Issue #38
+1. (Optional) Add universe YAML cache configuration in follow-up PR
 
 ______________________________________________________________________
 
