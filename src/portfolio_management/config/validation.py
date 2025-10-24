@@ -82,7 +82,7 @@ class ValidationResult:
                 message=message,
                 suggestion=suggestion,
                 severity=severity,
-            )
+            ),
         )
 
     def raise_if_invalid(self) -> None:
@@ -191,7 +191,7 @@ def validate_preselection_config(
         if top_k <= 0:
             result.add_error(
                 f"Preselection top_k must be > 0, got {top_k}. "
-                "Set to None to disable preselection."
+                "Set to None to disable preselection.",
             )
         elif top_k < 10:
             result.add_warning(
@@ -221,15 +221,13 @@ def validate_preselection_config(
             result.add_error(f"Preselection skip must be >= 0, got {skip}")
         if lookback is not None and skip >= lookback:
             result.add_error(
-                f"Preselection skip ({skip}) must be < lookback ({lookback})"
+                f"Preselection skip ({skip}) must be < lookback ({lookback})",
             )
 
     # Validate min_periods
     if min_periods is not None:
         if min_periods <= 0:
-            result.add_error(
-                f"Preselection min_periods must be > 0, got {min_periods}"
-            )
+            result.add_error(f"Preselection min_periods must be > 0, got {min_periods}")
         if lookback is not None and min_periods > lookback:
             result.add_warning(
                 category="optimality",
@@ -245,7 +243,7 @@ def validate_preselection_config(
         if method not in valid_methods:
             result.add_error(
                 f"Invalid preselection method '{method}'. "
-                f"Valid options: {', '.join(valid_methods)}"
+                f"Valid options: {', '.join(valid_methods)}",
             )
 
     if strict:
@@ -303,14 +301,12 @@ def validate_membership_config(
     # Validate buffer_rank
     if buffer_rank is not None:
         if buffer_rank <= 0:
-            result.add_error(
-                f"Membership buffer_rank must be > 0, got {buffer_rank}"
-            )
+            result.add_error(f"Membership buffer_rank must be > 0, got {buffer_rank}")
         if top_k is not None:
             if buffer_rank < top_k:
                 result.add_error(
                     f"Membership buffer_rank ({buffer_rank}) must be > top_k ({top_k}). "
-                    "Buffer rank should be higher than selection threshold to provide hysteresis."
+                    "Buffer rank should be higher than selection threshold to provide hysteresis.",
                 )
             elif buffer_rank <= top_k * 1.2:  # < 20% gap
                 result.add_warning(
@@ -326,19 +322,19 @@ def validate_membership_config(
     if min_holding_periods is not None:
         if min_holding_periods < 0:
             result.add_error(
-                f"Membership min_holding_periods must be >= 0, got {min_holding_periods}"
+                f"Membership min_holding_periods must be >= 0, got {min_holding_periods}",
             )
         if rebalance_periods is not None and min_holding_periods > rebalance_periods:
             result.add_error(
                 f"Membership min_holding_periods ({min_holding_periods}) cannot be > "
-                f"total rebalance_periods ({rebalance_periods}). This constraint is impossible to satisfy."
+                f"total rebalance_periods ({rebalance_periods}). This constraint is impossible to satisfy.",
             )
 
     # Validate max_turnover
     if max_turnover is not None:
         if not 0 <= max_turnover <= 1:
             result.add_error(
-                f"Membership max_turnover must be in [0, 1], got {max_turnover}"
+                f"Membership max_turnover must be in [0, 1], got {max_turnover}",
             )
 
     if strict:
@@ -382,7 +378,7 @@ def validate_pit_config(
     if min_history_days is not None:
         if min_history_days <= 0:
             result.add_error(
-                f"PIT min_history_days must be > 0, got {min_history_days}"
+                f"PIT min_history_days must be > 0, got {min_history_days}",
             )
 
     # Validate min_price_rows
@@ -452,24 +448,24 @@ def validate_cache_config(
             if cache_path.exists() and not cache_path.is_dir():
                 result.add_error(
                     f"Cache path '{cache_dir}' exists but is not a directory. "
-                    "Choose a different directory."
+                    "Choose a different directory.",
                 )
             # Check if directory exists or can be created
             elif not cache_path.exists():
                 # Try to create it
                 cache_path.mkdir(parents=True, exist_ok=True)
                 logger.info(f"Created cache directory: {cache_path}")
-            
+
             # Check writability (only if it's a directory)
             if cache_path.is_dir() and not os.access(cache_path, os.W_OK):
                 result.add_error(
                     f"Cache directory '{cache_dir}' is not writable. "
-                    "Disable caching or choose a different directory."
+                    "Disable caching or choose a different directory.",
                 )
         except Exception as e:
             result.add_error(
                 f"Cannot create cache directory '{cache_dir}': {e}. "
-                "Disable caching or choose a different directory."
+                "Disable caching or choose a different directory.",
             )
 
     if strict:
@@ -641,11 +637,9 @@ def check_optimality_warnings(
         # For optimality warnings, only raise if there are HIGH severity warnings
         high_severity_warnings = [w for w in result.warnings if w.severity == "high"]
         if high_severity_warnings:
-            error_msgs = [
-                f"{w.parameter}: {w.message}" for w in high_severity_warnings
-            ]
+            error_msgs = [f"{w.parameter}: {w.message}" for w in high_severity_warnings]
             raise ConfigurationError(
-                "High-severity optimality warnings:\n" + "\n".join(error_msgs)
+                "High-severity optimality warnings:\n" + "\n".join(error_msgs),
             )
 
     return result
