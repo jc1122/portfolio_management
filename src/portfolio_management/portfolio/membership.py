@@ -41,6 +41,11 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from portfolio_management.utils.validation import (
+    validate_positive_int,
+    validate_probability,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -112,26 +117,20 @@ class MembershipPolicy:
             ValueError: If any parameter is invalid.
 
         """
-        if self.buffer_rank is not None and self.buffer_rank < 1:
-            raise ValueError(f"buffer_rank must be >= 1, got {self.buffer_rank}")
+        if self.buffer_rank is not None:
+            validate_positive_int(self.buffer_rank, "buffer_rank")
 
-        if self.min_holding_periods is not None and self.min_holding_periods < 0:
-            raise ValueError(
-                f"min_holding_periods must be non-negative, got {self.min_holding_periods}",
-            )
+        if self.min_holding_periods is not None:
+            validate_positive_int(self.min_holding_periods, "min_holding_periods", allow_zero=True)
 
-        if self.max_turnover is not None and not (0.0 <= self.max_turnover <= 1.0):
-            raise ValueError(f"max_turnover must be in [0, 1], got {self.max_turnover}")
+        if self.max_turnover is not None:
+            validate_probability(self.max_turnover, "max_turnover")
 
-        if self.max_new_assets is not None and self.max_new_assets < 0:
-            raise ValueError(
-                f"max_new_assets must be non-negative, got {self.max_new_assets}",
-            )
+        if self.max_new_assets is not None:
+            validate_positive_int(self.max_new_assets, "max_new_assets", allow_zero=True)
 
-        if self.max_removed_assets is not None and self.max_removed_assets < 0:
-            raise ValueError(
-                f"max_removed_assets must be non-negative, got {self.max_removed_assets}",
-            )
+        if self.max_removed_assets is not None:
+            validate_positive_int(self.max_removed_assets, "max_removed_assets", allow_zero=True)
 
     @classmethod
     def default(cls) -> MembershipPolicy:
