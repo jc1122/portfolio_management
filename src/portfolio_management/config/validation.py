@@ -448,14 +448,20 @@ def validate_cache_config(
     if enabled and cache_dir is not None:
         cache_path = Path(cache_dir)
         try:
+            # Check if path exists but is not a directory
+            if cache_path.exists() and not cache_path.is_dir():
+                result.add_error(
+                    f"Cache path '{cache_dir}' exists but is not a directory. "
+                    "Choose a different directory."
+                )
             # Check if directory exists or can be created
-            if not cache_path.exists():
+            elif not cache_path.exists():
                 # Try to create it
                 cache_path.mkdir(parents=True, exist_ok=True)
                 logger.info(f"Created cache directory: {cache_path}")
             
-            # Check writability
-            if not os.access(cache_path, os.W_OK):
+            # Check writability (only if it's a directory)
+            if cache_path.is_dir() and not os.access(cache_path, os.W_OK):
                 result.add_error(
                     f"Cache directory '{cache_dir}' is not writable. "
                     "Disable caching or choose a different directory."
