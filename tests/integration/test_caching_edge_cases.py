@@ -196,7 +196,7 @@ class TestDiskErrors:
 
         try:
             # Try to write cache - should not crash
-            factor_cache.put_factor_scores(
+            cache.put_factor_scores(
                 scores, sample_returns, config, "2020-01-01", "2020-12-31"
             )
             # If it doesn't raise, that's fine (graceful degradation)
