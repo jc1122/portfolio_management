@@ -17,6 +17,7 @@ Tests validate:
 from __future__ import annotations
 
 import datetime
+import os
 import tempfile
 import time
 from decimal import Decimal
@@ -45,6 +46,18 @@ from portfolio_management.portfolio import (
 
 # Mark all tests in this module as integration and slow
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
+
+
+def _long_history_enabled() -> bool:
+    env_value = os.environ.get("RUN_LONG_HISTORY_TESTS", "")
+    return env_value.lower() in {"1", "true", "yes", "on"}
+
+
+if not _long_history_enabled():
+    pytest.skip(
+        "Long-history backtests are disabled. Set RUN_LONG_HISTORY_TESTS=1 to run.",
+        allow_module_level=True,
+    )
 
 # Data file paths
 LONG_HISTORY_DIR = Path("outputs/long_history_1000")
