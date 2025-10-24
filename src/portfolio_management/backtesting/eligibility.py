@@ -10,11 +10,13 @@ Supports optional caching to avoid recomputing eligibility across backtest runs.
 from __future__ import annotations
 
 import datetime
+import logging
+import warnings
+from typing import Any
 
 import pandas as pd
 
-from portfolio_management.core.protocols import CacheProtocol
-from portfolio_management.utils.date_utils import date_to_timestamp
+logger = logging.getLogger(__name__)
 
 
 def compute_pit_eligibility(
@@ -47,19 +49,78 @@ def compute_pit_eligibility(
         Boolean Series indicating eligibility for each asset (True = eligible).
         Index matches the columns of the returns DataFrame.
 
+    Raises:
+        ValueError: If inputs are invalid
+
     Example:
         >>> returns = pd.DataFrame(...)  # Historical returns
         >>> eligible = compute_pit_eligibility(returns, date(2023, 12, 31))
         >>> eligible_assets = returns.columns[eligible]
 
     """
+    # Validate inputs
+    if returns is None or returns.empty:
+        raise ValueError(
+            "returns DataFrame is empty or None. "
+            "To fix: provide a non-empty DataFrame with returns data. "
+            "Expected format: DataFrame with dates as index, assets as columns."
+        )
+    
+    if not isinstance(returns, pd.DataFrame):
+        raise ValueError(
+            f"returns must be a pandas DataFrame, got {type(returns).__name__}. "
+            "To fix: convert your data to a DataFrame. "
+            "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)"
+        )
+    
+    if not isinstance(date, datetime.date):
+        raise ValueError(
+            f"date must be a datetime.date, got {type(date).__name__}. "
+            "To fix: use datetime.date object. "
+            "Example: from datetime import date; eligibility_date = date(2023, 12, 31)"
+        )
+    
+    if min_history_days <= 0:
+        raise ValueError(
+            f"min_history_days must be > 0, got {min_history_days}. "
+            "min_history_days defines the minimum time span required. "
+            "Common values: 63 (3 months), 126 (6 months), 252 (1 year). "
+            "To fix: use a positive integer. "
+            "Example: min_history_days=252"
+        )
+    
+    if min_price_rows <= 0:
+        raise ValueError(
+            f"min_price_rows must be > 0, got {min_price_rows}. "
+            "min_price_rows defines the minimum number of valid data points. "
+            "Common values: 60, 126, 252. "
+            "To fix: use a positive integer. "
+            "Example: min_price_rows=252"
+        )
+    
+    # Check if date is within data range
+    max_date = returns.index.max()
+    if isinstance(max_date, pd.Timestamp):
+        max_date = max_date.date()
+    
+    if date > max_date:
+        raise ValueError(
+            f"date ({date}) is after the last available date ({max_date}). "
+            "To fix: use a date within your data range. "
+            f"Available date range: {returns.index.min()} to {max_date}"
+        )
+    
     # Filter returns to only include data up to the given date
-    # Use date_to_timestamp for consistent date handling
-    cutoff_datetime = date_to_timestamp(date)
+    # Convert date to datetime for comparison
+    cutoff_datetime = pd.Timestamp(date)
     historical_data = returns[returns.index <= cutoff_datetime]
 
     if len(historical_data) == 0:
         # No data available yet - nothing is eligible
+        logger.warning(
+            f"No historical data available up to {date}. "
+            "Returning all assets as ineligible."
+        )
         return pd.Series(False, index=returns.columns)
 
     # For each asset, find first non-NaN observation
@@ -74,7 +135,7 @@ def compute_pit_eligibility(
             days_since_first[ticker] = 0
         else:
             # Calculate days between first valid and current date
-            days_diff = (cutoff_datetime - date_to_timestamp(first_date)).days
+            days_diff = (cutoff_datetime - pd.Timestamp(first_date)).days
             days_since_first[ticker] = days_diff
 
     # Count non-NaN observations up to the date
@@ -91,7 +152,7 @@ def compute_pit_eligibility_cached(
     date: datetime.date,
     min_history_days: int = 252,
     min_price_rows: int = 252,
-    cache: CacheProtocol | None = None,
+    cache: Any | None = None,
 ) -> pd.Series:
     """Compute PIT eligibility with optional caching.
 
@@ -102,7 +163,7 @@ def compute_pit_eligibility_cached(
         date: Rebalance date
         min_history_days: Minimum history days requirement
         min_price_rows: Minimum price rows requirement
-        cache: Optional cache instance (must implement CacheProtocol)
+        cache: Optional FactorCache instance
 
     Returns:
         Boolean Series indicating eligibility
@@ -174,7 +235,7 @@ def detect_delistings(
         this is a pragmatic approach to handle delistings gracefully during backtesting.
 
     """
-    cutoff_datetime = date_to_timestamp(current_date)
+    cutoff_datetime = pd.Timestamp(current_date)
     lookforward_datetime = cutoff_datetime + pd.Timedelta(days=lookforward_days)
 
     delistings: dict[str, datetime.date] = {}
@@ -190,7 +251,7 @@ def detect_delistings(
             # No valid data at all
             continue
 
-        last_valid_date = date_to_timestamp(last_valid_idx)
+        last_valid_date = pd.Timestamp(last_valid_idx)
 
         # Check if last valid date is at or before current date
         if last_valid_date <= cutoff_datetime:
@@ -230,7 +291,7 @@ def get_asset_history_stats(
         - coverage_pct: Percentage of days with valid data
 
     """
-    cutoff_datetime = date_to_timestamp(date)
+    cutoff_datetime = pd.Timestamp(date)
     historical_data = returns[returns.index <= cutoff_datetime]
 
     if len(historical_data) == 0:
@@ -265,8 +326,8 @@ def get_asset_history_stats(
                 },
             )
         else:
-            first_valid_ts = date_to_timestamp(first_valid)
-            last_valid_ts = date_to_timestamp(last_valid)
+            first_valid_ts = pd.Timestamp(first_valid)
+            last_valid_ts = pd.Timestamp(last_valid)
 
             days_since = (cutoff_datetime - first_valid_ts).days
             total_rows = ticker_data.notna().sum()
