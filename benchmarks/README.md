@@ -37,6 +37,7 @@ python benchmarks/benchmark_cache_performance.py --output-dir /path/to/output
 **Output:**
 
 Results are written to `docs/performance/caching_benchmarks.md` with:
+
 - Executive summary
 - Detailed benchmark results
 - Performance charts (text-based tables)
@@ -49,6 +50,7 @@ Results are written to `docs/performance/caching_benchmarks.md` with:
 Comprehensive benchmarking suite for fast IO implementation (polars/pyarrow backends).
 
 **What it measures:**
+
 - CSV reading performance (pandas vs polars)
 - Parquet reading/writing performance (pandas vs pyarrow)
 - Memory usage across backends
@@ -57,6 +59,7 @@ Comprehensive benchmarking suite for fast IO implementation (polars/pyarrow back
 - Multiple dataset sizes (100 to 10,000 assets)
 
 **Usage:**
+
 ```bash
 # Run all benchmarks
 python benchmarks/benchmark_fast_io.py --all
@@ -72,17 +75,75 @@ python benchmarks/benchmark_fast_io.py --all --output-json results.json
 ```
 
 **Requirements:**
+
 ```bash
 pip install polars pyarrow psutil
 ```
 
 **Expected Results:**
+
 - CSV reading: 2-5x speedup with polars
 - Parquet reading: 5-10x speedup with pyarrow
 - Memory usage: 5-10% reduction with polars
 - 100% result equivalence across backends
 
 **Documentation:** See [docs/performance/fast_io_benchmarks.md](../docs/performance/fast_io_benchmarks.md)
+
+### Preselection Performance Benchmarks (`benchmark_preselection.py`)
+
+Profiles factor-based asset preselection across different universe sizes, lookback periods, and rebalancing scenarios.
+
+**What it measures:**
+
+- Momentum, low-volatility, and combined factor computation benchmarks
+- Universe size scaling (100-5000 assets)
+- Lookback period impact (30-504 days)
+- Multiple rebalance date simulation
+- Time breakdown analysis (compute/rank/select)
+- Detailed cProfile integration
+
+**Usage:**
+
+```bash
+# Run all benchmarks
+python benchmarks/benchmark_preselection.py --all
+
+# Custom universe sizes
+python benchmarks/benchmark_preselection.py --universe-sizes 100 500 1000 2500
+
+# Custom lookback periods
+python benchmarks/benchmark_preselection.py --lookback-periods 30 63 126 252
+
+# Multiple rebalances
+python benchmarks/benchmark_preselection.py --rebalances 24
+
+# Detailed profiling
+python benchmarks/benchmark_preselection.py --profile-detail
+
+# Combined options
+python benchmarks/benchmark_preselection.py \
+    --universe-sizes 100 500 1000 \
+    --lookback-periods 63 126 252 \
+    --iterations 5 \
+    --rebalances 12
+```
+
+**Output:**
+
+- Execution time per scenario
+- Universe size scaling analysis
+- Time breakdown percentages
+- Lookback period impact
+- Multiple rebalance performance
+- cProfile detailed analysis
+
+**Expected Performance:**
+
+- **Target**: \<0.1s for 1000 assets
+- **Acceptable**: \<1.0s for 5000 assets
+- **Warning**: >2.0s for any scenario
+
+**Documentation:** See [docs/performance/preselection_profiling.md](../docs/performance/preselection_profiling.md)
 
 ### `test_selection_performance.py`
 
@@ -93,15 +154,18 @@ Asset selector vectorization performance tests (existing benchmark).
 ### Prerequisites
 
 1. **Install dependencies:**
+
    ```bash
    pip install -e ".[fast-io]"  # Fast IO backends
    pip install psutil  # Memory profiling
    ```
 
-2. **Verify installation:**
+1. **Verify installation:**
+
    ```bash
    python -c "from portfolio_management.data.io.fast_io import get_available_backends; print(get_available_backends())"
    ```
+
    Expected output: `['pandas', 'polars', 'pyarrow']`
 
 ### Quick Start
@@ -122,6 +186,7 @@ python benchmarks/benchmark_fast_io.py --all
 ### Advanced Usage
 
 #### Save Results for Analysis
+
 ```bash
 # Save to JSON
 python benchmarks/benchmark_fast_io.py --all --output-json results.json
@@ -131,6 +196,7 @@ python -c "import json; data = json.load(open('results.json')); print(f\"Best sp
 ```
 
 #### Run Specific Benchmarks
+
 ```bash
 # CSV only (faster, focuses on CSV performance)
 python benchmarks/benchmark_fast_io.py --csv
@@ -192,15 +258,18 @@ docs/performance/caching_benchmarks.md
 The benchmark script outputs several sections:
 
 1. **Available Backends:**
+
    - Shows which backends are installed
    - Warns if optional dependencies missing
 
-2. **Benchmark Progress:**
+1. **Benchmark Progress:**
+
    - Real-time progress for each test
    - File creation status
    - Per-backend timing
 
-3. **Results Summary Table:**
+1. **Results Summary Table:**
+
    ```
    Backend      Dataset                   Operation       Mean (s)   Speedup    Memory (MB)
    ----------------------------------------------------------------------------------------
@@ -209,13 +278,15 @@ The benchmark script outputs several sections:
    pyarrow      100 assets x 1260 days    read_csv        0.8900     2.75x      240.0
    ```
 
-4. **Analysis:**
+1. **Analysis:**
+
    - Top 5 speedups
    - Break-even analysis
    - Memory efficiency comparison
    - Equivalence verification status
 
-5. **Recommendations:**
+1. **Recommendations:**
+
    - When to use each backend
    - Configuration guidelines
    - Best practices
@@ -231,13 +302,15 @@ The benchmark script outputs several sections:
 ### Success Criteria
 
 ✅ **Pass:**
+
 - Speedup >2x for large datasets (500+ assets)
 - Speedup >4x for very large datasets (1000+ assets)
 - 100% equivalence verification
-- Memory usage <2x pandas
+- Memory usage \<2x pandas
 
 ❌ **Investigate:**
-- Speedup <2x for large datasets
+
+- Speedup \<2x for large datasets
 - Equivalence failures
 - Memory usage >2x pandas
 - Crashes or errors
@@ -256,10 +329,10 @@ Benchmarks use synthetic price data that mimics real market data:
 ### Measurement Methodology
 
 1. **Warm-up:** First iteration excluded from timing (JIT compilation, cache warming)
-2. **Multiple iterations:** 3-5 runs per test, report mean/std/min/max
-3. **Memory profiling:** Peak RSS tracked using psutil
-4. **Cache control:** Optional cache clearing between iterations (cold reads)
-5. **Equivalence:** Strict numerical comparison (rtol=1e-10, atol=1e-10)
+1. **Multiple iterations:** 3-5 runs per test, report mean/std/min/max
+1. **Memory profiling:** Peak RSS tracked using psutil
+1. **Cache control:** Optional cache clearing between iterations (cold reads)
+1. **Equivalence:** Strict numerical comparison (rtol=1e-10, atol=1e-10)
 
 ### Dataset Size Progression
 
@@ -290,6 +363,7 @@ Based on Issue #40 and PR #49:
 **Problem:** `Available backends: ['pandas']`
 
 **Solution:**
+
 ```bash
 pip install polars pyarrow
 ```
@@ -299,6 +373,7 @@ pip install polars pyarrow
 **Problem:** `⚠️  psutil not installed - memory profiling disabled`
 
 **Solution:**
+
 ```bash
 pip install psutil
 ```
@@ -308,6 +383,7 @@ pip install psutil
 **Problem:** `ModuleNotFoundError: No module named 'portfolio_management'`
 
 **Solution:**
+
 ```bash
 # Install package in editable mode
 pip install -e .
@@ -318,6 +394,7 @@ pip install -e .
 **Problem:** Benchmarks taking too long
 
 **Solution:**
+
 ```bash
 # Run with smaller dataset sizes
 python benchmarks/benchmark_fast_io.py --csv  # Skip Parquet tests
@@ -331,6 +408,7 @@ python benchmarks/benchmark_fast_io.py --csv  # Skip Parquet tests
 **Problem:** Inconsistent results, high variance
 
 **Solution:**
+
 - Run on local SSD (not network drive)
 - Close other programs
 - Run multiple times and average
@@ -341,10 +419,10 @@ python benchmarks/benchmark_fast_io.py --csv  # Skip Parquet tests
 To add a new benchmark:
 
 1. Create a new Python script in this directory
-2. Follow the naming convention: `benchmark_<feature>.py`
-3. Include docstring with description, usage, requirements
-4. Output results to `docs/performance/` directory
-5. Update this README with benchmark description
+1. Follow the naming convention: `benchmark_<feature>.py`
+1. Include docstring with description, usage, requirements
+1. Output results to `docs/performance/` directory
+1. Update this README with benchmark description
 
 ### Benchmark Script Template
 
@@ -453,12 +531,12 @@ if current_speedup < baseline_speedup * 0.9:  # 10% regression threshold
 ## Support
 
 For questions or issues with benchmarks:
+
 1. Check [Troubleshooting](#troubleshooting) section above
-2. Review [docs/performance/fast_io_benchmarks.md](../docs/performance/fast_io_benchmarks.md)
-3. Run `python benchmarks/benchmark_fast_io.py --equivalence` to verify setup
-4. Open an issue on GitHub with benchmark output and environment details
+1. Review [docs/performance/fast_io_benchmarks.md](../docs/performance/fast_io_benchmarks.md)
+1. Run `python benchmarks/benchmark_fast_io.py --equivalence` to verify setup
+1. Open an issue on GitHub with benchmark output and environment details
 
-
----
+______________________________________________________________________
 
 *Last updated: 2025-10-24*
