@@ -18,21 +18,25 @@ The framework is currently implemented with **no-op (no-operation) stubs** that 
 ### Core Components
 
 1. **IndicatorProvider Interface** (`portfolio_management.analytics.indicators.IndicatorProvider`)
+
    - Abstract base class defining the contract for indicator computation
    - `compute(series, params) -> pd.Series` method returns indicator signals
    - Extensible for different indicator libraries
 
-2. **NoOpIndicatorProvider** (`portfolio_management.analytics.indicators.NoOpIndicatorProvider`)
+1. **NoOpIndicatorProvider** (`portfolio_management.analytics.indicators.NoOpIndicatorProvider`)
+
    - Stub implementation that returns all-True signals
    - Used for testing and preparation
    - Performs no actual filtering
 
-3. **FilterHook** (`portfolio_management.analytics.indicators.FilterHook`)
+1. **FilterHook** (`portfolio_management.analytics.indicators.FilterHook`)
+
    - Applies indicator-based filtering to asset lists
    - Integrates with universe configuration and backtest pipeline
    - Handles missing data and error cases gracefully
 
-4. **IndicatorConfig** (`portfolio_management.analytics.indicators.IndicatorConfig`)
+1. **IndicatorConfig** (`portfolio_management.analytics.indicators.IndicatorConfig`)
+
    - Configuration dataclass for indicator parameters
    - Validates provider types and parameter ranges
    - Supports enable/disable toggle
@@ -51,7 +55,7 @@ universes:
       data_status: ["ok"]
       min_history_days: 756
       # ... other filter criteria ...
-    
+
     # Technical indicators configuration (optional)
     technical_indicators:
       enabled: true           # Enable indicator filtering
@@ -95,11 +99,11 @@ class TalibIndicatorProvider(IndicatorProvider):
         """Compute RSI indicator using TA-Lib."""
         window = params.get("window", 14)
         threshold = params.get("threshold", 30.0)  # Oversold threshold
-        
+
         # Compute RSI
         rsi = talib.RSI(series.values, timeperiod=window)
         rsi_series = pd.Series(rsi, index=series.index)
-        
+
         # Return boolean signal: True if RSI < threshold (oversold = buy signal)
         return rsi_series < threshold
 ```
@@ -143,10 +147,10 @@ class CompositeIndicatorProvider(IndicatorProvider):
     def __init__(self, providers: list[IndicatorProvider], logic: str = "AND"):
         self.providers = providers
         self.logic = logic  # "AND" or "OR"
-    
+
     def compute(self, series: pd.Series, params: dict[str, Any]) -> pd.Series:
         signals = [p.compute(series, params) for p in self.providers]
-        
+
         if self.logic == "AND":
             return pd.concat(signals, axis=1).all(axis=1)
         else:  # OR
@@ -187,11 +191,11 @@ class IndicatorProvider(ABC):
     @abstractmethod
     def compute(self, series: pd.Series, params: dict[str, Any]) -> pd.Series:
         """Compute indicator signal from price/volume series.
-        
+
         Args:
             series: Price or volume time series
             params: Indicator-specific parameters
-            
+
         Returns:
             Boolean or float series [0, 1] indicating signal strength
         """
@@ -211,14 +215,14 @@ class NoOpIndicatorProvider(IndicatorProvider):
 class FilterHook:
     def __init__(self, config: IndicatorConfig, provider: IndicatorProvider):
         """Initialize filter hook."""
-        
+
     def filter_assets(
         self,
         prices: pd.DataFrame,
         assets: list[str],
     ) -> list[str]:
         """Filter assets based on indicator signals.
-        
+
         Returns list of assets that pass indicator filter.
         """
 ```
@@ -231,14 +235,14 @@ class IndicatorConfig:
     enabled: bool = False
     provider: str = "noop"
     params: dict[str, Any] = field(default_factory=dict)
-    
+
     def validate(self) -> None:
         """Validate configuration."""
-    
+
     @classmethod
     def disabled(cls) -> IndicatorConfig:
         """Create disabled configuration."""
-    
+
     @classmethod
     def noop(cls, params: dict[str, Any] | None = None) -> IndicatorConfig:
         """Create no-op configuration."""
@@ -257,9 +261,9 @@ class IndicatorConfig:
 The framework is designed to minimize changes when adding real indicators:
 
 1. Configuration schema remains stable
-2. Only provider implementations need to be swapped
-3. Tests can be gradually migrated from stub to real indicators
-4. CLI remains unchanged (just add more provider choices)
+1. Only provider implementations need to be swapped
+1. Tests can be gradually migrated from stub to real indicators
+1. CLI remains unchanged (just add more provider choices)
 
 ## Performance Considerations
 
@@ -273,29 +277,29 @@ The framework is designed to minimize changes when adding real indicators:
 When integrating actual indicators:
 
 1. **Caching**: Consider caching indicator computations across rebalances
-2. **Vectorization**: Use vectorized TA library operations when possible
-3. **Lazy Evaluation**: Compute indicators only when needed
-4. **Parallelization**: Consider parallel computation for multiple assets
+1. **Vectorization**: Use vectorized TA library operations when possible
+1. **Lazy Evaluation**: Compute indicators only when needed
+1. **Parallelization**: Consider parallel computation for multiple assets
 
 ## Best Practices
 
 1. **Start with no-op**: Test configuration and integration before adding real indicators
-2. **Validate parameters**: Ensure indicator parameters are sensible for your data
-3. **Handle missing data**: Providers should gracefully handle gaps in price data
-4. **Document indicators**: Clearly document which indicators are used and why
-5. **Backtest comparison**: Compare results with and without indicators to validate effectiveness
+1. **Validate parameters**: Ensure indicator parameters are sensible for your data
+1. **Handle missing data**: Providers should gracefully handle gaps in price data
+1. **Document indicators**: Clearly document which indicators are used and why
+1. **Backtest comparison**: Compare results with and without indicators to validate effectiveness
 
 ## Future Work
 
 Potential enhancements:
 
-- [ ] Integration with TA-Lib for standard technical indicators
-- [ ] Support for custom indicator definitions via configuration
-- [ ] Multi-indicator composition and logic
-- [ ] Indicator signal strength (beyond binary include/exclude)
-- [ ] Rolling indicator re-evaluation during backtests
-- [ ] Indicator parameter optimization
-- [ ] Visualization of indicator signals alongside price charts
+- \[ \] Integration with TA-Lib for standard technical indicators
+- \[ \] Support for custom indicator definitions via configuration
+- \[ \] Multi-indicator composition and logic
+- \[ \] Indicator signal strength (beyond binary include/exclude)
+- \[ \] Rolling indicator re-evaluation during backtests
+- \[ \] Indicator parameter optimization
+- \[ \] Visualization of indicator signals alongside price charts
 
 ## References
 

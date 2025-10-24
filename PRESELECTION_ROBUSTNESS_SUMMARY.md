@@ -13,11 +13,13 @@ Test preselection factor computation robustness with edge cases to ensure determ
 ### Files Created
 
 1. **`tests/integration/test_preselection_edge_cases.py`** (1,000+ lines)
+
    - 31 comprehensive edge case tests
    - Organized into 7 test classes covering different edge case categories
    - Includes custom fixtures for various edge case scenarios
 
-2. **`docs/preselection_edge_cases.md`** (350+ lines)
+1. **`docs/preselection_edge_cases.md`** (350+ lines)
+
    - Complete documentation of tie-breaking rules
    - Edge case behavior descriptions
    - Known limitations and best practices
@@ -54,12 +56,14 @@ Coverage: All edge cases from issue requirements
 **Rule**: Ties are broken deterministically by alphabetical symbol order.
 
 **Validation**:
+
 - ✅ Identical momentum values → alphabetical selection
 - ✅ Numerical precision differences (1e-10) → deterministic
 - ✅ Boundary ties (ranks 29-32, top_k=30) → first alphabetically
 - ✅ Multiple runs produce identical results
 
 **Example**:
+
 ```python
 # Three assets with identical scores
 "ASSET_A": 0.001  # Selected (alphabetically first)
@@ -71,6 +75,7 @@ Coverage: All edge cases from issue requirements
 ### 2. Empty/Minimal Result Handling
 
 **Behaviors Validated**:
+
 - ✅ Insufficient data → raises `InsufficientDataError`
 - ✅ Fewer valid assets than top_k → returns all valid assets
 - ✅ Single asset → deterministic selection
@@ -79,6 +84,7 @@ Coverage: All edge cases from issue requirements
 ### 3. Combined Factor Robustness
 
 **Edge Cases Handled**:
+
 - ✅ One factor all NaN → selection based on valid factor
 - ✅ Both factors all NaN → tie-breaking by symbol (no crash)
 - ✅ Extreme weight ratios (99%/1%) → stable computation
@@ -87,6 +93,7 @@ Coverage: All edge cases from issue requirements
 ### 4. Data Quality Resilience
 
 **Robustness Validated**:
+
 - ✅ All-zero returns → zero momentum, deterministic selection
 - ✅ All NaN in window → uses available data before window
 - ✅ Single valid point → minimal but valid calculation
@@ -96,6 +103,7 @@ Coverage: All edge cases from issue requirements
 ### 5. Configuration Boundary Behavior
 
 **Edge Values Tested**:
+
 - ✅ lookback = min_periods → valid, uses exact minimum
 - ✅ skip = lookback - 1 → valid, single-period momentum
 - ✅ top_k = 0 → returns all assets (disabled)
@@ -105,6 +113,7 @@ Coverage: All edge cases from issue requirements
 ### 6. Z-Score Edge Cases
 
 **Standardization Robustness**:
+
 - ✅ Zero std dev → neutral scores (0.0) for all
 - ✅ Extreme outlier (|z| > 3) → included in ranking
 - ✅ Empty factor result → graceful handling
@@ -113,6 +122,7 @@ Coverage: All edge cases from issue requirements
 ### 7. Determinism Guarantees
 
 **Validated Properties**:
+
 - ✅ Same config + same data = same results (20 runs tested)
 - ✅ Output always sorted alphabetically
 - ✅ No silent failures (explicit errors or valid results)
@@ -138,29 +148,29 @@ All acceptance criteria from Issue #70 met:
 ### Tie-Breaking Rules (docs/preselection_edge_cases.md)
 
 1. **Primary**: Score-based ranking (descending)
-2. **Secondary**: Alphabetical by symbol (ascending)
-3. **Boundary ties**: Select first k alphabetically from tied group
-4. **Numerical precision**: Values within ~1e-10 treated as potentially tied
+1. **Secondary**: Alphabetical by symbol (ascending)
+1. **Boundary ties**: Select first k alphabetically from tied group
+1. **Numerical precision**: Values within ~1e-10 treated as potentially tied
 
 ### Known Limitations
 
 1. **No outlier detection** - extreme values included without trimming
-2. **No missing data imputation** - NaN propagates naturally
-3. **No stability constraints** - each period independent
-4. **Fixed ranking factors** - only momentum and low-vol available
-5. **No multi-period optimization** - single lookback window only
-6. **Equal weighting** - top-k treats all selected equally
-7. **Z-score standardization only** - no rank or percentile methods
-8. **No cross-sectional options** - single normalization approach
+1. **No missing data imputation** - NaN propagates naturally
+1. **No stability constraints** - each period independent
+1. **Fixed ranking factors** - only momentum and low-vol available
+1. **No multi-period optimization** - single lookback window only
+1. **Equal weighting** - top-k treats all selected equally
+1. **Z-score standardization only** - no rank or percentile methods
+1. **No cross-sectional options** - single normalization approach
 
 ### Best Practices
 
 1. **Accept alphabetical tie-breaking** as standard behavior
-2. **Validate min_periods** matches data availability
-3. **Pre-filter** assets with insufficient history
-4. **Monitor** NaN score rates in production
-5. **Test edge values** at configuration boundaries
-6. **Log selection changes** for audit trail
+1. **Validate min_periods** matches data availability
+1. **Pre-filter** assets with insufficient history
+1. **Monitor** NaN score rates in production
+1. **Test edge values** at configuration boundaries
+1. **Log selection changes** for audit trail
 
 ## Testing Infrastructure
 
@@ -179,12 +189,12 @@ All acceptance criteria from Issue #70 met:
 ### Test Classes
 
 1. `TestRankingTies` (5 tests)
-2. `TestEmptyMinimalResults` (5 tests)
-3. `TestCombinedFactorEdgeCases` (4 tests)
-4. `TestDataQualityIssues` (5 tests)
-5. `TestConfigurationBoundaries` (5 tests)
-6. `TestZScoreEdgeCases` (4 tests)
-7. `TestValidationAndDeterminism` (3 tests)
+1. `TestEmptyMinimalResults` (5 tests)
+1. `TestCombinedFactorEdgeCases` (4 tests)
+1. `TestDataQualityIssues` (5 tests)
+1. `TestConfigurationBoundaries` (5 tests)
+1. `TestZScoreEdgeCases` (4 tests)
+1. `TestValidationAndDeterminism` (3 tests)
 
 ## Integration with Existing Tests
 
@@ -205,10 +215,10 @@ All acceptance criteria from Issue #70 met:
 The preselection system demonstrates robust behavior across all tested edge cases:
 
 1. **No crashes** on degenerate inputs (all NaN, all zeros, extreme outliers)
-2. **Deterministic** results across all scenarios (20-run validation)
-3. **Graceful degradation** when data quality is poor
-4. **Clear documentation** of expected behavior and limitations
-5. **Comprehensive test coverage** across 31 edge case scenarios
+1. **Deterministic** results across all scenarios (20-run validation)
+1. **Graceful degradation** when data quality is poor
+1. **Clear documentation** of expected behavior and limitations
+1. **Comprehensive test coverage** across 31 edge case scenarios
 
 The system is ready for production use with confidence in edge case handling.
 

@@ -1,0 +1,25 @@
+performance:
+  annualized_return_pct: 9.87
+  calmar_ratio: 0.31
+  max_drawdown_pct: -31.42
+  sharpe_ratio: 0.76
+  sortino_ratio: 0.89
+  total_return_pct: 283.9
+  volatility_pct: 13.02
+portfolio:
+  final_value: 383902.8333
+  initial_value: 100000.0
+  num_days: 3601
+  peak_value: 401335.20792
+risk:
+  avg_loss_pct: -0.58
+  avg_win_pct: 0.55
+  best_day_pct: 9.48
+  expected_shortfall_95_pct: -1.11
+  win_rate_pct: 50.2
+  worst_day_pct: -9.31
+trading:
+  avg_turnover: 0.0
+  num_rebalances: 53
+  total_costs_usd: 27373.88
+  total_trades: 825

@@ -235,11 +235,13 @@ pytest tests/portfolio/test_membership.py::TestSpecialScenarios -v         # 6 t
 ### Test Categories
 
 **Basic Functionality (19 tests)**:
+
 - Policy validation and creation
 - Basic policy application
 - Standard constraint enforcement
 
 **Buffer Zone Edge Cases (7 tests)**:
+
 - Assets entering buffer zone (ranks 31-50 with top_k=30, buffer=50)
 - Assets exiting buffer zone
 - Assets oscillating around buffer boundary
@@ -248,6 +250,7 @@ pytest tests/portfolio/test_membership.py::TestSpecialScenarios -v         # 6 t
 - Buffer disabled scenarios
 
 **Boundary Conditions (6 tests)**:
+
 - All current holdings failing criteria
 - All holdings protected by min_holding_periods
 - Single asset portfolio
@@ -255,6 +258,7 @@ pytest tests/portfolio/test_membership.py::TestSpecialScenarios -v         # 6 t
 - Equal rank scenarios (ties)
 
 **Policy Constraint Conflicts (7 tests)**:
+
 - min_holding_periods vs max_removed_assets conflict
 - max_new_assets vs top_k conflict
 - Buffer keeping more than top_k
@@ -262,6 +266,7 @@ pytest tests/portfolio/test_membership.py::TestSpecialScenarios -v         # 6 t
 - Multiple policies at limits simultaneously
 
 **Special Scenarios (6 tests)**:
+
 - Missing assets in preselected_ranks (delisted assets)
 - All new candidates worse than holdings
 - Large buffer (buffer > universe size)

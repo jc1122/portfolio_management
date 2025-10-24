@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass
 
-import pytest
-
 from portfolio_management.macro.models import RegimeConfig
 from portfolio_management.macro.regime import RegimeGate
 
@@ -322,4 +320,6 @@ class TestIntegrationScenarios:
 
             # Test adjust_selection_scores
             scored = gate.adjust_selection_scores(assets)
-            assert all(score == 1.0 for _, score in scored), f"Failed for config: {config}"
+            assert all(
+                score == 1.0 for _, score in scored
+            ), f"Failed for config: {config}"

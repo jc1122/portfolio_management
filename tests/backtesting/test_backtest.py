@@ -346,46 +346,46 @@ class TestPITEligibility:
     def returns_with_late_starter(self) -> pd.DataFrame:
         """Create returns with one asset starting late."""
         dates = pd.date_range("2020-01-01", periods=800, freq="D")
-        
+
         rng = np.random.default_rng(100)
-        
+
         # Assets A, B: Full history
         returns_a = rng.normal(0.0001, 0.01, len(dates))
         returns_b = rng.normal(0.00015, 0.012, len(dates))
-        
+
         # Asset C: Starts after 400 days
         returns_c = np.full(len(dates), np.nan)
         returns_c[400:] = rng.normal(0.0001, 0.011, len(dates) - 400)
-        
+
         df = pd.DataFrame(
             {"A": returns_a, "B": returns_b, "C": returns_c},
             index=dates,
         )
-        
+
         return df
 
     @pytest.fixture
     def returns_with_delisting(self) -> pd.DataFrame:
         """Create returns with one asset delisting mid-period."""
         dates = pd.date_range("2020-01-01", periods=800, freq="D")
-        
+
         rng = np.random.default_rng(101)
-        
+
         # Asset A: Full history
         returns_a = rng.normal(0.0001, 0.01, len(dates))
-        
+
         # Asset B: Delists after 400 days
         returns_b = rng.normal(0.00015, 0.012, len(dates))
         returns_b[400:] = np.nan
-        
+
         # Asset C: Full history
         returns_c = rng.normal(0.0001, 0.011, len(dates))
-        
+
         df = pd.DataFrame(
             {"A": returns_a, "B": returns_b, "C": returns_c},
             index=dates,
         )
-        
+
         return df
 
     def test_pit_eligibility_excludes_late_starter_initially(
@@ -393,10 +393,10 @@ class TestPITEligibility:
     ):
         """Test that late-starting assets are excluded when they don't have enough history."""
         returns = returns_with_late_starter
-        
+
         # Generate prices from returns
         prices = (1 + returns).cumprod() * 100
-        
+
         # Backtest from day 450 to 550 (only 50 days after C starts)
         config = BacktestConfig(
             start_date=returns.index[450].date(),
@@ -405,37 +405,37 @@ class TestPITEligibility:
             min_history_days=100,  # Require 100 days
             min_price_rows=100,
         )
-        
+
         strategy = EqualWeightStrategy()
-        
+
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
             prices=prices,
             returns=returns,
         )
-        
+
         _equity, _metrics, events = engine.run()
-        
+
         # At first rebalance (day 450), asset C should not be included
         # because it only has 50 days of history
         first_event = events[0]
-        
+
         # Check that only A and B were traded in first rebalance
         traded_assets = set(first_event.trades.keys())
         assert "A" in traded_assets or len(traded_assets) > 0
         assert "B" in traded_assets or len(traded_assets) > 0
         # C might not be traded if it doesn't meet eligibility
-    
+
     def test_pit_eligibility_includes_late_starter_later(
         self, returns_with_late_starter: pd.DataFrame
     ):
         """Test that late-starting assets are included once they have enough history."""
         returns = returns_with_late_starter
-        
+
         # Generate prices from returns
         prices = (1 + returns).cumprod() * 100
-        
+
         # Backtest from day 550 to 650 (150 days after C starts)
         config = BacktestConfig(
             start_date=returns.index[550].date(),
@@ -444,31 +444,31 @@ class TestPITEligibility:
             min_history_days=100,  # Asset C now has enough history
             min_price_rows=100,
         )
-        
+
         strategy = EqualWeightStrategy()
-        
+
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
             prices=prices,
             returns=returns,
         )
-        
+
         _equity, _metrics, events = engine.run()
-        
+
         # Now all three assets should potentially be included
         # Check at least one rebalance happened
         assert len(events) > 0
-    
+
     def test_pit_eligibility_handles_delisting(
         self, returns_with_delisting: pd.DataFrame
     ):
         """Test that delisted assets are properly liquidated."""
         returns = returns_with_delisting
-        
+
         # Generate prices from returns
         prices = (1 + returns).cumprod() * 100
-        
+
         # Backtest from day 200 to 600 (across the delisting at day 400)
         config = BacktestConfig(
             start_date=returns.index[200].date(),
@@ -477,33 +477,33 @@ class TestPITEligibility:
             min_history_days=50,
             min_price_rows=50,
         )
-        
+
         strategy = EqualWeightStrategy()
-        
+
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
             prices=prices,
             returns=returns,
         )
-        
+
         _equity, _metrics, events = engine.run()
-        
+
         # Should have successfully completed the backtest
         assert len(events) > 0
-        
+
         # Engine should have tracked the delisted asset
         assert len(engine.delisted_assets) >= 0  # May or may not detect B as delisted
-    
+
     def test_pit_eligibility_disabled_includes_all_assets(
         self, returns_with_late_starter: pd.DataFrame
     ):
         """Test that disabling PIT eligibility includes all assets regardless of history."""
         returns = returns_with_late_starter
-        
+
         # Generate prices from returns
         prices = (1 + returns).cumprod() * 100
-        
+
         # Backtest early when C doesn't have much history
         config = BacktestConfig(
             start_date=returns.index[450].date(),
@@ -512,35 +512,35 @@ class TestPITEligibility:
             min_history_days=100,
             min_price_rows=100,
         )
-        
+
         strategy = EqualWeightStrategy()
-        
+
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
             prices=prices,
             returns=returns,
         )
-        
+
         _equity, _metrics, events = engine.run()
-        
+
         # Should run successfully even with late starter
         assert len(events) > 0
-    
+
     def test_pit_eligibility_no_eligible_assets_skips_rebalance(self):
         """Test that rebalancing is skipped when no assets are eligible."""
         # Create minimal data with very late starters
         dates = pd.date_range("2020-01-01", periods=300, freq="D")
-        
+
         rng = np.random.default_rng(102)
-        
+
         # All assets start very late
         returns_a = np.full(len(dates), np.nan)
         returns_a[290:] = rng.normal(0.0001, 0.01, 10)
-        
+
         returns = pd.DataFrame({"A": returns_a}, index=dates)
         prices = (1 + returns.fillna(0)).cumprod() * 100
-        
+
         # Try to backtest from beginning with strict requirements
         config = BacktestConfig(
             start_date=dates[0].date(),
@@ -549,22 +549,22 @@ class TestPITEligibility:
             min_history_days=252,  # Very strict
             min_price_rows=252,
         )
-        
+
         strategy = EqualWeightStrategy()
-        
+
         engine = BacktestEngine(
             config=config,
             strategy=strategy,
             prices=prices,
             returns=returns,
         )
-        
+
         _equity, metrics, events = engine.run()
-        
+
         # Should have no rebalances since no assets were eligible
         assert metrics.num_rebalances == 0
         assert len(events) == 0
-    
+
     def test_config_validates_pit_parameters(self):
         """Test that BacktestConfig validates PIT eligibility parameters."""
         # Valid config should work
@@ -576,7 +576,7 @@ class TestPITEligibility:
         )
         assert config.min_history_days == 252
         assert config.min_price_rows == 252
-        
+
         # Invalid min_history_days should raise error
         with pytest.raises(Exception):  # InvalidBacktestConfigError
             BacktestConfig(
@@ -584,7 +584,7 @@ class TestPITEligibility:
                 end_date=date(2021, 1, 1),
                 min_history_days=0,
             )
-        
+
         # Invalid min_price_rows should raise error
         with pytest.raises(Exception):  # InvalidBacktestConfigError
             BacktestConfig(

@@ -25,9 +25,7 @@ import tempfile
 import time
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -39,12 +37,10 @@ from portfolio_management.backtesting import (
 from portfolio_management.data.factor_caching import FactorCache
 from portfolio_management.portfolio import (
     EqualWeightStrategy,
-    MeanVarianceStrategy,
     MembershipPolicy,
     Preselection,
     PreselectionConfig,
     PreselectionMethod,
-    RiskParityStrategy,
 )
 
 # Check if long-history tests should run
@@ -222,7 +218,9 @@ class TestEqualWeightLongHistory:
                 len(removed) <= 10
             ), f"Event {i}: Too many assets removed ({len(removed)})"
 
-    def test_equal_weight_all_features_20_years(self, long_history_data, temp_cache_dir):
+    def test_equal_weight_all_features_20_years(
+        self, long_history_data, temp_cache_dir
+    ):
         """Test equal weight with ALL features enabled over 20 years."""
         prices, returns, _ = long_history_data
 
@@ -274,10 +272,10 @@ class TestEqualWeightLongHistory:
 
         # Check cache was used
         cache_stats = factor_cache.get_stats()
+        assert cache_stats["puts"] > 0, "Cache should have stored factor computations"
         assert (
-            cache_stats["puts"] > 0
-        ), "Cache should have stored factor computations"
-        assert cache_stats["hits"] + cache_stats["misses"] > 0, "Cache should be queried"
+            cache_stats["hits"] + cache_stats["misses"] > 0
+        ), "Cache should be queried"
 
 
 # NOTE: Additional test classes TestMeanVarianceLongHistory, TestRiskParityLongHistory,

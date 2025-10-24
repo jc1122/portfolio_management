@@ -15,6 +15,7 @@ October 23, 2025
 **Goal**: Offer optional faster IO paths for large datasets while preserving the pandas default and outputs.
 
 **Acceptance Criteria**:
+
 - Enabling fast IO does not change results
 - Shows measurable speed improvement on large inputs
 
@@ -38,9 +39,9 @@ portfolio_management/
 ### Key Components
 
 1. **fast_io.py**: Core module with backend detection and selection
-2. **PriceLoader**: Updated to support io_backend parameter
-3. **CLI Integration**: Added --io-backend argument to calculate_returns.py
-4. **Optional Dependencies**: Added fast-io group to pyproject.toml
+1. **PriceLoader**: Updated to support io_backend parameter
+1. **CLI Integration**: Added --io-backend argument to calculate_returns.py
+1. **Optional Dependencies**: Added fast-io group to pyproject.toml
 
 ## Features
 
@@ -54,6 +55,7 @@ portfolio_management/
 ### Backward Compatibility
 
 ✅ **Zero Breaking Changes**
+
 - Default behavior unchanged (pandas)
 - Existing code works without modification
 - No new required dependencies
@@ -70,6 +72,7 @@ Measured on synthetic datasets mimicking long_history universe:
 | 500 assets (5 years each) | 12.3s | 2.60s | **4.7x** |
 
 **Most Beneficial For**:
+
 - Large universes (500-1000+ assets)
 - Long histories (5-10+ years of daily data)
 - Multiple file operations (loading entire portfolios)
@@ -154,18 +157,21 @@ prices = loader.load_multiple_prices(assets, prices_dir)
 ### Test Coverage
 
 **Unit Tests** (`tests/data/test_fast_io.py`):
+
 - 11 test functions
 - Backend availability detection
 - CSV reading with all backends
 - Result consistency verification
 
 **Integration Tests** (`tests/analytics/test_fast_io_integration.py`):
+
 - 7 test functions
 - PriceLoader integration
 - Cache compatibility
 - Fallback behavior
 
 **Benchmarks** (`tests/benchmarks/benchmark_fast_io.py`):
+
 - Single large file benchmark
 - Multiple file loading (100 assets)
 - Large universe simulation (500 assets)
@@ -194,6 +200,7 @@ python tests/validate_fast_io.py
 ### Main Documentation
 
 **docs/fast_io.md** (464 lines):
+
 - Installation instructions
 - Usage examples (CLI and programmatic)
 - Performance benchmarks
@@ -203,11 +210,13 @@ python tests/validate_fast_io.py
 ### Supporting Documentation
 
 **tests/benchmarks/README.md** (194 lines):
+
 - How to run benchmarks
 - Interpreting results
 - Best practices
 
 **README.md** (updated):
+
 - Added fast IO to Current Capabilities
 - Added "Optional Fast IO" section
 - Quick start examples
@@ -217,26 +226,27 @@ python tests/validate_fast_io.py
 ### Files Created (7)
 
 1. `src/portfolio_management/data/io/fast_io.py` (309 lines)
-2. `tests/data/test_fast_io.py` (151 lines)
-3. `tests/analytics/test_fast_io_integration.py` (142 lines)
-4. `tests/benchmarks/benchmark_fast_io.py` (309 lines)
-5. `tests/benchmarks/README.md` (194 lines)
-6. `tests/validate_fast_io.py` (221 lines)
-7. `docs/fast_io.md` (464 lines)
+1. `tests/data/test_fast_io.py` (151 lines)
+1. `tests/analytics/test_fast_io_integration.py` (142 lines)
+1. `tests/benchmarks/benchmark_fast_io.py` (309 lines)
+1. `tests/benchmarks/README.md` (194 lines)
+1. `tests/validate_fast_io.py` (221 lines)
+1. `docs/fast_io.md` (464 lines)
 
 **Total New Lines**: 1,790 (code + tests + docs)
 
 ### Files Modified (5)
 
 1. `src/portfolio_management/data/io/__init__.py` - Added exports
-2. `src/portfolio_management/analytics/returns/loaders.py` - Added io_backend parameter
-3. `scripts/calculate_returns.py` - Added --io-backend CLI argument
-4. `pyproject.toml` - Added optional dependencies
-5. `README.md` - Added fast IO documentation
+1. `src/portfolio_management/analytics/returns/loaders.py` - Added io_backend parameter
+1. `scripts/calculate_returns.py` - Added --io-backend CLI argument
+1. `pyproject.toml` - Added optional dependencies
+1. `README.md` - Added fast IO documentation
 
 ### Code Quality
 
 ✅ **All Validation Checks Passed**
+
 - Core module structure correct
 - Module exports configured
 - PriceLoader integration complete
@@ -253,11 +263,13 @@ python tests/validate_fast_io.py
 ### ✅ Enabling fast IO does not change results
 
 **Verification**:
+
 - All backends produce identical pandas DataFrames
 - Tests verify numerical consistency (`pd.testing.assert_frame_equal`)
 - Same column names, types, and values across backends
 
 **Evidence**:
+
 ```python
 # From tests/data/test_fast_io.py
 def test_backend_consistency(sample_csv):
@@ -265,7 +277,7 @@ def test_backend_consistency(sample_csv):
     df_pandas = read_csv_fast(sample_csv, backend="pandas")
     df_polars = read_csv_fast(sample_csv, backend="polars")
     df_pyarrow = read_csv_fast(sample_csv, backend="pyarrow")
-    
+
     # All produce identical results
     pd.testing.assert_frame_equal(df_pandas, df_polars, check_dtype=False)
     pd.testing.assert_frame_equal(df_pandas, df_pyarrow, check_dtype=False)
@@ -274,11 +286,13 @@ def test_backend_consistency(sample_csv):
 ### ✅ Shows measurable speed improvement on large inputs
 
 **Verification**:
+
 - Benchmarks demonstrate 2-5x speedup
 - Most significant for large files (>1MB)
 - Greatest benefit for multiple file operations
 
 **Evidence**:
+
 ```
 Benchmark Results (500 assets, 5 years each):
 - pandas:  12.3 seconds
@@ -291,26 +305,32 @@ Benchmark Results (500 assets, 5 years each):
 Potential improvements for future iterations:
 
 1. **Environment Variable Support**
+
    - `PORTFOLIO_FAST_IO=polars` to set default backend
    - Useful for CI/CD and production deployments
 
-2. **Parquet Exports**
+1. **Parquet Exports**
+
    - Export processed data as Parquet for even faster reloading
    - Parquet typically 5-10x faster than CSV
 
-3. **Apply to Other Scripts**
+1. **Apply to Other Scripts**
+
    - `prepare_tradeable_data.py`
    - Other data processing scripts
 
-4. **Lazy Loading**
+1. **Lazy Loading**
+
    - Use polars lazy API for memory-efficient processing
    - Especially useful for very large datasets
 
-5. **Streaming Operations**
+1. **Streaming Operations**
+
    - Process files in chunks for memory efficiency
    - Handle datasets larger than RAM
 
-6. **Compression**
+1. **Compression**
+
    - Automatic gzip/zstd compression
    - Balance between disk space and decompression time
 
@@ -319,21 +339,25 @@ Potential improvements for future iterations:
 ### What Worked Well
 
 1. **Optional Dependencies Approach**
+
    - No breaking changes for existing users
    - Easy opt-in for performance-conscious users
    - Automatic fallback prevents failures
 
-2. **Transparent Backend Selection**
+1. **Transparent Backend Selection**
+
    - Users don't need to change code structure
    - All backends return pandas DataFrames
    - Easy to switch between backends
 
-3. **Comprehensive Testing**
+1. **Comprehensive Testing**
+
    - Tests work with or without optional dependencies
    - Proper skipif decorators
    - Integration tests verify compatibility
 
-4. **Documentation First**
+1. **Documentation First**
+
    - Clear installation instructions
    - Usage examples for multiple scenarios
    - Troubleshooting guide reduces support burden
@@ -341,16 +365,19 @@ Potential improvements for future iterations:
 ### Challenges Overcome
 
 1. **Import Error Handling**
+
    - Graceful fallback when polars/pyarrow not available
    - Clear logging messages guide users
    - No crashes if dependencies missing
 
-2. **Backend Consistency**
+1. **Backend Consistency**
+
    - Different backends have slightly different APIs
    - Wrapper functions normalize behavior
    - Tests verify identical results
 
-3. **Performance Measurement**
+1. **Performance Measurement**
+
    - Created synthetic datasets for reproducible benchmarks
    - Multiple iterations for stable measurements
    - Clear presentation of speedup factors
@@ -367,9 +394,10 @@ The fast IO implementation successfully delivers:
 ✅ **Production ready (all validation checks pass)**
 
 Users can immediately benefit from faster data loading by:
+
 1. Installing optional dependencies: `pip install polars pyarrow`
-2. Using `--io-backend polars` in CLI commands
-3. Or using `io_backend='polars'` programmatically
+1. Using `--io-backend polars` in CLI commands
+1. Or using `io_backend='polars'` programmatically
 
 The default behavior remains unchanged, ensuring existing workflows continue to work without modification.
 
@@ -387,16 +415,19 @@ The default behavior remains unchanged, ensuring existing workflows continue to 
 To add a new fast IO backend:
 
 1. Update `fast_io.py`:
+
    - Add availability check
    - Add to `get_available_backends()`
    - Add to `select_backend()` logic
    - Implement `_read_csv_<backend>()` function
 
-2. Update tests:
+1. Update tests:
+
    - Add skipif decorator for new backend
    - Add consistency tests
 
-3. Update documentation:
+1. Update documentation:
+
    - Add installation instructions
    - Add usage examples
    - Update benchmark results
@@ -404,6 +435,7 @@ To add a new fast IO backend:
 ### Performance Monitoring
 
 Monitor performance over time:
+
 - Run benchmarks on each major release
 - Track speedup factors
 - Document any regressions
@@ -412,7 +444,8 @@ Monitor performance over time:
 ### Support
 
 For issues or questions:
+
 1. Check `docs/fast_io.md` troubleshooting section
-2. Run `python tests/validate_fast_io.py` to verify installation
-3. Check that optional dependencies are installed correctly
-4. Review test output for clues
+1. Run `python tests/validate_fast_io.py` to verify installation
+1. Check that optional dependencies are installed correctly
+1. Review test output for clues

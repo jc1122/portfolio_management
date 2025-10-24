@@ -1,7 +1,7 @@
 # Cardinality Constraints Implementation Summary
 
-**Issue**: #35 - Advanced cardinality (design only): optimizer-integrated selection stub  
-**Date**: 2025-10-23  
+**Issue**: #35 - Advanced cardinality (design only): optimizer-integrated selection stub
+**Date**: 2025-10-23
 **Status**: ✅ COMPLETE
 
 ## Goal
@@ -10,18 +10,20 @@ Design and stub interfaces for future cardinality constraints inside the optimiz
 
 ## Scope (from Issue)
 
-- [x] Define interfaces/config for cardinality-constrained optimization (max_nonzero, group/cardinality)
-- [x] Add NotImplemented paths behind a feature flag and document trade-offs vs preselection
-- [x] Brief design notes comparing preselection vs integrated cardinality
+- \[x\] Define interfaces/config for cardinality-constrained optimization (max_nonzero, group/cardinality)
+- \[x\] Add NotImplemented paths behind a feature flag and document trade-offs vs preselection
+- \[x\] Brief design notes comparing preselection vs integrated cardinality
 
 ## Acceptance Criteria (from Issue)
 
-- [x] **Codebase compiles with stubs** ✅
+- \[x\] **Codebase compiles with stubs** ✅
+
   - All Python files validated for syntax
   - Imports work correctly
   - No runtime errors on module load
-  
-- [x] **Clear extension points are documented** ✅
+
+- \[x\] **Clear extension points are documented** ✅
+
   - 3 stub optimizer functions (MIQP, Heuristic, Relaxation)
   - Validation utilities
   - Factory method for optimizer selection
@@ -56,6 +58,7 @@ class CardinalityConstraints:
 ```
 
 **Features**:
+
 - Type-safe enum for method selection (feature flag)
 - Frozen dataclass with validation
 - Support for simple and group-based cardinality
@@ -92,6 +95,7 @@ def get_cardinality_optimizer(method: str):
 ```
 
 **Features**:
+
 - Custom exception with helpful error messages
 - Validation logic catches configuration errors early
 - Three stub functions for future methods
@@ -101,10 +105,12 @@ def get_cardinality_optimizer(method: str):
 #### 3. Package Exports
 
 **Modified Files**:
+
 - `src/portfolio_management/portfolio/__init__.py` - Export all types and functions
 - `src/portfolio_management/portfolio/constraints/__init__.py` - Export constraint types
 
 All new types available via:
+
 ```python
 from portfolio_management.portfolio import (
     CardinalityConstraints,
@@ -120,6 +126,7 @@ from portfolio_management.portfolio import (
 **File**: `tests/portfolio/test_cardinality.py`
 
 **Coverage**:
+
 - `TestCardinalityConstraints` - 8 tests for dataclass validation
 - `TestCardinalityMethod` - 3 tests for enum functionality
 - `TestValidateCardinalityConstraints` - 6 tests for validation logic
@@ -129,6 +136,7 @@ from portfolio_management.portfolio import (
 - `TestIntegrationScenarios` - 3 tests for realistic configurations
 
 **Example Test**:
+
 ```python
 def test_non_preselection_method_raises(self):
     """Test non-preselection methods raise NotImplementedError."""
@@ -147,6 +155,7 @@ All tests pass validation (syntax checked).
 **File**: `docs/cardinality_constraints.md` (500 lines)
 
 **Sections**:
+
 - What are cardinality constraints?
 - Current implementation (preselection) with examples
 - Future approaches (MIQP, heuristics, relaxation) with math
@@ -162,6 +171,7 @@ All tests pass validation (syntax checked).
 **File**: `docs/CARDINALITY_DESIGN_NOTES.md` (460 lines)
 
 **Sections**:
+
 - Executive summary with recommendations
 - Detailed comparison of 4 approaches
 - Decision matrix (10+ criteria)
@@ -175,8 +185,8 @@ All tests pass validation (syntax checked).
 | Criterion | Preselection | MIQP | Heuristic | Relaxation |
 |-----------|-------------|------|-----------|------------|
 | Optimality | Approximate | Optimal ✅ | Near-optimal | Approximate |
-| Speed (100) | <1s ✅ | 10-60s | 1-5s | 1-3s |
-| Speed (500) | <2s ✅ | May fail | 5-30s | 3-10s |
+| Speed (100) | \<1s ✅ | 10-60s | 1-5s | 1-3s |
+| Speed (500) | \<2s ✅ | May fail | 5-30s | 3-10s |
 | Solver | None ✅ | Gurobi/CPLEX | None ✅ | None ✅ |
 | Interpretability | High ✅ | Low | Medium | Medium |
 | Production | ✅ Yes | No | Future | Future |
@@ -186,6 +196,7 @@ All tests pass validation (syntax checked).
 **File**: `docs/cardinality_quickstart.md` (150 lines)
 
 **Sections**:
+
 - What are cardinality constraints?
 - Current implementation (preselection) example
 - Future methods overview
@@ -197,6 +208,7 @@ All tests pass validation (syntax checked).
 #### 4. Updated Existing Docs
 
 **Files**:
+
 - `README.md` - Added cardinality mention in capabilities
 - `docs/portfolio_construction.md` - Added cardinality section linking to guides
 
@@ -205,6 +217,7 @@ All tests pass validation (syntax checked).
 **Preselection vs Integrated Cardinality**:
 
 **Preselection (Current)**:
+
 - ✅ Fast (O(N log N))
 - ✅ Interpretable (factor-driven)
 - ✅ No dependencies
@@ -213,6 +226,7 @@ All tests pass validation (syntax checked).
 - ❌ Factor assumptions may not align with objectives
 
 **MIQP (Future)**:
+
 - ✅ Globally optimal
 - ✅ Single-stage optimization
 - ❌ Requires commercial solver ($$$)
@@ -220,6 +234,7 @@ All tests pass validation (syntax checked).
 - ❌ Scales poorly (>200 assets problematic)
 
 **Heuristic (Future)**:
+
 - ✅ Fast (polynomial time)
 - ✅ Near-optimal (5-10% of optimal)
 - ✅ No special solver
@@ -228,6 +243,7 @@ All tests pass validation (syntax checked).
 - ❌ Multiple restarts needed
 
 **Relaxation (Future)**:
+
 - ✅ Fast (continuous optimization speed)
 - ✅ No special solver
 - ❌ Two-stage (optimize + round)
@@ -293,36 +309,45 @@ def get_cardinality_optimizer(method: str):
 ## Implementation Roadmap
 
 ### Phase 0: Design & Stubs ✅ COMPLETE
+
 - Define interfaces
 - Create stubs
 - Document design
 - Write tests
 
 ### Phase 1: Relaxation (Future)
-**Effort**: 1-2 weeks  
+
+**Effort**: 1-2 weeks
 **Value**: Medium (exploratory analysis)
+
 - Extend CVXPY with L1 penalty
 - Implement thresholding
 - Parameter tuning utilities
 
 ### Phase 2: Heuristics (Future)
-**Effort**: 3-4 weeks  
+
+**Effort**: 3-4 weeks
 **Value**: High (production without solvers)
+
 - Greedy forward selection
 - Greedy backward elimination
 - Local search with swaps
 - Multiple restarts
 
 ### Phase 3: MIQP (Future)
-**Effort**: 2-3 weeks + license setup  
+
+**Effort**: 2-3 weeks + license setup
 **Value**: Medium (research, optimal solutions)
+
 - Gurobi/CPLEX integration
 - Big-M formulation
 - Warm-start logic
 
 ### Phase 4: Production Integration (Future)
-**Effort**: 1-2 weeks  
+
+**Effort**: 1-2 weeks
 **Value**: High (user-facing features)
+
 - Strategy integration
 - CLI flags
 - YAML configuration
@@ -331,18 +356,21 @@ def get_cardinality_optimizer(method: str):
 ## Verification
 
 ### Code Quality
+
 - ✅ All Python files compile without syntax errors
 - ✅ Type hints complete (mypy-compatible)
 - ✅ Docstrings comprehensive (Google style)
 - ✅ Follows repository conventions
 
 ### Testing
+
 - ✅ 89 test cases covering all interfaces
 - ✅ Edge cases tested (infeasible configs, invalid methods)
 - ✅ Exception handling validated
 - ✅ Integration scenarios covered
 
 ### Documentation
+
 - ✅ 3 comprehensive guides (1,000+ lines total)
 - ✅ API reference complete
 - ✅ Examples provided
@@ -352,17 +380,19 @@ def get_cardinality_optimizer(method: str):
 ## Files Changed
 
 ### Created (5 files, 2,100+ lines)
+
 1. `src/portfolio_management/portfolio/cardinality.py` (290 lines)
-2. `tests/portfolio/test_cardinality.py` (350 lines)
-3. `docs/cardinality_constraints.md` (500 lines)
-4. `docs/CARDINALITY_DESIGN_NOTES.md` (460 lines)
-5. `docs/cardinality_quickstart.md` (150 lines)
+1. `tests/portfolio/test_cardinality.py` (350 lines)
+1. `docs/cardinality_constraints.md` (500 lines)
+1. `docs/CARDINALITY_DESIGN_NOTES.md` (460 lines)
+1. `docs/cardinality_quickstart.md` (150 lines)
 
 ### Modified (4 files, 235 lines added)
+
 1. `src/portfolio_management/portfolio/constraints/models.py` (+115 lines)
-2. `src/portfolio_management/portfolio/__init__.py` (+40 lines)
-3. `src/portfolio_management/portfolio/constraints/__init__.py` (+5 lines)
-4. `README.md` & `docs/portfolio_construction.md` (+75 lines)
+1. `src/portfolio_management/portfolio/__init__.py` (+40 lines)
+1. `src/portfolio_management/portfolio/constraints/__init__.py` (+5 lines)
+1. `README.md` & `docs/portfolio_construction.md` (+75 lines)
 
 **Total**: 2,335 lines of code and documentation
 
@@ -371,22 +401,23 @@ def get_cardinality_optimizer(method: str):
 This implementation fully satisfies the issue requirements:
 
 1. ✅ **Interfaces defined** - CardinalityConstraints, CardinalityMethod, optimizer stubs
-2. ✅ **NotImplemented paths** - Clear exceptions behind feature flag (method enum)
-3. ✅ **Trade-offs documented** - 3 comprehensive docs comparing all approaches
-4. ✅ **Design notes** - Complete decision rationale and implementation roadmap
-5. ✅ **Codebase compiles** - All syntax validated, imports work correctly
-6. ✅ **Extension points clear** - 3 stub functions + validation + factory + docs
+1. ✅ **NotImplemented paths** - Clear exceptions behind feature flag (method enum)
+1. ✅ **Trade-offs documented** - 3 comprehensive docs comparing all approaches
+1. ✅ **Design notes** - Complete decision rationale and implementation roadmap
+1. ✅ **Codebase compiles** - All syntax validated, imports work correctly
+1. ✅ **Extension points clear** - 3 stub functions + validation + factory + docs
 
 **Current State**: Production-ready preselection approach documented and tested. Future optimizer-integrated methods have clear interfaces, stubs, and implementation guidance.
 
 **Recommendation**: Ready to merge. Future implementers have everything needed to add MIQP, heuristic, or relaxation methods without breaking existing code.
 
----
+______________________________________________________________________
 
 **Next Steps** (for future implementers):
+
 1. Review `docs/CARDINALITY_DESIGN_NOTES.md` for design rationale
-2. Choose implementation phase (Relaxation easiest, Heuristic most practical, MIQP most optimal)
-3. Follow extension points in `src/portfolio_management/portfolio/cardinality.py`
-4. Use test suite in `tests/portfolio/test_cardinality.py` as starting point
-5. Update stub functions to real implementations
-6. Add performance benchmarks and integration tests
+1. Choose implementation phase (Relaxation easiest, Heuristic most practical, MIQP most optimal)
+1. Follow extension points in `src/portfolio_management/portfolio/cardinality.py`
+1. Use test suite in `tests/portfolio/test_cardinality.py` as starting point
+1. Update stub functions to real implementations
+1. Add performance benchmarks and integration tests

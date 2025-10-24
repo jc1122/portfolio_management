@@ -29,6 +29,7 @@ class IndicatorProvider(ABC):
         ...         window = params.get("window", 14)
         ...         # ... RSI calculation ...
         ...         return rsi_series
+
     """
 
     @abstractmethod
@@ -48,8 +49,8 @@ class IndicatorProvider(ABC):
             >>> provider = SomeIndicatorProvider()
             >>> prices = pd.Series([100, 101, 102, 103], index=pd.date_range('2020-01-01', periods=4))
             >>> signal = provider.compute(prices, {"window": 2})
+
         """
-        pass
 
 
 class NoOpIndicatorProvider(IndicatorProvider):
@@ -75,6 +76,7 @@ class NoOpIndicatorProvider(IndicatorProvider):
         2020-01-02    True
         2020-01-03    True
         dtype: bool
+
     """
 
     def compute(self, series: pd.Series, params: dict[str, Any]) -> pd.Series:
@@ -87,6 +89,7 @@ class NoOpIndicatorProvider(IndicatorProvider):
         Returns:
             Boolean series with all True values, same index as input.
             This effectively includes all assets without filtering.
+
         """
         # Return all True values - no filtering
         return pd.Series(True, index=series.index, dtype=bool)

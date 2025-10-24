@@ -68,51 +68,59 @@ pytest -m "not integration" -v
 The test suite covers:
 
 ### Configuration & Validation
-- [x] Default configuration values
-- [x] Custom configuration
-- [x] Invalid lookback validation
-- [x] Invalid skip validation
-- [x] Skip >= lookback validation
-- [x] Invalid min_periods validation
-- [x] Min_periods > lookback validation
-- [x] Combined weights must sum to 1.0
+
+- \[x\] Default configuration values
+- \[x\] Custom configuration
+- \[x\] Invalid lookback validation
+- \[x\] Invalid skip validation
+- \[x\] Skip >= lookback validation
+- \[x\] Invalid min_periods validation
+- \[x\] Min_periods > lookback validation
+- \[x\] Combined weights must sum to 1.0
 
 ### Momentum Preselection
-- [x] Basic momentum selection
-- [x] Momentum with skip period
-- [x] No lookahead bias validation
+
+- \[x\] Basic momentum selection
+- \[x\] Momentum with skip period
+- \[x\] No lookahead bias validation
 
 ### Low-Volatility Preselection
-- [x] Basic low-vol selection
-- [x] Preference for low volatility assets
+
+- \[x\] Basic low-vol selection
+- \[x\] Preference for low volatility assets
 
 ### Combined Preselection
-- [x] Basic combined selection
-- [x] Different weight combinations
+
+- \[x\] Basic combined selection
+- \[x\] Different weight combinations
 
 ### Determinism
-- [x] Deterministic repeated selection
-- [x] Alphabetic tie-breaking
+
+- \[x\] Deterministic repeated selection
+- \[x\] Alphabetic tie-breaking
 
 ### Edge Cases
-- [x] Insufficient data handling
-- [x] Top-K > num assets
-- [x] Top-K = None (disabled)
-- [x] Top-K = 0 (disabled)
-- [x] All NaN returns
-- [x] Partial NaN returns
+
+- \[x\] Insufficient data handling
+- \[x\] Top-K > num assets
+- \[x\] Top-K = None (disabled)
+- \[x\] Top-K = 0 (disabled)
+- \[x\] All NaN returns
+- \[x\] Partial NaN returns
 
 ### Dictionary Configuration
-- [x] Create from dict (momentum)
-- [x] Create from dict (combined)
-- [x] Disabled preselection (None/0)
-- [x] Invalid method raises error
-- [x] Defaults applied
+
+- \[x\] Create from dict (momentum)
+- \[x\] Create from dict (combined)
+- \[x\] Disabled preselection (None/0)
+- \[x\] Invalid method raises error
+- \[x\] Defaults applied
 
 ### Integration
-- [x] Reduces universe size before optimization
-- [x] Works with BacktestEngine
-- [x] Works with universe YAML configs
+
+- \[x\] Reduces universe size before optimization
+- \[x\] Works with BacktestEngine
+- \[x\] Works with universe YAML configs
 
 ## Test Results ✅
 
@@ -128,10 +136,10 @@ tests/portfolio/ - 47 passed, 9 skipped in 0.18s ✅
 All tests should pass. Specific validations:
 
 1. **No Lookahead**: Verify preselection only uses data before rebalance date
-2. **Determinism**: Same inputs produce same outputs every time
-3. **Tie-Breaking**: Ties broken alphabetically by asset symbol
-4. **Factor Computation**: Momentum and volatility computed correctly
-5. **Edge Cases**: Graceful handling of insufficient data, NaN values, etc.
+1. **Determinism**: Same inputs produce same outputs every time
+1. **Tie-Breaking**: Ties broken alphabetically by asset symbol
+1. **Factor Computation**: Momentum and volatility computed correctly
+1. **Edge Cases**: Graceful handling of insufficient data, NaN values, etc.
 
 ## Manual Verification
 
@@ -145,6 +153,7 @@ python scripts/run_backtest.py --help | grep preselect
 ```
 
 Expected output should include:
+
 ```
   --preselect-method {momentum,low_vol,combined}
   --preselect-top-k PRESELECT_TOP_K
@@ -245,17 +254,17 @@ pip install -e .
 If tests fail:
 
 1. Check that data fixtures are properly set up
-2. Verify pandas/numpy versions are compatible
-3. Run tests with `-vv` for verbose output
-4. Check for random seed issues (tests use seed=42)
+1. Verify pandas/numpy versions are compatible
+1. Run tests with `-vv` for verbose output
+1. Check for random seed issues (tests use seed=42)
 
 ### Performance Issues
 
 If tests are slow:
 
 1. Reduce test data size in fixtures
-2. Skip integration tests: `pytest -m "not integration"`
-3. Use parallel execution: `pytest -n auto`
+1. Skip integration tests: `pytest -m "not integration"`
+1. Use parallel execution: `pytest -n auto`
 
 ## Success Criteria ✅
 
@@ -275,6 +284,6 @@ If tests are slow:
 Once all tests pass:
 
 1. Update memory bank with completion status
-2. Create PR with test results
-3. Request code review
-4. Merge to main branch
+1. Create PR with test results
+1. Request code review
+1. Merge to main branch

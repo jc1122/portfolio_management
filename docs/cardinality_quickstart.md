@@ -3,6 +3,7 @@
 ## What Are Cardinality Constraints?
 
 Cardinality constraints limit the **number of non-zero positions** in a portfolio. This is useful for:
+
 - Reducing transaction costs (fewer positions to rebalance)
 - Simplifying portfolio management
 - Enforcing minimum position sizes
@@ -34,6 +35,7 @@ portfolio = strategy.construct(filtered_returns, constraints)
 ```
 
 **Advantages:**
+
 - ✅ Fast (milliseconds)
 - ✅ Factor-driven (interpretable)
 - ✅ No special dependencies
@@ -46,16 +48,19 @@ portfolio = strategy.construct(filtered_returns, constraints)
 Three approaches are **designed but not yet implemented**:
 
 ### 1. MIQP (Mixed-Integer Quadratic Programming)
+
 - Globally optimal solutions
 - Requires commercial solver (Gurobi/CPLEX)
-- Best for small universes (<100 assets)
+- Best for small universes (\<100 assets)
 
 ### 2. Heuristics (Greedy/Local Search)
+
 - Good approximate solutions
 - No special solver needed
 - Fast even for large universes
 
 ### 3. Relaxation (Continuous + Rounding)
+
 - Continuous optimization with sparsity penalty
 - Post-process to enforce exact cardinality
 - Fast but may lose some optimality
@@ -120,18 +125,21 @@ class CardinalityMethod(Enum):
 ## Recommendations
 
 **Use preselection for:**
+
 - Production workflows
 - Large universes (>500 assets)
 - When speed matters
 - When factors align with strategy
 
 **Consider MIQP for (when implemented):**
-- Small universes (<100 assets)
+
+- Small universes (\<100 assets)
 - Research and development
 - When you have Gurobi/CPLEX license
 - When optimality is critical
 
 **Consider heuristics for (when implemented):**
+
 - Medium universes (100-500 assets)
 - Production without commercial solvers
 - Good-enough solutions acceptable
@@ -148,8 +156,8 @@ class CardinalityMethod(Enum):
 For future implementers:
 
 1. **Optimizer functions**: `optimize_with_cardinality_*()`
-2. **Validation**: `validate_cardinality_constraints()`
-3. **Factory**: `get_cardinality_optimizer()`
-4. **Tests**: `tests/portfolio/test_cardinality.py`
+1. **Validation**: `validate_cardinality_constraints()`
+1. **Factory**: `get_cardinality_optimizer()`
+1. **Tests**: `tests/portfolio/test_cardinality.py`
 
 See `docs/cardinality_constraints.md` for implementation guidance.

@@ -11,6 +11,7 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Guarantee**: When a cache hit occurs, the returned data is byte-for-byte identical to what would be computed without caching.
 
 **Mechanism**:
+
 - Hash-based invalidation ensures cache is invalidated when inputs change
 - Pickle serialization preserves exact numerical precision
 - No transformations applied to cached data during retrieval
@@ -20,12 +21,14 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 ### 2. **Automatic Invalidation on Data Changes**
 
 **Guarantee**: Cache automatically invalidates when:
+
 - Returns dataset changes (any value modification)
 - Configuration changes (lookback, skip, method parameters)
 - Date range changes
 - Data structure changes (column order, index order)
 
 **Mechanism**:
+
 - Dataset hash computed using `pd.util.hash_pandas_object()`
 - Configuration hash computed using sorted JSON serialization
 - Cache key includes dataset hash, config hash, and date range
@@ -38,6 +41,7 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Guarantee**: When `max_cache_age_days` is set, cache entries older than this limit are automatically invalidated.
 
 **Mechanism**:
+
 - Metadata stores creation timestamp (ISO 8601 format)
 - On cache retrieval, age is computed: `(now - created_at).days`
 - Entry invalidated if `age > max_cache_age_days`
@@ -50,6 +54,7 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Guarantee**: Cache statistics (hits, misses, puts) accurately reflect cache operations.
 
 **Mechanism**:
+
 - Counters updated atomically on each operation
 - Thread-safe operations (no concurrent modification)
 - `get_stats()` returns current snapshot
@@ -60,12 +65,14 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 ### 5. **No Silent Failures**
 
 **Guarantee**: Cache errors result in either:
+
 1. Explicit exception raised (documented failure mode)
-2. Cache miss returned (graceful degradation)
+1. Cache miss returned (graceful degradation)
 
 **Never**: Silently return incorrect data or corrupt state.
 
 **Mechanism**:
+
 - Try-except blocks catch corruption errors
 - Failed deserializations return None (cache miss)
 - Logging captures all failure events
@@ -80,16 +87,19 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: Cache writes fail with `OSError: No space left on device`
 
 **Behavior**:
+
 - `put_factor_scores()` and `put_pit_eligibility()` may raise `OSError`
 - Existing cache entries remain valid
 - Subsequent cache gets still work for existing entries
 
 **Recovery**:
+
 1. Free disk space
-2. Optionally call `cache.clear()` to remove old entries
-3. Cache will resume normal operation
+1. Optionally call `cache.clear()` to remove old entries
+1. Cache will resume normal operation
 
 **Mitigation**:
+
 - Set reasonable `max_cache_age_days` to limit growth
 - Monitor cache directory size
 - Implement cache size limits in application layer
@@ -99,16 +109,19 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: Cannot write to cache directory (permission error)
 
 **Behavior**:
+
 - Cache initialization may fail if directory cannot be created
 - `put_*()` operations may raise `PermissionError`
 - Cache gets still work for existing entries (if readable)
 
 **Recovery**:
+
 1. Fix directory permissions: `chmod 755 $CACHE_DIR`
-2. Or run with appropriate user permissions
-3. Or disable caching: `FactorCache(dir, enabled=False)`
+1. Or run with appropriate user permissions
+1. Or disable caching: `FactorCache(dir, enabled=False)`
 
 **Mitigation**:
+
 - Create cache directory with appropriate permissions during setup
 - Use user-writable cache directories (e.g., `~/.cache/portfolio_management`)
 
@@ -117,21 +130,25 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: Cache hit returns `None` unexpectedly; warning logged
 
 **Behavior**:
+
 - `get_*()` catches `pickle.UnpicklingError` and other exceptions
 - Logs warning: "Failed to load cached data: {error}"
 - Returns `None` (cache miss)
 - Increments miss counter
 
 **Recovery**:
+
 - Automatic: Next computation will recalculate and overwrite corrupted entry
 - Manual: Call `cache.clear()` to remove all corrupted entries
 
 **Causes**:
+
 - Disk corruption
 - Incomplete write (process killed during put)
 - Pickle version incompatibility (rare)
 
 **Mitigation**:
+
 - Use `pickle.HIGHEST_PROTOCOL` (done by default)
 - Ensure clean shutdown of processes
 - Consider atomic writes for critical caching
@@ -141,6 +158,7 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: Cache fails to load metadata; may raise `JSONDecodeError`
 
 **Behavior**:
+
 - Depends on corruption severity:
   - Minor: May successfully parse but with incorrect values → cache miss
   - Major: `json.JSONDecodeError` raised → cache miss
@@ -148,15 +166,18 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 - Increments miss counter
 
 **Recovery**:
+
 - Automatic: Corrupted entry treated as missing
 - Manual: Delete corrupted `.json` file or call `cache.clear()`
 
 **Causes**:
+
 - Incomplete write
 - Concurrent write (if multiple processes writing)
 - Disk corruption
 
 **Mitigation**:
+
 - Avoid concurrent writes to same cache key
 - Use file locking for multi-process scenarios (not currently implemented)
 
@@ -165,20 +186,24 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: One file exists but corresponding pair is missing
 
 **Behavior**:
+
 - Both metadata (.json) and data (.pkl) required for valid entry
 - Missing either file results in cache miss
 - No error raised; transparent fallback
 
 **Recovery**:
+
 - Automatic: Next computation recreates both files
 - Manual: Clean up orphaned files with `cache.clear()`
 
 **Causes**:
+
 - Incomplete write
 - Manual file deletion
 - Filesystem issues
 
 **Mitigation**:
+
 - Atomic writes (write to temp, then rename)
 - Cleanup orphaned files periodically
 
@@ -187,14 +212,17 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: `OSError` or `FileExistsError` during initialization
 
 **Behavior**:
+
 - `FactorCache` constructor raises exception
 - Cache cannot be created or used
 
 **Recovery**:
+
 1. Remove file: `rm $CACHE_DIR`
-2. Recreate cache: `FactorCache($CACHE_DIR, enabled=True)`
+1. Recreate cache: `FactorCache($CACHE_DIR, enabled=True)`
 
 **Mitigation**:
+
 - Validate cache directory path during configuration
 - Use dedicated directory for cache (avoid naming conflicts)
 
@@ -203,16 +231,19 @@ The FactorCache provides on-disk caching for expensive factor score calculations
 **Symptom**: All cache operations return `None` or no-op
 
 **Behavior**:
+
 - `get_*()` always returns `None`
 - `put_*()` is no-op
 - Statistics remain zero
 - Cache directories not created
 
 **Recovery**:
+
 - N/A (this is intentional behavior)
 - Enable cache: `FactorCache($DIR, enabled=True)`
 
 **Use Cases**:
+
 - Testing uncached performance
 - Debugging cache-related issues
 - Environments where caching is not desired
@@ -249,7 +280,7 @@ def get_scores_with_cache(returns, config, cache=None):
                 return cached
         except Exception as e:
             logger.warning(f"Cache error: {e}. Computing without cache.")
-    
+
     # Fallback: compute without cache
     return compute_scores(returns, config)
 ```
@@ -261,10 +292,10 @@ def check_cache_health(cache):
     """Check cache statistics and health."""
     stats = cache.get_stats()
     hit_rate = stats["hits"] / (stats["hits"] + stats["misses"]) if stats["hits"] + stats["misses"] > 0 else 0
-    
+
     if hit_rate < 0.5:
         logger.warning(f"Low cache hit rate: {hit_rate:.2%}")
-    
+
     # Check cache directory size
     cache_size = sum(f.stat().st_size for f in cache.data_dir.glob("*.pkl"))
     if cache_size > 1e9:  # 1 GB
@@ -344,10 +375,10 @@ See `tests/integration/test_caching_edge_cases.py` for comprehensive edge case t
 ### Metrics to Track
 
 1. **Hit Rate**: `hits / (hits + misses)`
-2. **Cache Size**: Total bytes in cache directory
-3. **Entry Count**: Number of cached entries
-4. **Error Rate**: Cache errors per operation
-5. **Age Distribution**: Distribution of entry ages
+1. **Cache Size**: Total bytes in cache directory
+1. **Entry Count**: Number of cached entries
+1. **Error Rate**: Cache errors per operation
+1. **Age Distribution**: Distribution of entry ages
 
 ## Limitations and Known Issues
 

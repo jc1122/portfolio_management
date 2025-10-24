@@ -9,12 +9,8 @@ import datetime
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from portfolio_management.core.exceptions import InvalidBacktestConfigError
-
-if TYPE_CHECKING:
-    from portfolio_management.portfolio.membership import MembershipPolicy
 
 
 class RebalanceFrequency(Enum):

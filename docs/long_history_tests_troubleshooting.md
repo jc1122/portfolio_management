@@ -11,7 +11,7 @@ The long-history integration tests (`tests/integration/test_long_history_compreh
 Tests require the following data files in `outputs/long_history_1000/`:
 
 - `long_history_1000_prices_daily.csv` - Daily price data (~5000 days, 100+ assets)
-- `long_history_1000_returns_daily.csv` - Daily return data  
+- `long_history_1000_returns_daily.csv` - Daily return data
 - `long_history_1000_selection.csv` - Asset selection metadata (optional)
 
 **If missing:** Tests will skip with message "Long history data not available"
@@ -39,11 +39,13 @@ pytest tests/integration/test_long_history_comprehensive.py::TestPerformanceMetr
 **Symptom:** Test exceeds 20-minute execution limit
 
 **Causes:**
+
 - Large universe size (>500 assets)
 - Complex optimization strategies (mean-variance, risk parity)
 - Many rebalance events (monthly over 20 years)
 
 **Solutions:**
+
 ```python
 # Reduce test period
 config = BacktestConfig(
@@ -67,11 +69,13 @@ preselection_config = PreselectionConfig(
 **Symptom:** `PortfolioConstructionError` or solver failures
 
 **Causes:**
+
 - Insufficient data for optimization (covariance matrix singular)
 - Too few assets selected
 - Numerical instability in optimization
 
 **Solutions:**
+
 ```python
 # Increase minimum data requirements
 config = BacktestConfig(
@@ -96,12 +100,14 @@ strategy = EqualWeightStrategy()  # Instead of MeanVarianceStrategy
 
 **Cause:** Point-in-time filtering correctly excludes assets with insufficient history
 
-**Expected Behavior:** 
+**Expected Behavior:**
+
 - Early rebalances have fewer eligible assets
 - Asset count grows over time as more assets meet min_history_days
 - This is correct behavior to prevent lookahead bias
 
 **Verify:**
+
 ```python
 # Check first vs last event asset counts
 first_event = events[0]
@@ -117,12 +123,14 @@ print(f"Last event assets: {len(last_event.new_weights)}")
 **Symptom:** Multiple runs produce different results
 
 **Causes:**
+
 - Random number generator not seeded (should not happen in production code)
 - Caching issues
 - Floating point precision differences
 - Non-deterministic dictionary/set iteration (Python 3.7+ guarantees order)
 
 **Solutions:**
+
 ```python
 # Verify identical inputs
 assert prices1.equals(prices2), "Price data should be identical"
@@ -145,11 +153,13 @@ np.testing.assert_allclose(
 **Symptom:** Cached vs uncached results don't match
 
 **Causes:**
+
 - Cache key collision
 - Data mutation between runs
 - Cache invalidation not working correctly
 
 **Debugging:**
+
 ```python
 # Clear cache between runs
 factor_cache = FactorCache(cache_dir, enabled=True)
@@ -172,6 +182,7 @@ print(f"Puts: {stats['puts']}")
 **Cause:** Policy constraints too strict for the data
 
 **Solutions:**
+
 ```python
 # Relax constraints
 membership_policy = MembershipPolicy(
@@ -190,11 +201,13 @@ membership_policy = MembershipPolicy(enabled=False)
 **Symptom:** Out of memory errors
 
 **Causes:**
+
 - Loading full 20-year dataset for all assets
 - Creating too many intermediate DataFrames
 - Cache growing too large
 
 **Solutions:**
+
 ```bash
 # Run with memory profiling
 python -m memory_profiler tests/integration/test_long_history_comprehensive.py
@@ -212,12 +225,13 @@ python -m memory_profiler tests/integration/test_long_history_comprehensive.py
 Test execution times on a modern machine:
 
 - **Equal Weight tests:** 2-5 minutes each
-- **Mean-Variance tests:** 5-10 minutes each  
+- **Mean-Variance tests:** 5-10 minutes each
 - **Risk Parity tests:** 5-10 minutes each
 - **Determinism tests:** 5-15 minutes (runs config 3x)
 - **Full suite:** 60-120 minutes
 
 **Note:** Times scale with:
+
 - Number of assets
 - Rebalance frequency (monthly vs quarterly)
 - Optimization complexity
@@ -236,16 +250,19 @@ Good hit rate: >50% on repeated runs
 ### Portfolio Characteristics
 
 **Equal Weight:**
+
 - All assets have equal weight (1/N)
 - Simple, no optimization
 - Fast execution
 
 **Mean-Variance:**
+
 - Concentrated portfolios (10-30 assets actively weighted)
 - Some assets may have 0 weight
 - Optimization-driven allocation
 
 **Risk Parity:**
+
 - Balanced risk contribution
 - No single asset >30% weight typically
 - More computational cost
@@ -335,17 +352,19 @@ for i, event in enumerate(events[:5]):  # First 5 events
 **Purpose:** Ensures reproducibility and backward compatibility
 
 **Key Validations:**
+
 - Three runs produce identical numerical results
 - Equity curves match exactly
 - Metrics match to full precision
 
-**If failing:** Check for non-deterministic code (random generators, dict/set iteration in Python <3.7)
+**If failing:** Check for non-deterministic code (random generators, dict/set iteration in Python \<3.7)
 
 ### TestMarketRegimes
 
 **Purpose:** Validates behavior during specific market conditions
 
 **Expected Behaviors:**
+
 - 2008 crisis: Negative returns, large drawdowns
 - 2020 COVID: Sharp drawdown followed by recovery
 - 2021-2022: Mixed performance (bull then correction)
@@ -357,6 +376,7 @@ for i, event in enumerate(events[:5]):  # First 5 events
 **Purpose:** Verifies correctness of feature implementations
 
 **Critical Checks:**
+
 - PIT eligibility prevents lookahead
 - Preselection top_k honored
 - Membership constraints respected
@@ -399,12 +419,12 @@ factor_cache = FactorCache(cache_dir, enabled=True)
 If tests fail and you can't diagnose the issue:
 
 1. Check error message and stack trace carefully
-2. Review this troubleshooting guide
-3. Try simpler configuration (see "Simplify Configuration" above)
-4. Check data quality (see "Check Data Quality" above)
-5. Review test expectations (see "Expected Test Results" above)
-6. Check GitHub Issues for similar problems
-7. Create new issue with:
+1. Review this troubleshooting guide
+1. Try simpler configuration (see "Simplify Configuration" above)
+1. Check data quality (see "Check Data Quality" above)
+1. Review test expectations (see "Expected Test Results" above)
+1. Check GitHub Issues for similar problems
+1. Create new issue with:
    - Full error message and stack trace
    - Test configuration used
    - Data characteristics (shape, date range)
@@ -413,11 +433,13 @@ If tests fail and you can't diagnose the issue:
 ## Reference
 
 ### Key Files
+
 - Tests: `tests/integration/test_long_history_comprehensive.py`
 - Data: `outputs/long_history_1000/`
 - Fixtures: `tests/integration/conftest.py`
 
 ### Related Documentation
+
 - `docs/backtesting.md` - Backtest framework overview
 - `docs/preselection.md` - Preselection feature details
 - `docs/membership_policy.md` - Membership policy details

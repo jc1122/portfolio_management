@@ -14,13 +14,15 @@ Implemented comprehensive integration tests using 20 years of historical data (2
 ### Files Created
 
 1. **`tests/integration/test_long_history_comprehensive.py`** (1000+ lines)
+
    - 15 comprehensive test methods
    - 7 test classes organized by purpose
    - Uses existing `outputs/long_history_1000/` data
    - Auto-skips if data not available
    - Marked as `@pytest.mark.integration` and `@pytest.mark.slow`
 
-2. **`docs/long_history_tests_guide.md`** (13KB)
+1. **`docs/long_history_tests_guide.md`** (13KB)
+
    - User guide with expected behaviors
    - Feature combinations explained
    - Example configurations
@@ -28,7 +30,8 @@ Implemented comprehensive integration tests using 20 years of historical data (2
    - Validation criteria
    - Running instructions
 
-3. **`docs/long_history_tests_troubleshooting.md`** (11KB)
+1. **`docs/long_history_tests_troubleshooting.md`** (11KB)
+
    - Common issues with solutions
    - Debugging workflow
    - Test-specific notes
@@ -61,16 +64,19 @@ Implemented comprehensive integration tests using 20 years of historical data (2
 ### Features Tested
 
 **Strategies:**
+
 - ✅ Equal Weight (baseline)
 - ✅ Mean-Variance optimization
 - ✅ Risk Parity
 
 **Preselection Methods:**
+
 - ✅ Momentum (lookback 252, skip 21)
 - ✅ Low Volatility (lookback 252)
 - ✅ Combined factors (50/50 momentum + low-vol)
 
 **Feature Combinations:**
+
 - ✅ Baseline (no features)
 - ✅ Preselection only
 - ✅ Preselection + membership policy
@@ -80,6 +86,7 @@ Implemented comprehensive integration tests using 20 years of historical data (2
 - ✅ Backward compatibility
 
 **Market Regimes:**
+
 - ✅ 2007-2008: Financial crisis
 - ✅ 2020: COVID crash
 - ✅ 2021-2022: Bull market and correction
@@ -96,7 +103,7 @@ All acceptance criteria met:
 - ✅ **Membership Constraints:** All limits honored
 - ✅ **Preselection Top-K:** Counts validated
 - ✅ **Cache Hit Rates:** >50% on repeat runs
-- ✅ **Performance:** <20 min per test
+- ✅ **Performance:** \<20 min per test
 - ✅ **Crisis Handling:** System remains stable
 
 ## Performance Benchmarks
@@ -105,10 +112,10 @@ All acceptance criteria met:
 
 | Test Type | Expected Time | Status |
 |-----------|--------------|--------|
-| Equal Weight | 2-5 min | ✅ <20 min |
-| Mean-Variance | 5-10 min | ✅ <20 min |
-| Risk Parity | 5-10 min | ✅ <20 min |
-| Determinism (3x) | 5-15 min | ✅ <20 min |
+| Equal Weight | 2-5 min | ✅ \<20 min |
+| Mean-Variance | 5-10 min | ✅ \<20 min |
+| Risk Parity | 5-10 min | ✅ \<20 min |
+| Determinism (3x) | 5-15 min | ✅ \<20 min |
 | **Full Suite** | **60-120 min** | ✅ Nightly CI |
 
 ### Cache Performance
@@ -171,6 +178,7 @@ pytest -v -m integration
 ### 1. Determinism Testing
 
 Runs same configuration 3 times and validates:
+
 - Exact numerical equality of results
 - Identical equity curves
 - Same number of rebalance events
@@ -179,6 +187,7 @@ Runs same configuration 3 times and validates:
 ### 2. Backward Compatibility
 
 Compares results with/without features:
+
 - Baseline vs features-disabled must match
 - Ensures features are truly optional
 - No regressions introduced
@@ -186,6 +195,7 @@ Compares results with/without features:
 ### 3. Cache Validation
 
 Validates caching correctness:
+
 - Cached vs uncached results identical
 - Hit rates >50% on repeat runs
 - Cache statistics tracked
@@ -193,6 +203,7 @@ Validates caching correctness:
 ### 4. PIT Eligibility
 
 Verifies no lookahead bias:
+
 - Early rebalances have fewer assets (correct)
 - Asset count grows over time as more meet min_history_days
 - Validates temporal correctness
@@ -200,6 +211,7 @@ Verifies no lookahead bias:
 ### 5. Constraint Adherence
 
 Validates all constraints honored:
+
 - Preselection top_k limits
 - Membership policy turnover limits
 - Min/max asset constraints
@@ -209,6 +221,7 @@ Validates all constraints honored:
 ### User Guide
 
 **Coverage:**
+
 - Test structure and organization
 - Feature combinations explained
 - Expected behaviors documented
@@ -221,6 +234,7 @@ Validates all constraints honored:
 ### Troubleshooting Guide
 
 **Coverage:**
+
 - 7 common issues with solutions
 - 5-step debugging workflow
 - Test-specific notes
@@ -239,7 +253,7 @@ From original issue #72:
 - ✅ Backward compatibility verified (no regressions)
 - ✅ Cached vs uncached results identical
 - ✅ Fast IO vs pandas results identical (tested in existing tests)
-- ✅ Tests complete in reasonable time (<20 min each)
+- ✅ Tests complete in reasonable time (\<20 min each)
 - ✅ Crisis periods handled correctly
 - ✅ Edge cases documented
 - ✅ No lookahead bias detected
@@ -266,16 +280,19 @@ Tests are marked for selective execution:
 ### Recommended CI Setup
 
 **Every Commit:**
+
 ```bash
 pytest tests/ -m "not slow"  # Fast tests only
 ```
 
 **Nightly Builds:**
+
 ```bash
 pytest tests/integration/test_long_history_comprehensive.py -v  # Full suite
 ```
 
 **Before Releases:**
+
 ```bash
 pytest tests/ -v  # All tests including slow
 ```
@@ -303,38 +320,46 @@ pytest tests/ -v  # All tests including slow
 ### Design Decisions
 
 1. **Auto-skip Pattern:** Tests skip gracefully if data unavailable
+
    - Won't block CI in environments without data
    - Clear skip message guides users
 
-2. **Module-scoped Fixtures:** Load data once per module
+1. **Module-scoped Fixtures:** Load data once per module
+
    - Significant performance improvement
    - Reduces test execution time
 
-3. **Temporary Cache Dirs:** Each test gets clean cache
+1. **Temporary Cache Dirs:** Each test gets clean cache
+
    - Prevents test interference
    - Validates cache correctness
 
-4. **Performance Assertions:** <20 min limit enforced
+1. **Performance Assertions:** \<20 min limit enforced
+
    - Ensures tests remain practical
    - Prevents runaway execution
 
 ### Best Practices
 
 1. **Comprehensive Assertions:** Validate multiple aspects
+
    - Not just "test passes"
    - Check intermediate results
    - Verify constraints honored
 
-2. **Market Regime Testing:** Real crisis periods
+1. **Market Regime Testing:** Real crisis periods
+
    - 2007-2008 financial crisis
    - 2020 COVID crash
    - Validates stress behavior
 
-3. **Determinism Focus:** Exact reproducibility
+1. **Determinism Focus:** Exact reproducibility
+
    - Critical for production use
    - Builds confidence in results
 
-4. **Documentation First:** Write docs alongside tests
+1. **Documentation First:** Write docs alongside tests
+
    - Captures expected behavior
    - Helps future debugging
 
@@ -343,11 +368,11 @@ pytest tests/ -v  # All tests including slow
 Potential improvements for future iterations:
 
 1. **Extended History:** 25+ years when data available
-2. **More Regimes:** 2015 China crash, dot-com bubble
-3. **Parallel Execution:** Speed up test suite
-4. **Performance Profiling:** Detailed timing breakdowns
-5. **Memory Profiling:** Track memory usage patterns
-6. **Synthetic Data:** Deterministic test data generation
+1. **More Regimes:** 2015 China crash, dot-com bubble
+1. **Parallel Execution:** Speed up test suite
+1. **Performance Profiling:** Detailed timing breakdowns
+1. **Memory Profiling:** Track memory usage patterns
+1. **Synthetic Data:** Deterministic test data generation
 
 ## Related Work
 
@@ -366,7 +391,7 @@ Successfully implemented comprehensive long-history integration tests that valid
 
 **Status:** ✅ **COMPLETE AND PRODUCTION-READY**
 
----
+______________________________________________________________________
 
 **Implementation Date:** October 24, 2025
 **Estimated Effort:** 5-7 days (as specified in issue)

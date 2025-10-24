@@ -221,7 +221,7 @@ class FactorCache:
                 metadata = CacheMetadata.from_dict(json.load(f))
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning(
-                f"Corrupted metadata for factor scores (key: {cache_key[:8]}...): {e}"
+                f"Corrupted metadata for factor scores (key: {cache_key[:8]}...): {e}",
             )
             self._stats["misses"] += 1
             return None
@@ -316,7 +316,7 @@ class FactorCache:
             if data_path.exists():
                 data_path.unlink()
             logger.warning(
-                f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}"
+                f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}",
             )
             raise
 
@@ -366,7 +366,7 @@ class FactorCache:
                 metadata = CacheMetadata.from_dict(json.load(f))
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning(
-                f"Corrupted metadata for PIT eligibility (key: {cache_key[:8]}...): {e}"
+                f"Corrupted metadata for PIT eligibility (key: {cache_key[:8]}...): {e}",
             )
             self._stats["misses"] += 1
             return None
@@ -455,7 +455,7 @@ class FactorCache:
             if data_path.exists():
                 data_path.unlink()
             logger.warning(
-                f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}"
+                f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}",
             )
             raise
 

@@ -204,6 +204,7 @@ python scripts/calculate_returns.py \
 ```
 
 **Key points:**
+
 - **Optional**: Pandas remains the default; no changes needed if satisfied with current performance
 - **Transparent**: All backends produce identical pandas DataFrames
 - **Auto-fallback**: If backend unavailable, automatically falls back to pandas with a warning
@@ -487,6 +488,7 @@ Comprehensive 20-year backtest validation tests (`tests/integration/test_long_hi
 - **Data Required:** `outputs/long_history_1000/` (auto-skips if not available)
 
 **Key Test Scenarios:**
+
 - Equal weight, mean-variance, risk parity strategies (20 years each)
 - Preselection (momentum, low-vol, combined factors)
 - Membership policy + turnover management
@@ -507,6 +509,7 @@ pytest tests/ -m "not slow"
 ```
 
 **Documentation:**
+
 - **User Guide:** [`docs/long_history_tests_guide.md`](docs/long_history_tests_guide.md) - Expected behaviors and configurations
 - **Troubleshooting:** [`docs/long_history_tests_troubleshooting.md`](docs/long_history_tests_troubleshooting.md) - Debugging failures
 
@@ -521,6 +524,7 @@ Tests are marked for selective execution:
 ### Quality Metrics
 
 Current test metrics:
+
 - **Total Tests:** 610+ tests
 - **Pass Rate:** 100% (1 xfailed for known CVXPY instability)
 - **Coverage:** ~85% of source code

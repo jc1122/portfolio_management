@@ -1,7 +1,6 @@
 """Tests for MacroSignalProvider."""
 
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
@@ -10,7 +9,6 @@ from portfolio_management.core.exceptions import (
     DataDirectoryNotFoundError,
     DataValidationError,
 )
-from portfolio_management.macro.models import MacroSeries
 from portfolio_management.macro.provider import MacroSignalProvider
 
 
@@ -55,7 +53,9 @@ class TestLocateSeries:
 
         # Create a test series file
         series_file = series_dir / "gdp.txt"
-        series_file.write_text("ticker,per,date,time,open,high,low,close,volume,openint\n")
+        series_file.write_text(
+            "ticker,per,date,time,open,high,low,close,volume,openint\n"
+        )
 
         provider = MacroSignalProvider(data_dir)
         series = provider.locate_series("gdp.us")
@@ -85,7 +85,9 @@ class TestLocateSeries:
 
         # Create a test series file
         series_file = series_dir / "pmi.txt"
-        series_file.write_text("ticker,per,date,time,open,high,low,close,volume,openint\n")
+        series_file.write_text(
+            "ticker,per,date,time,open,high,low,close,volume,openint\n"
+        )
 
         provider = MacroSignalProvider(data_dir)
         series = provider.locate_series("pmi.us")

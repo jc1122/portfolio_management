@@ -73,7 +73,7 @@ Tests that validate buffer zone behavior:
 - Assets exiting buffer zone (drops below buffer_rank)
 - Assets oscillating around buffer boundary
 - Multiple assets in buffer zone
-- Empty buffer zone (all ranks < top_k)
+- Empty buffer zone (all ranks \< top_k)
 - Buffer disabled (buffer_rank=None)
 - Buffer at top_k boundary
 
@@ -122,12 +122,14 @@ tests/portfolio/test_membership.py::TestSpecialScenarios::test_multiple_policies
 ### Test Failure Example
 
 If a test fails, pytest will show:
+
 - Which test failed
 - The assertion that failed
 - The actual vs expected values
 - Full traceback
 
 Example:
+
 ```
 tests/portfolio/test_membership.py::TestBufferZoneEdgeCases::test_asset_enters_buffer_zone FAILED
 
@@ -140,15 +142,15 @@ E       AssertionError: assert 'GOOGL' in ['AAPL', 'MSFT', ...]
 ## Debugging Failed Tests
 
 1. **Read the test docstring** to understand what scenario is being tested
-2. **Check the assertion message** to see what failed
-3. **Add print statements** to inspect intermediate values:
+1. **Check the assertion message** to see what failed
+1. **Add print statements** to inspect intermediate values:
    ```python
    print(f"Current holdings: {current_holdings}")
    print(f"Result: {result}")
    print(f"Buffered assets: {buffered_assets}")
    ```
-4. **Run with verbose output**: `pytest -vv -s`
-5. **Use pytest debugger**: `pytest --pdb` to drop into debugger on failure
+1. **Run with verbose output**: `pytest -vv -s`
+1. **Use pytest debugger**: `pytest --pdb` to drop into debugger on failure
 
 ## Validating Without Running Tests
 
@@ -159,6 +161,7 @@ python3 /tmp/validate_tests.py
 ```
 
 This validates:
+
 - Syntax is correct
 - All test classes are present
 - All critical test methods exist
@@ -167,6 +170,6 @@ This validates:
 ## Next Steps After Tests Pass
 
 1. Review coverage report to identify any missing scenarios
-2. Consider adding integration tests for multi-period rebalancing
-3. Update main documentation with edge case handling notes
-4. Consider adding property-based tests (hypothesis) for exhaustive validation
+1. Consider adding integration tests for multi-period rebalancing
+1. Update main documentation with edge case handling notes
+1. Consider adding property-based tests (hypothesis) for exhaustive validation

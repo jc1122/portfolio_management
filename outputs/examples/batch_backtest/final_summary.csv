@@ -1,0 +1,4 @@
+,total_return_pct,annualized_return_pct,volatility_pct,sharpe_ratio,sortino_ratio,max_drawdown_pct,calmar_ratio
+Momentum_Top30_Buffer50,562.62,14.15,23.41,0.6,0.76,-40.83,0.35
+LowVol_Top20_MaxTurnover0.2,262.42,9.43,13.02,0.72,0.85,-32.14,0.29
+MultiFactor_60Mom_40LV,328.54,10.72,19.51,0.55,0.7,-32.18,0.33

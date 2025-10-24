@@ -226,7 +226,7 @@ class PreselectionBenchmark:
         else:
             date_mask = returns.index < rebalance_date
         available_returns = returns.loc[date_mask]
-        
+
         # Get lookback window
         lookback_start = max(0, len(available_returns) - config.lookback)
         lookback_returns = available_returns.iloc[lookback_start:]
@@ -254,7 +254,7 @@ class PreselectionBenchmark:
             candidates = sorted_scores[sorted_scores >= kth_score]
         else:
             candidates = sorted_scores
-        
+
         if len(candidates) > k:
             candidates_df = pd.DataFrame(
                 {"score": candidates, "symbol": candidates.index}
@@ -379,10 +379,10 @@ class PreselectionBenchmark:
         start_index = max(lookback, min_periods)  # Ensure enough history
         available_dates = len(all_dates) - start_index
         step = available_dates // num_rebalances
-        
+
         # Generate rebalance dates starting after minimum history
         rebalance_dates = [
-            all_dates[start_index + i * step].date() 
+            all_dates[start_index + i * step].date()
             for i in range(num_rebalances)
         ]
 
@@ -460,7 +460,7 @@ class PreselectionBenchmark:
         s = io.StringIO()
         stats = pstats.Stats(profiler, stream=s).sort_stats("cumulative")
         stats.print_stats(20)
-        
+
         print(s.getvalue())
 
         return stats

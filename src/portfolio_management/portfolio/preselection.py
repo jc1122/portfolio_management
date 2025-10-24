@@ -193,7 +193,10 @@ class Preselection:
         # Try to get from cache
         if self.cache is not None:
             cached_scores = self.cache.get_factor_scores(
-                full_returns, cache_config, start_date, end_date,
+                full_returns,
+                cache_config,
+                start_date,
+                end_date,
             )
             if cached_scores is not None:
                 return cached_scores
@@ -211,7 +214,11 @@ class Preselection:
         # Cache the scores
         if self.cache is not None:
             self.cache.put_factor_scores(
-                scores, full_returns, cache_config, start_date, end_date,
+                scores,
+                full_returns,
+                cache_config,
+                start_date,
+                end_date,
             )
 
         return scores
@@ -364,7 +371,8 @@ class Preselection:
                 {"score": candidates, "symbol": candidates.index},
             )
             candidates_df = candidates_df.sort_values(
-                by=["score", "symbol"], ascending=[False, True],
+                by=["score", "symbol"],
+                ascending=[False, True],
             )
             selected = candidates_df.head(k)["symbol"].tolist()
         else:

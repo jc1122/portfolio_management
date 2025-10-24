@@ -43,7 +43,9 @@ class UniverseDefinition:
     classification_requirements: dict[str, list[str]] = field(default_factory=dict)
     return_config: ReturnConfig = field(default_factory=ReturnConfig)
     constraints: dict[str, int | float] = field(default_factory=dict)
-    technical_indicators: IndicatorConfig = field(default_factory=IndicatorConfig.disabled)
+    technical_indicators: IndicatorConfig = field(
+        default_factory=IndicatorConfig.disabled
+    )
 
     def validate(self) -> None:
         """Validate the universe definition."""
