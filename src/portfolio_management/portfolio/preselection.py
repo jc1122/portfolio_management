@@ -26,12 +26,17 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from portfolio_management.core.exceptions import InsufficientDataError
+from portfolio_management.core.protocols import CacheProtocol
+from portfolio_management.utils.date_utils import date_to_timestamp
+from portfolio_management.utils.validation import (
+    validate_numeric_range,
+    validate_positive_int,
+)
 
 
 class PreselectionMethod(Enum):
@@ -75,12 +80,12 @@ class Preselection:
     Supports optional caching to avoid recomputing factor scores across runs.
     """
 
-    def __init__(self, config: PreselectionConfig, cache: Any | None = None) -> None:
+    def __init__(self, config: PreselectionConfig, cache: CacheProtocol | None = None) -> None:
         """Initialize preselection engine.
 
         Args:
             config: Preselection configuration
-            cache: Optional FactorCache instance for caching factor scores
+            cache: Optional cache instance for caching factor scores (must implement CacheProtocol)
 
         """
         self.config = config
@@ -89,14 +94,14 @@ class Preselection:
 
     def _validate_config(self) -> None:
         """Validate configuration parameters."""
-        if self.config.lookback < 1:
-            raise ValueError("lookback must be >= 1")
-        if self.config.skip < 0:
-            raise ValueError("skip must be >= 0")
+        validate_positive_int(self.config.lookback, "lookback")
+        validate_positive_int(self.config.skip, "skip", allow_zero=True)
+
         if self.config.skip >= self.config.lookback:
             raise ValueError("skip must be < lookback")
-        if self.config.min_periods < 1:
-            raise ValueError("min_periods must be >= 1")
+
+        validate_positive_int(self.config.min_periods, "min_periods")
+
         if self.config.min_periods > self.config.lookback:
             raise ValueError("min_periods must be <= lookback")
 
@@ -134,13 +139,10 @@ class Preselection:
 
         # Filter data up to rebalance date (no lookahead)
         if rebalance_date is not None:
-            # Convert index to dates for comparison
-            if isinstance(returns.index, pd.DatetimeIndex):
-                date_mask = returns.index.date < rebalance_date
-            else:
-                # Assume index is already dates
-                date_mask = returns.index < rebalance_date
-            available_returns = returns.loc[date_mask]
+            # Use date_to_timestamp to handle date conversion consistently
+            cutoff_ts = date_to_timestamp(rebalance_date)
+            # Filter to strictly before the rebalance date
+            available_returns = returns[returns.index < cutoff_ts]
         else:
             available_returns = returns
 

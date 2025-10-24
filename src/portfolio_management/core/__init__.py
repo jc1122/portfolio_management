@@ -25,8 +25,15 @@ Public API:
         - log_duration: Context manager for timing operations
 
     Types:
-        - SymbolType, DateType, PriceDataFrame (type aliases)
-        - IDataLoader, IAssetFilter, IPortfolioStrategy (protocols)
+        - SymbolType, DateType, DateLike (type aliases)
+        - PriceDataFrame, ReturnsDataFrame, FactorScores (typed DataFrames)
+        - IDataLoader, IAssetFilter, IPortfolioStrategy (legacy protocols)
+
+    Protocols:
+        - CacheProtocol: Interface for factor caching
+        - DataLoaderProtocol: Interface for data loading
+        - FactorProtocol: Interface for factor computation
+        - EligibilityProtocol: Interface for eligibility computation
 """
 
 from .config import (
@@ -60,12 +67,21 @@ from .exceptions import (
     TransactionCostError,
     UniverseLoadError,
 )
+from .protocols import (
+    CacheProtocol,
+    DataLoaderProtocol,
+    EligibilityProtocol,
+    FactorProtocol,
+)
 from .types import (
+    DateLike,
     DateType,
+    FactorScores,
     IAssetFilter,
     IDataLoader,
     IPortfolioStrategy,
     PriceDataFrame,
+    ReturnsDataFrame,
     SymbolType,
 )
 from .utils import _run_in_parallel as run_in_parallel
@@ -112,8 +128,16 @@ __all__ = [
     # Types
     "SymbolType",
     "DateType",
+    "DateLike",
     "PriceDataFrame",
+    "ReturnsDataFrame",
+    "FactorScores",
     "IDataLoader",
     "IAssetFilter",
     "IPortfolioStrategy",
+    # Protocols
+    "CacheProtocol",
+    "DataLoaderProtocol",
+    "FactorProtocol",
+    "EligibilityProtocol",
 ]

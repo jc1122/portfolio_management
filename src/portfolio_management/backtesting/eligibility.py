@@ -10,9 +10,11 @@ Supports optional caching to avoid recomputing eligibility across backtest runs.
 from __future__ import annotations
 
 import datetime
-from typing import Any
 
 import pandas as pd
+
+from portfolio_management.core.protocols import CacheProtocol
+from portfolio_management.utils.date_utils import date_to_timestamp
 
 
 def compute_pit_eligibility(
@@ -52,8 +54,8 @@ def compute_pit_eligibility(
 
     """
     # Filter returns to only include data up to the given date
-    # Convert date to datetime for comparison
-    cutoff_datetime = pd.Timestamp(date)
+    # Use date_to_timestamp for consistent date handling
+    cutoff_datetime = date_to_timestamp(date)
     historical_data = returns[returns.index <= cutoff_datetime]
 
     if len(historical_data) == 0:
@@ -72,7 +74,7 @@ def compute_pit_eligibility(
             days_since_first[ticker] = 0
         else:
             # Calculate days between first valid and current date
-            days_diff = (cutoff_datetime - pd.Timestamp(first_date)).days
+            days_diff = (cutoff_datetime - date_to_timestamp(first_date)).days
             days_since_first[ticker] = days_diff
 
     # Count non-NaN observations up to the date
@@ -89,7 +91,7 @@ def compute_pit_eligibility_cached(
     date: datetime.date,
     min_history_days: int = 252,
     min_price_rows: int = 252,
-    cache: Any | None = None,
+    cache: CacheProtocol | None = None,
 ) -> pd.Series:
     """Compute PIT eligibility with optional caching.
 
@@ -100,7 +102,7 @@ def compute_pit_eligibility_cached(
         date: Rebalance date
         min_history_days: Minimum history days requirement
         min_price_rows: Minimum price rows requirement
-        cache: Optional FactorCache instance
+        cache: Optional cache instance (must implement CacheProtocol)
 
     Returns:
         Boolean Series indicating eligibility
@@ -172,7 +174,7 @@ def detect_delistings(
         this is a pragmatic approach to handle delistings gracefully during backtesting.
 
     """
-    cutoff_datetime = pd.Timestamp(current_date)
+    cutoff_datetime = date_to_timestamp(current_date)
     lookforward_datetime = cutoff_datetime + pd.Timedelta(days=lookforward_days)
 
     delistings: dict[str, datetime.date] = {}
@@ -188,7 +190,7 @@ def detect_delistings(
             # No valid data at all
             continue
 
-        last_valid_date = pd.Timestamp(last_valid_idx)
+        last_valid_date = date_to_timestamp(last_valid_idx)
 
         # Check if last valid date is at or before current date
         if last_valid_date <= cutoff_datetime:
@@ -228,7 +230,7 @@ def get_asset_history_stats(
         - coverage_pct: Percentage of days with valid data
 
     """
-    cutoff_datetime = pd.Timestamp(date)
+    cutoff_datetime = date_to_timestamp(date)
     historical_data = returns[returns.index <= cutoff_datetime]
 
     if len(historical_data) == 0:
@@ -263,8 +265,8 @@ def get_asset_history_stats(
                 },
             )
         else:
-            first_valid_ts = pd.Timestamp(first_valid)
-            last_valid_ts = pd.Timestamp(last_valid)
+            first_valid_ts = date_to_timestamp(first_valid)
+            last_valid_ts = date_to_timestamp(last_valid)
 
             days_since = (cutoff_datetime - first_valid_ts).days
             total_rows = ticker_data.notna().sum()
