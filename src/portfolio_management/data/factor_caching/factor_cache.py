@@ -216,8 +216,15 @@ class FactorCache:
             return None
 
         # Load and validate metadata
-        with open(metadata_path) as f:
-            metadata = CacheMetadata.from_dict(json.load(f))
+        try:
+            with open(metadata_path) as f:
+                metadata = CacheMetadata.from_dict(json.load(f))
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.warning(
+                f"Corrupted metadata for factor scores (key: {cache_key[:8]}...): {e}"
+            )
+            self._stats["misses"] += 1
+            return None
 
         if not self._is_cache_valid(metadata):
             logger.debug(f"Cache expired for factor scores (key: {cache_key[:8]}...)")
@@ -256,6 +263,10 @@ class FactorCache:
             start_date: Start date for cache key
             end_date: End date for cache key
 
+        Raises:
+            OSError: If disk is full or permission denied
+            IOError: If write operation fails
+
         """
         if not self.enabled:
             return
@@ -281,21 +292,33 @@ class FactorCache:
             params=config,
         )
 
-        # Write metadata
         metadata_path = self.metadata_dir / f"{cache_key}.json"
-        with open(metadata_path, "w") as f:
-            json.dump(metadata.to_dict(), f, indent=2)
-
-        # Write data
         data_path = self.data_dir / f"{cache_key}.pkl"
-        with open(data_path, "wb") as f:
-            pickle.dump(scores, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-        self._stats["puts"] += 1
-        logger.info(
-            f"Cached factor scores (key: {cache_key[:8]}..., "
-            f"config: {config.get('method', 'unknown')})",
-        )
+        try:
+            # Write metadata
+            with open(metadata_path, "w") as f:
+                json.dump(metadata.to_dict(), f, indent=2)
+
+            # Write data
+            with open(data_path, "wb") as f:
+                pickle.dump(scores, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            self._stats["puts"] += 1
+            logger.info(
+                f"Cached factor scores (key: {cache_key[:8]}..., "
+                f"config: {config.get('method', 'unknown')})",
+            )
+        except OSError as e:
+            # Clean up partial writes
+            if metadata_path.exists():
+                metadata_path.unlink()
+            if data_path.exists():
+                data_path.unlink()
+            logger.warning(
+                f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}"
+            )
+            raise
 
     def get_pit_eligibility(
         self,
@@ -338,8 +361,15 @@ class FactorCache:
             return None
 
         # Load and validate metadata
-        with open(metadata_path) as f:
-            metadata = CacheMetadata.from_dict(json.load(f))
+        try:
+            with open(metadata_path) as f:
+                metadata = CacheMetadata.from_dict(json.load(f))
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.warning(
+                f"Corrupted metadata for PIT eligibility (key: {cache_key[:8]}...): {e}"
+            )
+            self._stats["misses"] += 1
+            return None
 
         if not self._is_cache_valid(metadata):
             logger.debug(f"Cache expired for PIT eligibility (key: {cache_key[:8]}...)")
@@ -375,6 +405,10 @@ class FactorCache:
             start_date: Start date for cache key
             end_date: End date for cache key
 
+        Raises:
+            OSError: If disk is full or permission denied
+            IOError: If write operation fails
+
         """
         if not self.enabled:
             return
@@ -400,18 +434,30 @@ class FactorCache:
             params=config,
         )
 
-        # Write metadata
         metadata_path = self.metadata_dir / f"{cache_key}.json"
-        with open(metadata_path, "w") as f:
-            json.dump(metadata.to_dict(), f, indent=2)
-
-        # Write data
         data_path = self.data_dir / f"{cache_key}.pkl"
-        with open(data_path, "wb") as f:
-            pickle.dump(eligibility, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-        self._stats["puts"] += 1
-        logger.info(f"Cached PIT eligibility (key: {cache_key[:8]}...)")
+        try:
+            # Write metadata
+            with open(metadata_path, "w") as f:
+                json.dump(metadata.to_dict(), f, indent=2)
+
+            # Write data
+            with open(data_path, "wb") as f:
+                pickle.dump(eligibility, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            self._stats["puts"] += 1
+            logger.info(f"Cached PIT eligibility (key: {cache_key[:8]}...)")
+        except OSError as e:
+            # Clean up partial writes
+            if metadata_path.exists():
+                metadata_path.unlink()
+            if data_path.exists():
+                data_path.unlink()
+            logger.warning(
+                f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}"
+            )
+            raise
 
     def clear(self) -> int:
         """Clear all cache entries.
