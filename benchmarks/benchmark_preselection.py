@@ -373,10 +373,18 @@ class PreselectionBenchmark:
             universe_size, num_days=lookback + num_rebalances * 21 + 100
         )
 
-        # Create monthly rebalance dates
+        # Create rebalance dates with sufficient history for min_periods
         all_dates = returns.index.tolist()
-        step = len(all_dates) // num_rebalances
-        rebalance_dates = [all_dates[i * step].date() for i in range(1, num_rebalances + 1)]
+        min_periods = 60
+        start_index = max(lookback, min_periods)  # Ensure enough history
+        available_dates = len(all_dates) - start_index
+        step = available_dates // num_rebalances
+        
+        # Generate rebalance dates starting after minimum history
+        rebalance_dates = [
+            all_dates[start_index + i * step].date() 
+            for i in range(num_rebalances)
+        ]
 
         config = PreselectionConfig(
             method=PreselectionMethod.MOMENTUM,
