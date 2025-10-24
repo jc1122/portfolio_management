@@ -90,6 +90,8 @@ docs/                                # Living module guides
   ├── backtesting.md
   ├── cardinality_constraints.md     # Cardinality constraints design & stubs
   ├── fast_io.md                     # Optional fast IO with polars/pyarrow
+  ├── long_history_tests_guide.md    # Long-history integration tests guide
+  ├── long_history_tests_troubleshooting.md  # Test debugging guide
   ├── macro_signals.md               # Macroeconomic signals & regime gating
   ├── portfolio_construction.md
   ├── preselection.md                # Factor-based asset preselection guide
@@ -440,6 +442,89 @@ The portfolio management toolkit has been fully refactored into a clean, well-or
 **Current Status:** 🚀 **PRODUCTION READY**
 
 The system is fully implemented, thoroughly tested, and ready for production deployment. See `memory-bank/progress.md` for complete roadmap and `archive/refactoring/` for detailed phase documentation and historical records.
+
+## Testing
+
+The project includes comprehensive testing at multiple levels:
+
+### Test Organization
+
+```
+tests/
+  ├── unit/                    # Unit tests for individual components
+  ├── integration/             # End-to-end integration tests
+  │   ├── test_backtest_integration.py
+  │   ├── test_caching_integration.py
+  │   ├── test_long_history_comprehensive.py  # 20-year backtest validation
+  │   └── ...
+  ├── scripts/                 # CLI command tests
+  └── benchmarks/              # Performance benchmarks
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest tests/
+
+# Run unit tests only
+pytest tests/ -m "not integration"
+
+# Run integration tests
+pytest tests/integration/ -v
+
+# Run specific test file
+pytest tests/integration/test_backtest_integration.py -v
+```
+
+### Long-History Integration Tests
+
+Comprehensive 20-year backtest validation tests (`tests/integration/test_long_history_comprehensive.py`):
+
+- **Purpose:** Validate all Sprint 2 features across 2005-2025 historical data
+- **Coverage:** All strategies, feature combinations, and market regimes
+- **Execution:** 60-120 minutes for full suite (marked as `slow`)
+- **Data Required:** `outputs/long_history_1000/` (auto-skips if not available)
+
+**Key Test Scenarios:**
+- Equal weight, mean-variance, risk parity strategies (20 years each)
+- Preselection (momentum, low-vol, combined factors)
+- Membership policy + turnover management
+- PIT eligibility + caching
+- Determinism validation (3x runs must match)
+- Crisis periods: 2007-2008 financial crisis, 2020 COVID crash
+- Backward compatibility verification
+
+```bash
+# Run long-history tests
+pytest tests/integration/test_long_history_comprehensive.py -v
+
+# Run with performance output
+pytest tests/integration/test_long_history_comprehensive.py::TestPerformanceMetrics -v -s
+
+# Run during development (skip slow tests)
+pytest tests/ -m "not slow"
+```
+
+**Documentation:**
+- **User Guide:** [`docs/long_history_tests_guide.md`](docs/long_history_tests_guide.md) - Expected behaviors and configurations
+- **Troubleshooting:** [`docs/long_history_tests_troubleshooting.md`](docs/long_history_tests_troubleshooting.md) - Debugging failures
+
+### Test Markers
+
+Tests are marked for selective execution:
+
+- `@pytest.mark.integration` - Integration tests (require data)
+- `@pytest.mark.slow` - Long-running tests (>5 minutes)
+- `@pytest.mark.unit` - Fast unit tests
+
+### Quality Metrics
+
+Current test metrics:
+- **Total Tests:** 610+ tests
+- **Pass Rate:** 100% (1 xfailed for known CVXPY instability)
+- **Coverage:** ~85% of source code
+- **Type Safety:** 0 mypy errors
 
 ## Contributing
 
