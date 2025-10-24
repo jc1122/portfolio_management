@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import pickle
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -111,16 +112,68 @@ class FactorCache:
             max_cache_age_days: Maximum cache age in days before invalidation
                                (None = no age limit)
 
+        Raises:
+            ValueError: If cache_dir is invalid or max_cache_age_days is negative
+            OSError: If cache_dir is not writable
+
         """
+        # Validate cache_dir
+        if not isinstance(cache_dir, Path):
+            if isinstance(cache_dir, str):
+                cache_dir = Path(cache_dir)
+            else:
+                raise ValueError(
+                    f"cache_dir must be a Path or str, got {type(cache_dir).__name__}. "
+                    "To fix: use pathlib.Path or string. "
+                    "Example: cache_dir = Path('.cache/factors')"
+                )
+        
+        # Validate max_cache_age_days
+        if max_cache_age_days is not None and max_cache_age_days < 0:
+            raise ValueError(
+                f"max_cache_age_days must be >= 0, got {max_cache_age_days}. "
+                "To fix: use None for no age limit or a non-negative integer. "
+                "Example: max_cache_age_days=7 (expire after 7 days)"
+            )
+        
         self.cache_dir = cache_dir
         self.enabled = enabled
         self.max_cache_age_days = max_cache_age_days
 
         if enabled:
-            self.metadata_dir = cache_dir / "metadata"
-            self.data_dir = cache_dir / "data"
-            self.metadata_dir.mkdir(parents=True, exist_ok=True)
-            self.data_dir.mkdir(parents=True, exist_ok=True)
+            # Check if cache_dir is writable
+            try:
+                self.metadata_dir = cache_dir / "metadata"
+                self.data_dir = cache_dir / "data"
+                self.metadata_dir.mkdir(parents=True, exist_ok=True)
+                self.data_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Test write permissions
+                test_file = self.data_dir / ".write_test"
+                try:
+                    test_file.write_text("test")
+                    test_file.unlink()
+                except OSError as e:
+                    raise OSError(
+                        f"Cache directory {cache_dir} is not writable: {e}. "
+                        "To fix: ensure the directory has write permissions or choose a different directory. "
+                        "Example: cache_dir = Path('~/.cache/portfolio').expanduser()"
+                    ) from e
+                    
+            except OSError as e:
+                logger.error(
+                    f"Failed to create cache directories at {cache_dir}: {e}. "
+                    "Disabling cache."
+                )
+                self.enabled = False
+                warnings.warn(
+                    f"Cache directory {cache_dir} is not accessible. "
+                    "Caching has been disabled. "
+                    "Performance may be degraded for large universes (>500 assets). "
+                    "To fix: check directory permissions or choose a different cache location.",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
         self._stats = {"hits": 0, "misses": 0, "puts": 0}
 
@@ -263,12 +316,21 @@ class FactorCache:
             start_date: Start date for cache key
             end_date: End date for cache key
 
-        Raises:
-            OSError: If disk is full or permission denied
-            IOError: If write operation fails
+        Note:
+            If write fails, logs warning and continues without caching (non-fatal).
 
         """
         if not self.enabled:
+            # Warn if cache is disabled for large universe
+            if len(returns.columns) > 500:
+                warnings.warn(
+                    f"Caching is disabled for a large universe ({len(returns.columns)} assets > 500). "
+                    "This may lead to degraded performance on subsequent runs. "
+                    "Consider enabling caching for better performance. "
+                    "Example: cache = FactorCache(Path('.cache/factors'), enabled=True)",
+                    UserWarning,
+                    stacklevel=2,
+                )
             return
 
         dataset_hash = self._compute_dataset_hash(returns)
@@ -315,10 +377,22 @@ class FactorCache:
                 metadata_path.unlink()
             if data_path.exists():
                 data_path.unlink()
+            
+            # Log warning and continue (don't crash)
             logger.warning(
-                f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}"
+                f"Failed to cache factor scores (key: {cache_key[:8]}...): {e}. "
+                "Cache write failed but continuing without caching. "
+                "Possible causes: disk full, permission denied, quota exceeded. "
+                "Consider: checking disk space, freeing up space, or disabling cache."
             )
-            raise
+            warnings.warn(
+                "Cache write failed. Continuing without caching. "
+                "Performance may be degraded on subsequent runs. "
+                "Check logs for details.",
+                UserWarning,
+                stacklevel=2,
+            )
+            # Don't raise - continue without caching
 
     def get_pit_eligibility(
         self,
@@ -405,12 +479,13 @@ class FactorCache:
             start_date: Start date for cache key
             end_date: End date for cache key
 
-        Raises:
-            OSError: If disk is full or permission denied
-            IOError: If write operation fails
+        Note:
+            If write fails, logs warning and continues without caching (non-fatal).
 
         """
         if not self.enabled:
+            # Warn if cache is disabled for large universe (only for eligibility, not scores)
+            # Skip warning here since it's already issued by put_factor_scores
             return
 
         dataset_hash = self._compute_dataset_hash(returns)
@@ -454,10 +529,22 @@ class FactorCache:
                 metadata_path.unlink()
             if data_path.exists():
                 data_path.unlink()
+            
+            # Log warning and continue (don't crash)
             logger.warning(
-                f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}"
+                f"Failed to cache PIT eligibility (key: {cache_key[:8]}...): {e}. "
+                "Cache write failed but continuing without caching. "
+                "Possible causes: disk full, permission denied, quota exceeded. "
+                "Consider: checking disk space, freeing up space, or disabling cache."
             )
-            raise
+            warnings.warn(
+                "Cache write failed. Continuing without caching. "
+                "Performance may be degraded on subsequent runs. "
+                "Check logs for details.",
+                UserWarning,
+                stacklevel=2,
+            )
+            # Don't raise - continue without caching
 
     def clear(self) -> int:
         """Clear all cache entries.
