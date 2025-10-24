@@ -18,6 +18,7 @@ Example:
     ...     returns=historical_returns,
     ...     rebalance_date=date(2023, 1, 1)
     ... )
+
 """
 
 from __future__ import annotations
@@ -25,13 +26,10 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
-if TYPE_CHECKING:
-    pass
 
 from portfolio_management.core.exceptions import InsufficientDataError
 
@@ -73,16 +71,20 @@ class Preselection:
 
     Computes momentum and/or low-volatility factors from historical returns
     and selects top-K assets deterministically without lookahead bias.
+
+    Supports optional caching to avoid recomputing factor scores across runs.
     """
 
-    def __init__(self, config: PreselectionConfig) -> None:
+    def __init__(self, config: PreselectionConfig, cache: Any | None = None) -> None:
         """Initialize preselection engine.
 
         Args:
             config: Preselection configuration
+            cache: Optional FactorCache instance for caching factor scores
 
         """
         self.config = config
+        self.cache = cache
         self._validate_config()
 
     def _validate_config(self) -> None:
@@ -102,7 +104,7 @@ class Preselection:
             total_weight = self.config.momentum_weight + self.config.low_vol_weight
             if not np.isclose(total_weight, 1.0, atol=1e-6):
                 raise ValueError(
-                    f"Combined weights must sum to 1.0, got {total_weight}"
+                    f"Combined weights must sum to 1.0, got {total_weight}",
                 )
 
     def select_assets(
@@ -151,7 +153,52 @@ class Preselection:
                 f"have {len(available_returns)}",
             )
 
-        # Compute factor scores
+        # Compute factor scores (with caching if enabled)
+        scores = self._get_or_compute_scores(returns, available_returns, rebalance_date)
+
+        # Select top-K assets
+        return self._select_top_k(scores)
+
+    def _get_or_compute_scores(
+        self,
+        full_returns: pd.DataFrame,
+        available_returns: pd.DataFrame,
+        rebalance_date: datetime.date | None,
+    ) -> pd.Series:
+        """Get factor scores from cache or compute them.
+
+        Args:
+            full_returns: Full returns matrix (for cache key)
+            available_returns: Returns filtered to rebalance date
+            rebalance_date: Rebalance date for cache key
+
+        Returns:
+            Series of factor scores
+
+        """
+        # Build cache config
+        cache_config = {
+            "method": self.config.method.value,
+            "lookback": self.config.lookback,
+            "skip": self.config.skip,
+            "min_periods": self.config.min_periods,
+            "momentum_weight": self.config.momentum_weight,
+            "low_vol_weight": self.config.low_vol_weight,
+        }
+
+        # Determine date range for cache key
+        start_date = str(available_returns.index[0])
+        end_date = str(available_returns.index[-1])
+
+        # Try to get from cache
+        if self.cache is not None:
+            cached_scores = self.cache.get_factor_scores(
+                full_returns, cache_config, start_date, end_date,
+            )
+            if cached_scores is not None:
+                return cached_scores
+
+        # Compute scores
         if self.config.method == PreselectionMethod.MOMENTUM:
             scores = self._compute_momentum(available_returns)
         elif self.config.method == PreselectionMethod.LOW_VOL:
@@ -161,8 +208,13 @@ class Preselection:
         else:
             raise ValueError(f"Unknown preselection method: {self.config.method}")
 
-        # Select top-K assets
-        return self._select_top_k(scores)
+        # Cache the scores
+        if self.cache is not None:
+            self.cache.put_factor_scores(
+                scores, full_returns, cache_config, start_date, end_date,
+            )
+
+        return scores
 
     def _compute_momentum(self, returns: pd.DataFrame) -> pd.Series:
         """Compute momentum factor (cumulative return with optional skip).
@@ -309,10 +361,10 @@ class Preselection:
         if len(candidates) > k:
             # Sort by score (desc) then symbol (asc) for deterministic tie-breaking
             candidates_df = pd.DataFrame(
-                {"score": candidates, "symbol": candidates.index}
+                {"score": candidates, "symbol": candidates.index},
             )
             candidates_df = candidates_df.sort_values(
-                by=["score", "symbol"], ascending=[False, True]
+                by=["score", "symbol"], ascending=[False, True],
             )
             selected = candidates_df.head(k)["symbol"].tolist()
         else:
@@ -334,7 +386,7 @@ def create_preselection_from_dict(config_dict: dict) -> Preselection | None:
     """
     if not config_dict:
         return None
-    
+
     top_k = config_dict.get("top_k", 0)
     if top_k is None or top_k <= 0:
         return None
@@ -345,7 +397,7 @@ def create_preselection_from_dict(config_dict: dict) -> Preselection | None:
     except ValueError:
         raise ValueError(
             f"Invalid preselection method: {method_str}. "
-            f"Must be one of: {[m.value for m in PreselectionMethod]}"
+            f"Must be one of: {[m.value for m in PreselectionMethod]}",
         )
 
     config = PreselectionConfig(
