@@ -10,9 +10,13 @@ Supports optional caching to avoid recomputing eligibility across backtest runs.
 from __future__ import annotations
 
 import datetime
+import logging
+import warnings
 from typing import Any
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def compute_pit_eligibility(
@@ -45,12 +49,67 @@ def compute_pit_eligibility(
         Boolean Series indicating eligibility for each asset (True = eligible).
         Index matches the columns of the returns DataFrame.
 
+    Raises:
+        ValueError: If inputs are invalid
+
     Example:
         >>> returns = pd.DataFrame(...)  # Historical returns
         >>> eligible = compute_pit_eligibility(returns, date(2023, 12, 31))
         >>> eligible_assets = returns.columns[eligible]
 
     """
+    # Validate inputs
+    if returns is None or returns.empty:
+        raise ValueError(
+            "returns DataFrame is empty or None. "
+            "To fix: provide a non-empty DataFrame with returns data. "
+            "Expected format: DataFrame with dates as index, assets as columns."
+        )
+    
+    if not isinstance(returns, pd.DataFrame):
+        raise ValueError(
+            f"returns must be a pandas DataFrame, got {type(returns).__name__}. "
+            "To fix: convert your data to a DataFrame. "
+            "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)"
+        )
+    
+    if not isinstance(date, datetime.date):
+        raise ValueError(
+            f"date must be a datetime.date, got {type(date).__name__}. "
+            "To fix: use datetime.date object. "
+            "Example: from datetime import date; eligibility_date = date(2023, 12, 31)"
+        )
+    
+    if min_history_days <= 0:
+        raise ValueError(
+            f"min_history_days must be > 0, got {min_history_days}. "
+            "min_history_days defines the minimum time span required. "
+            "Common values: 63 (3 months), 126 (6 months), 252 (1 year). "
+            "To fix: use a positive integer. "
+            "Example: min_history_days=252"
+        )
+    
+    if min_price_rows <= 0:
+        raise ValueError(
+            f"min_price_rows must be > 0, got {min_price_rows}. "
+            "min_price_rows defines the minimum number of valid data points. "
+            "Common values: 60, 126, 252. "
+            "To fix: use a positive integer. "
+            "Example: min_price_rows=252"
+        )
+    
+    # Check if date is within data range
+    max_date = returns.index.max()
+    if isinstance(max_date, pd.Timestamp):
+        max_date = max_date.date()
+    
+    if date > max_date:
+        raise ValueError(
+            f"date ({date}) is after the last available date ({max_date}). "
+            "To fix: use a date within your data range. "
+            f"Available date range: {returns.index.min()} to {max_date}"
+        )
+    
     # Filter returns to only include data up to the given date
     # Convert date to datetime for comparison
     cutoff_datetime = pd.Timestamp(date)
@@ -58,6 +117,10 @@ def compute_pit_eligibility(
 
     if len(historical_data) == 0:
         # No data available yet - nothing is eligible
+        logger.warning(
+            f"No historical data available up to {date}. "
+            "Returning all assets as ineligible."
+        )
         return pd.Series(False, index=returns.columns)
 
     # For each asset, find first non-NaN observation

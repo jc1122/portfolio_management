@@ -1,0 +1,51 @@
+# Basic Equal-Weight Universe
+#
+# This example defines a simple, broad universe of global assets without any
+# complex filtering or preselection. It's a good starting point for a
+# diversified, passive strategy.
+#
+# Strategy: Equal-weight allocation across a filtered set of global ETFs.
+# Use Case: Core holding in a multi-sleeve portfolio.
+# Key Features:
+# - No preselection (all eligible assets are used)
+# - No membership policy (turnover is not constrained)
+# - Simple monthly returns
+
+universes:
+  basic_equal_weight:
+    description: "A simple, diversified universe of global ETFs with equal weighting."
+
+    filter_criteria:
+      # --- Data Quality & History ---
+      data_status: ["ok"]             # Use only high-quality data.
+      min_history_days: 756         # Require at least 3 years of calendar history.
+      min_price_rows: 700           # Require at least 700 trading days of data.
+
+      # --- Asset Universe ---
+      markets: ["LSE", "NYSE", "NSQ"] # London & US exchanges.
+      currencies: ["GBP", "USD"]      # Pound and Dollar denominated assets.
+      categories:                     # Focus on broad ETFs.
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nyse etfs"
+        - "nasdaq etfs"
+
+    classification_requirements:
+      # --- Thematic & Asset Class Filters ---
+      # Ensure diversification across major asset classes.
+      asset_class: ["equity", "commodity", "real_estate", "fixed_income"]
+      geography: ["global", "north_america", "europe", "united_kingdom"]
+
+    return_config:
+      # --- Return Calculation Parameters ---
+      method: "simple"                # Standard percentage returns.
+      frequency: "monthly"            # Rebalance and calculate returns monthly.
+      handle_missing: "forward_fill"  # Fill missing data points from the last known value.
+      max_forward_fill_days: 5      # Limit fill to 5 days to avoid stale data.
+      min_periods: 12                 # Require at least 12 months of returns data for an asset to be included.
+
+    constraints:
+      # --- Final Universe Size ---
+      # Ensure the final universe is of a manageable size.
+      min_assets: 20
+      max_assets: 100

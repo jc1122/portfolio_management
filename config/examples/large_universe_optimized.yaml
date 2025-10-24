@@ -1,0 +1,60 @@
+# Performance-Optimized Example: Large Universe
+#
+# This example is designed for running backtests on a very large universe of
+# assets (e.g., 1000+). The key is to use preselection to dramatically
+# reduce the number of assets that need to be considered by the portfolio
+# optimizer at each rebalancing step.
+#
+# Strategy: Any strategy on a large universe (e.g., Russell 3000).
+# Use Case: Backtesting on a broad market index.
+# Key Features:
+# - A large initial universe.
+# - Aggressive preselection to reduce the universe to a manageable size.
+# - Recommendation to use caching.
+
+universes:
+  large_universe_optimized:
+    description: "An example of configuring a large universe for efficient backtesting."
+
+    filter_criteria:
+      # Start with a very broad filter.
+      data_status: ["ok", "warning"]
+      min_history_days: 252
+      min_price_rows: 252
+      markets: ["NYSE", "NSQ", "AMEX"] # All major US exchanges.
+      currencies: ["USD"]
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 12
+
+    preselection:
+      # --- Aggressive Preselection ---
+      # Reduce a universe of 1000+ assets down to the top 100.
+      # This is the most important step for performance.
+      method: "combined"
+      top_k: 100
+      lookback: 252
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 126
+
+    constraints:
+      min_assets: 500 # Expect a large universe before preselection.
+      max_assets: 3000
+
+# --- Performance Notes ---
+# To run a backtest on a large universe like this, it is highly recommended
+# to enable caching. Caching is typically enabled via a command-line
+# argument to the backtesting script, for example:
+#
+# python scripts/run_backtest.py my_strategy --universe large_universe_optimized --use-cache
+#
+# This will store intermediate results (like return calculations) and speed
+# up subsequent runs.

@@ -6,7 +6,10 @@ the portfolio management toolkit for better type safety and consistency.
 Type Aliases:
     - SymbolType: Represents stock ticker symbols
     - DateType: Flexible date representation
+    - DateLike: More specific date-like type for conversions
     - PriceDataFrame: DataFrame with expected price/volume columns
+    - ReturnsDataFrame: DataFrame with returns data
+    - FactorScores: Series with factor scores for assets
 
 Protocols:
     - IDataLoader: Interface for data loading operations
@@ -19,13 +22,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    import datetime
 
     import pandas as pd
 
 # Type aliases for improved readability and consistency
 SymbolType = str
 DateType = "date | str"
+DateLike = "datetime.date | pd.Timestamp | str"
 PriceDataFrame = "pd.DataFrame"  # DataFrame with specific columns expected
+ReturnsDataFrame = "pd.DataFrame"  # DataFrame with returns (index=dates, columns=tickers)
+FactorScores = "pd.Series"  # Series with factor scores (index=tickers)
 
 
 class IDataLoader(Protocol):

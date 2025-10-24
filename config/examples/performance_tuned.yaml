@@ -1,0 +1,63 @@
+# Performance-Tuned Example Configuration
+#
+# This file provides a balanced, performance-tuned configuration for general
+# use. It combines several best practices for efficient backtesting, including
+# preselection, a moderately sized universe, and recommendations for caching.
+#
+# Strategy: A good starting point for any factor-based strategy.
+# Use Case: General-purpose backtesting with a focus on speed.
+# Key Features:
+# - Preselection to reduce the optimization space.
+# - A reasonably sized universe.
+# - Recommendations for caching and I/O settings.
+
+universes:
+  performance_tuned:
+    description: "A balanced, performance-tuned universe configuration."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 504
+      min_price_rows: 480
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nasdaq stocks/1"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 24
+
+    preselection:
+      # --- Balanced Preselection ---
+      # A combined factor preselection is a good all-around choice.
+      method: "combined"
+      top_k: 75 # Reduce the universe to a manageable size.
+      lookback: 126 # A 6-month lookback is a good balance of signal and speed.
+      skip: 10
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 63
+
+    constraints:
+      min_assets: 200 # Expect a reasonably large universe before preselection.
+      max_assets: 1000
+
+# --- Performance Notes ---
+# For best performance with this configuration, consider the following:
+#
+# 1. Caching: Enable caching to store intermediate results.
+#    --use-cache
+#
+# 2. I/O: If your master asset list is very large, use chunked I/O.
+#    --chunk-size 5000
+#
+# Example command:
+# python scripts/manage_universes.py load performance_tuned --use-cache --chunk-size 5000

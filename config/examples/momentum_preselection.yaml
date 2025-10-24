@@ -1,0 +1,55 @@
+# Momentum Preselection Universe
+#
+# This example demonstrates how to use preselection to create a momentum-tilted
+# universe. It selects the top 30 assets based on their 12-month performance,
+# skipping the most recent month to avoid short-term reversals.
+#
+# Strategy: Long-only momentum.
+# Use Case: A satellite sleeve in a core-satellite portfolio.
+# Key Features:
+# - Momentum-based preselection
+# - Skips most recent month of returns (a common momentum practice)
+
+universes:
+  momentum_preselection:
+    description: "A universe of assets selected for high momentum."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 504         # 2 years of history to ensure reliable momentum calculation.
+      min_price_rows: 480
+      markets: ["LSE", "NYSE", "NSQ"]
+      currencies: ["GBP", "USD"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+        - "nasdaq stocks/1"
+        - "nasdaq stocks/2"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 24
+
+    preselection:
+      # --- Momentum Preselection ---
+      method: "momentum"              # Use the momentum factor.
+      top_k: 30                       # Select the top 30 performing assets.
+      lookback: 252                   # Calculate momentum over the past year (252 trading days).
+      skip: 21                        # Skip the most recent 21 trading days (approx. 1 month).
+      min_periods: 126                # Require at least 6 months of data for a valid momentum score.
+
+    constraints:
+      # --- Final Universe Size ---
+      # The preselection `top_k` acts as the main constraint, but we can still
+      # set a floor to ensure the universe doesn't shrink too much if few
+      # assets have valid momentum scores.
+      min_assets: 15
+      max_assets: 30
