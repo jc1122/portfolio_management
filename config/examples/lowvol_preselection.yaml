@@ -1,0 +1,52 @@
+# Low-Volatility Preselection Universe
+#
+# This example shows how to build a defensive, low-volatility universe.
+# It selects the top 40 assets with the lowest realized volatility over the
+# past year.
+#
+# Strategy: Defensive, low-volatility equity.
+# Use Case: A defensive sleeve in a portfolio, aiming for lower drawdowns.
+# Key Features:
+# - Low-volatility preselection
+# - No "skip" period is necessary for volatility.
+
+universes:
+  lowvol_preselection:
+    description: "A universe of assets selected for low volatility."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 504         # 2 years of history for reliable volatility calculation.
+      min_price_rows: 480
+      markets: ["LSE", "NYSE", "NSQ"]
+      currencies: ["GBP", "USD"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+        - "nasdaq stocks/1"
+        - "nasdaq stocks/2"
+
+    classification_requirements:
+      asset_class: ["equity"]
+      # Exclude highly volatile sectors if desired.
+      # sector: ["-Technology", "-Consumer Cyclical"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 24
+
+    preselection:
+      # --- Low-Volatility Preselection ---
+      method: "low_vol"               # Use the low-volatility factor.
+      top_k: 40                       # Select the 40 assets with the lowest volatility.
+      lookback: 252                   # Calculate volatility over the past year.
+      min_periods: 126                # Require at least 6 months of data for a valid score.
+
+    constraints:
+      min_assets: 20
+      max_assets: 40

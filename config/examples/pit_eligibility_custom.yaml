@@ -1,0 +1,53 @@
+# Point-in-Time (PIT) Eligibility with Custom Requirements
+#
+# This example demonstrates how to use the `pit_eligibility` feature to
+# prevent lookahead bias. It ensures that at any point in a backtest, an
+# asset is only included if it had a sufficient history *at that time*.
+#
+# Strategy: Any backtest where survivorship bias is a concern.
+# Use Case: Running historically accurate backtests on a universe where
+#           assets may have listed or delisted over time.
+# Key Features:
+# - Enables PIT eligibility to avoid lookahead bias.
+# - Custom requirements for history and data density.
+
+universes:
+  pit_eligibility_custom:
+    description: "A universe with custom Point-in-Time eligibility filters."
+
+    pit_eligibility:
+      # --- Point-in-Time Eligibility ---
+      enabled: true
+      # Require an asset to have at least 2 years of calendar history at any
+      # given point in the backtest.
+      min_history_days: 504
+      # Require an asset to have at least 480 non-null price observations at
+      # any given point in the backtest. This is a stricter requirement than
+      # just calendar days and ensures data density.
+      min_price_rows: 480
+
+    filter_criteria:
+      # These criteria are applied to the entire dataset first.
+      # PIT eligibility is then applied on top of this filtered set during a backtest.
+      data_status: ["ok", "warning"] # Allow some warnings, as PIT will filter out bad data.
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nasdaq stocks/1"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 12
+
+    constraints:
+      # These constraints are applied *after* the PIT filter at each
+      # rebalance date.
+      min_assets: 50
+      max_assets: 200
