@@ -1,0 +1,170 @@
+# Example Universe Configuration with Validation-Compliant Settings
+#
+# This example demonstrates a well-configured universe that passes
+# all validation checks with sensible defaults.
+
+universes:
+  # Conservative portfolio with standard settings
+  conservative_30:
+    description: "Conservative 30-asset portfolio with sensible defaults"
+    assets:
+      - AAPL
+      - MSFT
+      - GOOGL
+      - AMZN
+      - META
+      - TSLA
+      - NVDA
+      - JPM
+      - BAC
+      - WFC
+      - JNJ
+      - PFE
+      - UNH
+      - XOM
+      - CVX
+      - COP
+      - PG
+      - KO
+      - PEP
+      - WMT
+      - HD
+      - NKE
+      - DIS
+      - NFLX
+      - INTC
+      - AMD
+      - CSCO
+      - ORCL
+      - CRM
+      - ADBE
+
+    # Preselection: Top 20 assets from 30 using momentum
+    # ✅ Passes validation:
+    #   - top_k (20) > 10 (good diversification)
+    #   - lookback (252) >= 63 (stable factors)
+    #   - skip (1) < lookback (252)
+    #   - min_periods (63) <= lookback (252)
+    preselection:
+      method: momentum
+      top_k: 20
+      lookback: 252  # 1 year
+      skip: 1
+      min_periods: 63  # 3 months minimum
+
+    # Membership policy: Reduce turnover
+    # ✅ Passes validation:
+    #   - buffer_rank (30) > top_k (20)
+    #   - buffer_rank (30) is 50% higher than top_k (20) - good hysteresis
+    #   - min_holding_periods (3) is reasonable
+    #   - max_turnover (0.3) is reasonable
+    membership_policy:
+      enabled: true
+      buffer_rank: 30  # Keep assets ranked 21-30
+      min_holding_periods: 3  # Hold for at least 3 rebalances
+      max_turnover: 0.3  # Max 30% portfolio change per rebalance
+      max_new_assets: 5  # Add at most 5 new assets per rebalance
+      max_removed_assets: 5  # Remove at most 5 assets per rebalance
+
+    # Point-in-time eligibility: Avoid lookahead bias
+    # ✅ Passes validation:
+    #   - min_history_days (252) > 0
+    #   - min_price_rows (252) > 0
+    pit_eligibility:
+      enabled: true
+      min_history_days: 252  # 1 year
+      min_price_rows: 252
+
+  # Aggressive portfolio with larger universe
+  aggressive_50:
+    description: "Aggressive 50-asset portfolio with top-30 selection"
+    # Note: Full 50-asset list abbreviated for brevity
+    assets:
+      - AAPL
+      - MSFT
+      - GOOGL
+      - AMZN
+      - META
+      # ... additional 45 assets would be listed here
+
+    # ✅ Optimal configuration for larger universe
+    preselection:
+      method: combined  # Momentum + low-volatility
+      top_k: 30  # Select top 30 from 50
+      lookback: 252
+      skip: 1
+      momentum_weight: 0.6  # Favor momentum
+      low_vol_weight: 0.4
+      min_periods: 63
+
+    # ✅ Buffer rank provides good hysteresis (60% higher than top_k)
+    membership_policy:
+      enabled: true
+      buffer_rank: 48  # 60% higher than top_k (30)
+      min_holding_periods: 2
+      max_turnover: 0.4
+      max_new_assets: 8
+      max_removed_assets: 8
+
+    pit_eligibility:
+      enabled: true
+      min_history_days: 252
+      min_price_rows: 252
+
+  # Simple portfolio without advanced features
+  simple_20:
+    description: "Simple 20-asset portfolio without preselection or membership policy"
+    assets:
+      - AAPL
+      - MSFT
+      - GOOGL
+      - AMZN
+      - META
+      - JPM
+      - JNJ
+      - PFE
+      - XOM
+      - CVX
+      - PG
+      - KO
+      - WMT
+      - HD
+      - DIS
+      - INTC
+      - CSCO
+      - CRM
+      - ADBE
+      - BA
+
+    # No preselection - use all 20 assets
+    # No membership policy - allow free rebalancing
+    # No PIT eligibility - assume all assets have sufficient history
+
+    # ✅ Validation passes because:
+    #   - No conflicting features enabled
+    #   - 20 assets provide reasonable diversification
+    #   - Simple configuration is clear and explicit
+
+# Common validation errors to avoid:
+#
+# ❌ BAD: buffer_rank < top_k
+# membership_policy:
+#   buffer_rank: 15  # ERROR: Must be > top_k (20)
+#
+# ❌ BAD: top_k too small
+# preselection:
+#   top_k: 5  # WARNING: Poor diversification
+#
+# ❌ BAD: lookback too short
+# preselection:
+#   lookback: 30  # WARNING: Unstable factors
+#
+# ❌ BAD: skip >= lookback
+# preselection:
+#   skip: 252  # ERROR: Must be < lookback (252)
+#   lookback: 252
+#
+# ❌ BAD: min_periods > lookback
+# preselection:
+#   min_periods: 300  # WARNING: Impossible to satisfy
+#   lookback: 252
