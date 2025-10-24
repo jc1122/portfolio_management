@@ -35,6 +35,7 @@ from dataclasses import asdict
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -49,8 +50,20 @@ from portfolio_management.backtesting import (
     BacktestEngine,
     RebalanceFrequency,
 )
+from portfolio_management.config.validation import (
+    ValidationWarning,
+    check_dependencies,
+    check_optimality_warnings,
+    get_sensible_defaults,
+    validate_cache_config,
+    validate_feature_compatibility,
+    validate_membership_config,
+    validate_pit_config,
+    validate_preselection_config,
+)
 from portfolio_management.core.exceptions import (
     BacktestError,
+    ConfigurationError,
     InsufficientHistoryError,
     InvalidBacktestConfigError,
 )
@@ -359,6 +372,23 @@ def create_parser() -> argparse.ArgumentParser:
         help="Print detailed progress information",
     )
 
+    # Validation options
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Treat configuration warnings as errors (strict validation mode)",
+    )
+    parser.add_argument(
+        "--ignore-warnings",
+        action="store_true",
+        help="Suppress configuration warnings (not recommended)",
+    )
+    parser.add_argument(
+        "--show-defaults",
+        action="store_true",
+        help="Display sensible default values and exit",
+    )
+
     return parser
 
 
@@ -627,6 +657,220 @@ def apply_pit_config_from_universe(universe_config: dict, args: argparse.Namespa
             args.min_price_rows = pit_config.get("min_price_rows", 252)
 
 
+def print_validation_warnings(
+    warnings: list[ValidationWarning], verbose: bool = False
+) -> None:
+    """Print validation warnings in a user-friendly format.
+
+    Args:
+        warnings: List of validation warnings to print
+        verbose: If True, print detailed warnings; if False, print summary
+
+    """
+    if not warnings:
+        return
+
+    print("\n⚠️  Configuration Warnings:")
+    print("=" * 70)
+
+    # Group warnings by severity
+    by_severity = {"high": [], "medium": [], "low": []}
+    for w in warnings:
+        by_severity[w.severity].append(w)
+
+    # Print high severity first
+    for severity in ["high", "medium", "low"]:
+        severity_warnings = by_severity[severity]
+        if not severity_warnings:
+            continue
+
+        severity_symbol = {"high": "🔴", "medium": "🟡", "low": "⚪"}[severity]
+        print(f"\n{severity_symbol} {severity.upper()} Severity:")
+
+        for w in severity_warnings:
+            if verbose:
+                print(f"  • {w.category.upper()}: {w.parameter}")
+                print(f"    Problem: {w.message}")
+                print(f"    Suggestion: {w.suggestion}")
+            else:
+                print(f"  • {w.parameter}: {w.message}")
+
+    print("\n" + "=" * 70)
+    if not verbose:
+        print("Run with --verbose for detailed suggestions.")
+    print()
+
+
+def validate_configuration(
+    args: argparse.Namespace, universe_config: dict, universe_size: int
+) -> None:
+    """Validate backtest configuration and print warnings.
+
+    Args:
+        args: Parsed command-line arguments
+        universe_config: Universe configuration dictionary
+        universe_size: Number of assets in universe
+
+    Raises:
+        ConfigurationError: If validation fails in strict mode
+
+    """
+    all_warnings = []
+
+    universe_preselection = universe_config.get("preselection", {}) if universe_config else {}
+    preselection_enabled = bool(args.preselect_method or args.preselect_top_k)
+    if not preselection_enabled:
+        preselection_enabled = bool(
+            universe_preselection.get("method") and universe_preselection.get("top_k")
+        )
+
+    preselection_top_k = args.preselect_top_k
+    if preselection_top_k is None:
+        preselection_top_k = universe_preselection.get("top_k")
+
+    universe_membership = universe_config.get("membership_policy", {}) if universe_config else {}
+    membership_enabled = bool(args.membership_enabled)
+    membership_config: dict[str, Any] | None = None
+    if membership_enabled:
+        membership_config = {
+            "buffer_rank": args.membership_buffer_rank,
+            "min_holding_periods": args.membership_min_hold,
+            "max_turnover": float(args.membership_max_turnover)
+            if args.membership_max_turnover
+            else None,
+        }
+    elif universe_membership.get("enabled", False):
+        membership_enabled = True
+        membership_config = {
+            "buffer_rank": universe_membership.get("buffer_rank"),
+            "min_holding_periods": universe_membership.get("min_holding_periods"),
+            "max_turnover": universe_membership.get("max_turnover"),
+        }
+        if membership_config["max_turnover"] is not None:
+            membership_config["max_turnover"] = float(membership_config["max_turnover"])
+
+    # 1. Validate preselection config
+    if preselection_enabled:
+        result = validate_preselection_config(
+            top_k=preselection_top_k,
+            lookback=
+            args.preselect_lookback
+            if args.preselect_lookback is not None
+            else universe_preselection.get("lookback"),
+            skip=
+            args.preselect_skip
+            if args.preselect_skip is not None
+            else universe_preselection.get("skip"),
+            method=
+            args.preselect_method
+            if args.preselect_method
+            else universe_preselection.get("method"),
+            strict=args.strict,
+        )
+        all_warnings.extend(result.warnings)
+        if not result.valid:
+            raise ConfigurationError(
+                f"Preselection validation failed:\n" + "\n".join(result.errors)
+            )
+
+    # 2. Validate membership config
+    if membership_enabled and membership_config is not None:
+        result = validate_membership_config(
+            buffer_rank=membership_config.get("buffer_rank"),
+            top_k=preselection_top_k,
+            min_holding_periods=membership_config.get("min_holding_periods"),
+            max_turnover=membership_config.get("max_turnover"),
+            strict=args.strict,
+        )
+        all_warnings.extend(result.warnings)
+        if not result.valid:
+            raise ConfigurationError(
+                f"Membership policy validation failed:\n" + "\n".join(result.errors)
+            )
+
+    # 3. Validate PIT config
+    if args.use_pit_eligibility:
+        result = validate_pit_config(
+            min_history_days=args.min_history_days,
+            min_price_rows=args.min_price_rows,
+            strict=args.strict,
+        )
+        all_warnings.extend(result.warnings)
+        if not result.valid:
+            raise ConfigurationError(
+                f"PIT eligibility validation failed:\n" + "\n".join(result.errors)
+            )
+
+    # 4. Validate cache config
+    if args.enable_cache:
+        cache_dir = args.cache_dir if args.cache_dir else Path(".cache/backtest")
+        result = validate_cache_config(
+            cache_dir=cache_dir,
+            max_age_days=args.cache_max_age_days,
+            enabled=True,
+            strict=args.strict,
+        )
+        all_warnings.extend(result.warnings)
+        if not result.valid:
+            raise ConfigurationError(
+                f"Cache configuration validation failed:\n" + "\n".join(result.errors)
+            )
+
+    # 5. Check feature compatibility
+    result = validate_feature_compatibility(
+        preselection_enabled=preselection_enabled,
+        preselection_top_k=preselection_top_k,
+        membership_enabled=membership_enabled,
+        membership_buffer_rank=
+        membership_config.get("buffer_rank") if membership_config else None,
+        cache_enabled=args.enable_cache,
+        universe_size=universe_size,
+        strict=args.strict,
+    )
+    all_warnings.extend(result.warnings)
+
+    # 6. Check optimality
+    config_dict = {
+        "preselection": {
+            "top_k": preselection_top_k,
+            "lookback":
+            args.preselect_lookback
+            if args.preselect_lookback is not None
+            else universe_preselection.get("lookback"),
+        },
+        "membership": {
+            "buffer_rank":
+            membership_config.get("buffer_rank") if membership_config else None,
+        },
+        "universe": {"size": universe_size},
+        "cache": {"enabled": args.enable_cache},
+    }
+    result = check_optimality_warnings(config_dict, strict=args.strict)
+    all_warnings.extend(result.warnings)
+
+    # 7. Check dependencies
+    result = check_dependencies(
+        fast_io_enabled=False,  # Fast IO not exposed in this CLI yet
+        universe_size=universe_size,
+        strict=args.strict,
+    )
+    all_warnings.extend(result.warnings)
+
+    # Print warnings (unless suppressed)
+    if args.strict and all_warnings:
+        warning_summary = "\n".join(
+            f"  - {w.parameter}: {w.message} (severity={w.severity})"
+            for w in all_warnings
+        )
+        raise ConfigurationError(
+            "Strict mode enabled. Configuration warnings treated as errors:\n"
+            + warning_summary
+        )
+
+    if all_warnings and not args.ignore_warnings:
+        print_validation_warnings(all_warnings, verbose=args.verbose)
+
+
 def save_results(
     output_dir: Path,
     config: BacktestConfig,
@@ -766,6 +1010,32 @@ def main() -> int:
     parser = create_parser()
     args = parser.parse_args()
 
+    # Handle --show-defaults flag
+    if args.show_defaults:
+        defaults = get_sensible_defaults()
+        print("\n📋 Sensible Configuration Defaults")
+        print("=" * 70)
+        print("\nPreselection:")
+        for key, value in defaults["preselection"].items():
+            print(f"  --preselect-{key.replace('_', '-')}: {value}")
+        print("\nMembership Policy:")
+        for key, value in defaults["membership"].items():
+            print(f"  --membership-{key.replace('_', '-')}: {value}")
+        print("\nPoint-in-Time Eligibility:")
+        for key, value in defaults["pit"].items():
+            if key == "enabled":
+                continue
+            print(f"  --{key.replace('_', '-')}: {value}")
+        print("\nCaching:")
+        for key, value in defaults["cache"].items():
+            if key == "enabled":
+                continue
+            print(f"  --cache-{key.replace('_', '-')}: {value}")
+        print("\n" + "=" * 70)
+        print("\nUse these values as starting points for your configuration.")
+        print("Override with CLI flags or universe YAML configuration.\n")
+        return 0
+
     try:
         # Set up output directory
         if args.output_dir is None:
@@ -784,6 +1054,11 @@ def main() -> int:
 
         # Apply PIT eligibility config from universe (if not set via CLI)
         apply_pit_config_from_universe(universe_config, args)
+
+        # Validate configuration early (before expensive data loading)
+        if args.verbose:
+            print("Validating configuration...")
+        validate_configuration(args, universe_config, len(assets))
 
         # Load data (optimized to only load required columns and date range)
         if args.verbose:
