@@ -108,13 +108,13 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--start-date",
         type=parse_date,
-        default="2020-01-01",
+        default=date(2020, 1, 1),
         help="Backtest start date (YYYY-MM-DD). Default: 2020-01-01",
     )
     parser.add_argument(
         "--end-date",
         type=parse_date,
-        default=date.today().isoformat(),
+        default=date.today(),
         help="Backtest end date (YYYY-MM-DD). Default: today",
     )
 

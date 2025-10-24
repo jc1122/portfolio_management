@@ -125,27 +125,23 @@ class FactorCache:
         self._stats = {"hits": 0, "misses": 0, "puts": 0}
 
     def _compute_dataset_hash(self, data: pd.DataFrame) -> str:
-        """Compute hash of dataset (returns matrix).
+        """Compute a stable hash for the entire dataset."""
 
-        Uses shape, columns, index range, and sample of values for efficiency.
-        """
-        hash_components = [
-            str(data.shape),
-            ",".join(sorted(data.columns.astype(str))),
-            str(data.index.min()),
-            str(data.index.max()),
-        ]
+        hasher = hashlib.sha256()
+        hasher.update(str(data.shape).encode())
 
-        # Sample values for content verification (avoid hashing entire dataset)
-        if not data.empty:
-            sample = data.iloc[
-                :: max(1, len(data) // 100),
-                :: max(1, len(data.columns) // 50),
-            ]
-            hash_components.append(str(sample.values.sum()))
+        if data.empty:
+            hasher.update("|".join(map(str, data.columns)).encode())
+            hasher.update("|".join(map(str, data.index)).encode())
+            return hasher.hexdigest()[:16]
 
-        combined = "|".join(hash_components)
-        return hashlib.sha256(combined.encode()).hexdigest()[:16]
+        column_hash = pd.util.hash_pandas_object(pd.Index(data.columns), index=False)
+        data_hash = pd.util.hash_pandas_object(data, index=True)
+
+        hasher.update(column_hash.values.tobytes())
+        hasher.update(data_hash.values.tobytes())
+
+        return hasher.hexdigest()[:16]
 
     def _compute_config_hash(self, config: dict[str, Any]) -> str:
         """Compute hash of configuration parameters."""
