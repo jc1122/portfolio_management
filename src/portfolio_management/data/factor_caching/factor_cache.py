@@ -139,7 +139,8 @@ class FactorCache:
         # Sample values for content verification (avoid hashing entire dataset)
         if not data.empty:
             sample = data.iloc[
-                :: max(1, len(data) // 100), :: max(1, len(data.columns) // 50),
+                :: max(1, len(data) // 100),
+                :: max(1, len(data.columns) // 50),
             ]
             hash_components.append(str(sample.values.sum()))
 
@@ -199,7 +200,11 @@ class FactorCache:
         dataset_hash = self._compute_dataset_hash(returns)
         config_hash = self._compute_config_hash(config)
         cache_key = self._compute_cache_key(
-            dataset_hash, config_hash, start_date, end_date, "factor_scores",
+            dataset_hash,
+            config_hash,
+            start_date,
+            end_date,
+            "factor_scores",
         )
 
         metadata_path = self.metadata_dir / f"{cache_key}.json"
@@ -258,7 +263,11 @@ class FactorCache:
         dataset_hash = self._compute_dataset_hash(returns)
         config_hash = self._compute_config_hash(config)
         cache_key = self._compute_cache_key(
-            dataset_hash, config_hash, start_date, end_date, "factor_scores",
+            dataset_hash,
+            config_hash,
+            start_date,
+            end_date,
+            "factor_scores",
         )
 
         metadata = CacheMetadata(
@@ -313,7 +322,11 @@ class FactorCache:
         dataset_hash = self._compute_dataset_hash(returns)
         config_hash = self._compute_config_hash(config)
         cache_key = self._compute_cache_key(
-            dataset_hash, config_hash, start_date, end_date, "pit_eligibility",
+            dataset_hash,
+            config_hash,
+            start_date,
+            end_date,
+            "pit_eligibility",
         )
 
         metadata_path = self.metadata_dir / f"{cache_key}.json"
@@ -369,7 +382,11 @@ class FactorCache:
         dataset_hash = self._compute_dataset_hash(returns)
         config_hash = self._compute_config_hash(config)
         cache_key = self._compute_cache_key(
-            dataset_hash, config_hash, start_date, end_date, "pit_eligibility",
+            dataset_hash,
+            config_hash,
+            start_date,
+            end_date,
+            "pit_eligibility",
         )
 
         metadata = CacheMetadata(

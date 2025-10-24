@@ -119,20 +119,30 @@ def compute_pit_eligibility_cached(
     # Try cache
     if cache is not None:
         cached_eligibility = cache.get_pit_eligibility(
-            returns, cache_config, start_date, end_date,
+            returns,
+            cache_config,
+            start_date,
+            end_date,
         )
         if cached_eligibility is not None:
             return cached_eligibility
 
     # Compute
     eligibility = compute_pit_eligibility(
-        returns, date, min_history_days, min_price_rows,
+        returns,
+        date,
+        min_history_days,
+        min_price_rows,
     )
 
     # Cache result
     if cache is not None:
         cache.put_pit_eligibility(
-            eligibility, returns, cache_config, start_date, end_date,
+            eligibility,
+            returns,
+            cache_config,
+            start_date,
+            end_date,
         )
 
     return eligibility

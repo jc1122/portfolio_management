@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 from portfolio_management.backtesting.eligibility import (
     compute_pit_eligibility,
+    compute_pit_eligibility_cached,
     detect_delistings,
 )
 from portfolio_management.backtesting.models import (
@@ -50,6 +51,7 @@ class BacktestEngine:
         classifications: dict[str, str] | None = None,
         preselection=None,
         membership_policy=None,
+        cache=None,
     ) -> None:
         """Initialize the backtesting engine.
 
@@ -61,6 +63,7 @@ class BacktestEngine:
             classifications: Optional asset class mappings for constraints.
             preselection: Optional Preselection instance for asset filtering.
             membership_policy: Optional MembershipPolicy for controlling portfolio churn.
+            cache: Optional FactorCache instance for caching factor scores and PIT eligibility.
 
         Raises:
             InsufficientHistoryError: If data doesn't cover backtest period.
@@ -73,7 +76,10 @@ class BacktestEngine:
         self.classifications = classifications or {}
         self.preselection = preselection
         self.membership_policy = membership_policy
-        self.holding_periods: dict[str, int] = {}  # Track holding periods for membership policy
+        self.cache = cache
+        self.holding_periods: dict[str, int] = (
+            {}
+        )  # Track holding periods for membership policy
 
         # Validate date coverage
         data_start = self.prices.index.min()
@@ -258,39 +264,51 @@ class BacktestEngine:
             eligible_returns = historical_returns
             if self.config.use_pit_eligibility:
                 # Compute eligibility based only on data up to this date
-                eligibility_mask = compute_pit_eligibility(
-                    returns=historical_returns,
-                    date=date,
-                    min_history_days=self.config.min_history_days,
-                    min_price_rows=self.config.min_price_rows,
-                )
-                
+                # Use cached version if cache is available
+                if self.cache is not None:
+                    eligibility_mask = compute_pit_eligibility_cached(
+                        returns=historical_returns,
+                        date=date,
+                        min_history_days=self.config.min_history_days,
+                        min_price_rows=self.config.min_price_rows,
+                        cache=self.cache,
+                    )
+                else:
+                    eligibility_mask = compute_pit_eligibility(
+                        returns=historical_returns,
+                        date=date,
+                        min_history_days=self.config.min_history_days,
+                        min_price_rows=self.config.min_price_rows,
+                    )
+
                 # Filter to only eligible assets
                 eligible_tickers = historical_returns.columns[eligibility_mask]
                 if len(eligible_tickers) == 0:
                     # No eligible assets yet, skip rebalance
                     return
-                    
+
                 eligible_returns = historical_returns[eligible_tickers]
-                
+
                 # Detect delistings - assets that have stopped trading
                 delistings = detect_delistings(
                     returns=self.returns,
                     current_date=date,
                     lookforward_days=30,
                 )
-                
+
                 # Liquidate holdings in delisted assets
                 for ticker, last_date in delistings.items():
                     if ticker in self.holdings and self.holdings[ticker] > 0:
                         # Mark as delisted
                         self.delisted_assets[ticker] = last_date
-                        
+
                         # Liquidate at last available price if we have it
-                        if ticker in date_prices.index and not pd.isna(date_prices[ticker]):
+                        if ticker in date_prices.index and not pd.isna(
+                            date_prices[ticker],
+                        ):
                             shares = self.holdings[ticker]
                             price = float(date_prices[ticker])
-                            
+
                             if price > 0:
                                 # Calculate cost for selling
                                 cost = self.cost_model.calculate_cost(
@@ -299,12 +317,12 @@ class BacktestEngine:
                                     price,
                                     is_buy=False,
                                 )
-                                
+
                                 # Sell and add proceeds to cash
                                 sale_value = Decimal(str(shares * price))
                                 self.cash += sale_value
                                 self.cash -= cost
-                                
+
                                 # Remove from holdings
                                 del self.holdings[ticker]
 
@@ -321,7 +339,9 @@ class BacktestEngine:
                 # Filter to only eligible assets
                 asset_classes = pd.Series(self.classifications)
                 if self.config.use_pit_eligibility:
-                    asset_classes = asset_classes[asset_classes.index.isin(eligible_returns.columns)]
+                    asset_classes = asset_classes[
+                        asset_classes.index.isin(eligible_returns.columns)
+                    ]
 
             # Apply preselection if configured
             candidate_assets = list(eligible_returns.columns)
@@ -329,15 +349,24 @@ class BacktestEngine:
             membership_top_k = len(candidate_assets)
             if self.preselection is not None:
                 # Preselect assets based on factors (momentum, low_vol, etc.)
+                # Pass full self.returns dataset; preselection will filter by rebalance_date
+                # Then intersect selected assets with eligible assets
                 selected_assets = self.preselection.select_assets(
-                    returns=eligible_returns,
+                    returns=self.returns,
                     rebalance_date=date,
                 )
+                # Only keep selected assets that are also eligible
+                selected_assets = [
+                    a for a in selected_assets if a in eligible_returns.columns
+                ]
                 candidate_assets = selected_assets
                 membership_top_k = len(selected_assets)
 
                 # Get ranks for membership policy (if needed)
-                if self.membership_policy is not None and self.membership_policy.enabled:
+                if (
+                    self.membership_policy is not None
+                    and self.membership_policy.enabled
+                ):
                     if isinstance(eligible_returns.index, pd.DatetimeIndex):
                         date_mask = eligible_returns.index.date < date
                     else:
@@ -347,7 +376,9 @@ class BacktestEngine:
                     if self.preselection.config.method.value == "momentum":
                         scores = self.preselection._compute_momentum(available_returns)
                     elif self.preselection.config.method.value == "low_vol":
-                        scores = self.preselection._compute_low_volatility(available_returns)
+                        scores = self.preselection._compute_low_volatility(
+                            available_returns,
+                        )
                     elif self.preselection.config.method.value == "combined":
                         scores = self.preselection._compute_combined(available_returns)
                     else:
@@ -378,19 +409,31 @@ class BacktestEngine:
                     )
                 else:
                     # Ensure current holdings have ranks even if not in preselection results
-                    missing_holdings = sorted(set(current_holdings) - set(preselected_ranks.index))
+                    missing_holdings = sorted(
+                        set(current_holdings) - set(preselected_ranks.index),
+                    )
                     if missing_holdings:
-                        worst_rank = int(preselected_ranks.max()) if not preselected_ranks.empty else 0
+                        worst_rank = (
+                            int(preselected_ranks.max())
+                            if not preselected_ranks.empty
+                            else 0
+                        )
                         additional_ranks = pd.Series(
-                            range(worst_rank + 1, worst_rank + len(missing_holdings) + 1),
+                            range(
+                                worst_rank + 1,
+                                worst_rank + len(missing_holdings) + 1,
+                            ),
                             index=missing_holdings,
                         )
-                        preselected_ranks = pd.concat([preselected_ranks, additional_ranks])
+                        preselected_ranks = pd.concat(
+                            [preselected_ranks, additional_ranks],
+                        )
 
-                current_weight_map = {ticker: 0.0 for ticker in current_holdings}
-                candidate_weight_map = {
-                    ticker: 0.0 for ticker in set(candidate_assets) | set(current_holdings)
-                }
+                current_weight_map = dict.fromkeys(current_holdings, 0.0)
+                candidate_weight_map = dict.fromkeys(
+                    set(candidate_assets) | set(current_holdings),
+                    0.0,
+                )
 
                 # Apply membership policy
                 final_candidates = apply_membership_policy(
@@ -403,13 +446,17 @@ class BacktestEngine:
                     candidate_weights=candidate_weight_map,
                 )
 
-                candidate_assets = [c for c in final_candidates if c in eligible_returns.columns]
+                candidate_assets = [
+                    c for c in final_candidates if c in eligible_returns.columns
+                ]
 
             # Filter to final candidates determined by preselection/membership
             eligible_returns = eligible_returns[candidate_assets]
 
             if asset_classes is not None:
-                asset_classes = asset_classes[asset_classes.index.isin(candidate_assets)]
+                asset_classes = asset_classes[
+                    asset_classes.index.isin(candidate_assets)
+                ]
 
             # Construct target portfolio (on selected subset)
             portfolio = self.strategy.construct(
@@ -517,13 +564,15 @@ class BacktestEngine:
             # Remove zero positions
             removed_tickers = [t for t, s in self.holdings.items() if s == 0]
             self.holdings = {t: s for t, s in self.holdings.items() if s != 0}
-            
+
             # Update holding periods for membership policy
             if self.membership_policy is not None and self.membership_policy.enabled:
                 # Increment holding periods for all current holdings
                 for ticker in self.holdings.keys():
-                    self.holding_periods[ticker] = self.holding_periods.get(ticker, 0) + 1
-                
+                    self.holding_periods[ticker] = (
+                        self.holding_periods.get(ticker, 0) + 1
+                    )
+
                 # Reset holding periods for removed positions
                 for ticker in removed_tickers:
                     if ticker in self.holding_periods:

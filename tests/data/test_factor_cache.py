@@ -119,7 +119,9 @@ class TestFactorCache:
         assert hash1 == hash2
         assert len(hash1) == 16  # SHA256 truncated to 16 chars
 
-    def test_dataset_hash_differs_for_different_data(self, factor_cache, sample_returns):
+    def test_dataset_hash_differs_for_different_data(
+        self, factor_cache, sample_returns
+    ):
         """Test dataset hash changes when data changes."""
         hash1 = factor_cache._compute_dataset_hash(sample_returns)
 

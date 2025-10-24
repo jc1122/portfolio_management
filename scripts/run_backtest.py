@@ -217,7 +217,6 @@ def create_parser() -> argparse.ArgumentParser:
         help="Risk aversion parameter for mean-variance (higher = more conservative). Default: 1.0",
     )
 
-
     # Preselection options
     parser.add_argument(
         "--preselect-method",
@@ -321,6 +320,23 @@ def create_parser() -> argparse.ArgumentParser:
         help="Minimum price rows for PIT eligibility (default: 252)",
     )
 
+    # Caching options
+    parser.add_argument(
+        "--enable-cache",
+        action="store_true",
+        help="Enable on-disk caching for factor scores and PIT eligibility",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        help="Directory for cache storage. Default: .cache/backtest",
+    )
+    parser.add_argument(
+        "--cache-max-age-days",
+        type=int,
+        help="Maximum age of cache entries in days (optional, no limit if not set)",
+    )
+
     # Output options
     parser.add_argument(
         "--output-dir",
@@ -348,9 +364,10 @@ def create_parser() -> argparse.ArgumentParser:
 
 def load_universe(universe_file: Path, universe_name: str) -> tuple[list[str], dict]:
     """Load asset universe and configuration from YAML.
-    
+
     Returns:
         Tuple of (assets list, universe config dict with preselection/membership/pit blocks)
+
     """
     if not universe_file.exists():
         raise FileNotFoundError(f"Universe file not found: {universe_file}")
@@ -475,30 +492,51 @@ def create_strategy(strategy_name: str) -> PortfolioStrategy:
 
 def create_membership_policy(args: argparse.Namespace):
     """Create membership policy from CLI arguments.
-    
+
     Returns:
         MembershipPolicy instance if enabled, None otherwise.
+
     """
     if not args.membership_enabled:
         return None
-    
+
     from portfolio_management.portfolio import MembershipPolicy
-    
+
     return MembershipPolicy(
-        buffer_rank=args.membership_buffer_rank if args.membership_buffer_rank else None,
-        min_holding_periods=args.membership_min_hold if args.membership_min_hold else None,
-        max_turnover=float(args.membership_max_turnover) if args.membership_max_turnover else None,
+        buffer_rank=(
+            args.membership_buffer_rank if args.membership_buffer_rank else None
+        ),
+        min_holding_periods=(
+            args.membership_min_hold if args.membership_min_hold else None
+        ),
+        max_turnover=(
+            float(args.membership_max_turnover)
+            if args.membership_max_turnover
+            else None
+        ),
         max_new_assets=args.membership_max_new if args.membership_max_new else None,
-        max_removed_assets=args.membership_max_removed if args.membership_max_removed else None,
+        max_removed_assets=(
+            args.membership_max_removed if args.membership_max_removed else None
+        ),
         enabled=True,
     )
 
 
-def create_preselection_from_universe(universe_config: dict, args: argparse.Namespace):
+def create_preselection_from_universe(
+    universe_config: dict,
+    args: argparse.Namespace,
+    cache=None,
+):
     """Create preselection from universe config, with CLI args as override.
-    
+
+    Args:
+        universe_config: Universe configuration dictionary.
+        args: Parsed command-line arguments.
+        cache: Optional FactorCache instance for caching factor scores.
+
     Returns:
         Preselection instance if configured, None otherwise.
+
     """
     # CLI args override universe config
     if args.preselect_method and args.preselect_top_k:
@@ -507,7 +545,7 @@ def create_preselection_from_universe(universe_config: dict, args: argparse.Name
             PreselectionConfig,
             PreselectionMethod,
         )
-        
+
         preselection_config = PreselectionConfig(
             method=PreselectionMethod(args.preselect_method),
             top_k=args.preselect_top_k,
@@ -516,8 +554,8 @@ def create_preselection_from_universe(universe_config: dict, args: argparse.Name
             momentum_weight=args.preselect_momentum_weight,
             low_vol_weight=args.preselect_low_vol_weight,
         )
-        return Preselection(preselection_config)
-    
+        return Preselection(preselection_config, cache=cache)
+
     # Check universe config
     if "preselection" in universe_config:
         from portfolio_management.portfolio import (
@@ -525,7 +563,7 @@ def create_preselection_from_universe(universe_config: dict, args: argparse.Name
             PreselectionConfig,
             PreselectionMethod,
         )
-        
+
         ps_config = universe_config["preselection"]
         if ps_config.get("method") and ps_config.get("top_k"):
             preselection_config = PreselectionConfig(
@@ -537,25 +575,29 @@ def create_preselection_from_universe(universe_config: dict, args: argparse.Name
                 low_vol_weight=ps_config.get("low_vol_weight", 0.5),
                 min_periods=ps_config.get("min_periods", 60),
             )
-            return Preselection(preselection_config)
-    
+            return Preselection(preselection_config, cache=cache)
+
     return None
 
 
-def create_membership_policy_from_universe(universe_config: dict, args: argparse.Namespace):
+def create_membership_policy_from_universe(
+    universe_config: dict,
+    args: argparse.Namespace,
+):
     """Create membership policy from universe config, with CLI args as override.
-    
+
     Returns:
         MembershipPolicy instance if configured, None otherwise.
+
     """
     # CLI args override universe config
     if args.membership_enabled:
         return create_membership_policy(args)
-    
+
     # Check universe config
     if "membership_policy" in universe_config:
         from portfolio_management.portfolio import MembershipPolicy
-        
+
         mp_config = universe_config["membership_policy"]
         if mp_config.get("enabled", False):
             return MembershipPolicy(
@@ -566,18 +608,18 @@ def create_membership_policy_from_universe(universe_config: dict, args: argparse
                 max_removed_assets=mp_config.get("max_removed_assets"),
                 enabled=True,
             )
-    
+
     return None
 
 
 def apply_pit_config_from_universe(universe_config: dict, args: argparse.Namespace):
     """Update args with PIT settings from universe config if not already set by CLI.
-    
+
     CLI args take precedence over universe config.
     """
     if "pit_eligibility" in universe_config:
         pit_config = universe_config["pit_eligibility"]
-        
+
         # Only apply universe config if CLI didn't explicitly enable
         if not args.use_pit_eligibility and pit_config.get("enabled", False):
             args.use_pit_eligibility = True
@@ -739,7 +781,7 @@ def main() -> int:
         assets, universe_config = load_universe(args.universe_file, args.universe_name)
         if args.verbose:
             pass
-        
+
         # Apply PIT eligibility config from universe (if not set via CLI)
         apply_pit_config_from_universe(universe_config, args)
 
@@ -759,7 +801,9 @@ def main() -> int:
         # Apply technical indicator filtering if enabled
         if args.enable_indicators:
             if args.verbose:
-                print(f"Applying technical indicator filtering (provider: {args.indicator_provider})...")
+                print(
+                    f"Applying technical indicator filtering (provider: {args.indicator_provider})...",
+                )
             indicator_config = IndicatorConfig(
                 enabled=True,
                 provider=args.indicator_provider,
@@ -770,7 +814,9 @@ def main() -> int:
             filtered_assets = filter_hook.filter_assets(prices, assets)
 
             if args.verbose:
-                print(f"  Assets after indicator filtering: {len(filtered_assets)} (from {len(assets)})")
+                print(
+                    f"  Assets after indicator filtering: {len(filtered_assets)} (from {len(assets)})",
+                )
 
             # Reload data with filtered assets
             if filtered_assets != assets:
@@ -815,20 +861,43 @@ def main() -> int:
             min_price_rows=args.min_price_rows,
         )
 
+        # Create cache if enabled
+        cache = None
+        if args.enable_cache:
+            from portfolio_management.data.factor_caching import FactorCache
+
+            cache_dir = args.cache_dir if args.cache_dir else Path(".cache/backtest")
+            cache = FactorCache(
+                cache_dir=cache_dir,
+                enabled=True,
+                max_cache_age_days=args.cache_max_age_days,
+            )
+            if args.verbose:
+                print(f"Caching enabled: {cache_dir}")
+                if args.cache_max_age_days:
+                    print(f"  Cache max age: {args.cache_max_age_days} days")
+
         # Create preselection from universe config or CLI args
-        preselection = create_preselection_from_universe(universe_config, args)
+        preselection = create_preselection_from_universe(
+            universe_config,
+            args,
+            cache=cache,
+        )
         if preselection and args.verbose:
             print(
                 f"Preselection enabled: {preselection.config.method.value} "
-                f"(top-{preselection.config.top_k})"
+                f"(top-{preselection.config.top_k})",
             )
 
         # Create membership policy from universe config or CLI args
-        membership_policy = create_membership_policy_from_universe(universe_config, args)
+        membership_policy = create_membership_policy_from_universe(
+            universe_config,
+            args,
+        )
         if membership_policy and args.verbose:
             print(
                 f"Membership policy enabled: buffer_rank={membership_policy.buffer_rank}, "
-                f"min_hold={membership_policy.min_holding_periods}"
+                f"min_hold={membership_policy.min_holding_periods}",
             )
 
         # Run backtest
@@ -841,6 +910,7 @@ def main() -> int:
             returns=returns,
             preselection=preselection,
             membership_policy=membership_policy,
+            cache=cache,
         )
         equity_curve, metrics, rebalance_events = engine.run()
         if args.verbose:
@@ -848,6 +918,11 @@ def main() -> int:
 
         # Print results
         print_results(metrics, args.verbose)
+
+        # Print cache statistics if caching was enabled
+        if cache is not None and args.verbose:
+            print("\nCache Statistics:")
+            cache.print_stats()
 
         # Save results
         save_results(
