@@ -983,7 +983,7 @@ class TestSpecialScenarios:
             **{f"WORSE{i}": i + 3 for i in range(1, 48)},  # Ranks 4-50
         })
 
-        policy = MembershipPolicy(buffer_rank=50, max_new_assets=5)
+        policy = MembershipPolicy(buffer_rank=50)
 
         result = apply_membership_policy(
             current_holdings=current_holdings,
