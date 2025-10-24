@@ -1,0 +1,62 @@
+# Complex Membership Policy Universe
+#
+# This example demonstrates a sophisticated membership policy with all constraints
+# enabled. This is useful for strategies where turnover control is critical,
+# such as those with high transaction costs or tax sensitivity.
+#
+# Strategy: Any strategy requiring tight control over portfolio churn.
+# Use Case: A tax-aware or cost-sensitive active strategy.
+# Key Features:
+# - All membership policy constraints are active.
+# - Aims to keep portfolio turnover below 25% per rebalance.
+# - Strictly limits the number of new and removed assets.
+
+universes:
+  complex_membership_policy:
+    description: "A universe with a complex membership policy for tight turnover control."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 700
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nasdaq stocks/1"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "quarterly" # Membership policies are often paired with less frequent rebalancing.
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 36
+
+    preselection:
+      method: "combined"
+      top_k: 50
+      lookback: 252
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 126
+
+    membership_policy:
+      # --- Advanced Membership Policy for Strict Turnover Control ---
+      enabled: true
+      # An asset must be held for at least 4 quarters (1 year).
+      min_holding_periods: 4
+      # Existing holdings get a generous buffer zone.
+      buffer_rank: 75 # Keep holdings if they are in the top 75, even if top_k is 50.
+      # Do not allow portfolio turnover to exceed 25% in a single rebalance.
+      max_turnover: 0.25
+      # Add at most 5 new assets in a single rebalance.
+      max_new_assets: 5
+      # Remove at most 5 existing assets in a single rebalance.
+      max_removed_assets: 5
+
+    constraints:
+      min_assets: 40
+      max_assets: 75 # Max assets should be >= buffer_rank

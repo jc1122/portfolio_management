@@ -1,0 +1,49 @@
+# Performance-Optimized Example: Optimized Lookback Periods
+#
+# The `lookback` parameter in the preselection section determines how much
+# historical data is used to calculate factor scores. A shorter lookback
+# period can significantly speed up backtests, as less data needs to be
+# processed at each rebalancing step.
+#
+# Strategy: Any factor-based strategy where backtest speed is a priority.
+# Use Case: Rapid iteration and testing of factor strategies.
+# Key Features:
+# - A shorter lookback period for faster calculations.
+
+universes:
+  optimized_lookback:
+    description: "A universe with a shorter lookback period for faster backtesting."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 252 # Still require a year of history for eligibility.
+      min_price_rows: 252
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nasdaq stocks/1"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 12
+
+    preselection:
+      # --- Optimized Lookback ---
+      # Using a 3-month lookback (63 days) instead of a full year (252 days).
+      # This will be roughly 4x faster to compute.
+      method: "momentum"
+      top_k: 50
+      lookback: 63
+      skip: 5
+      min_periods: 42 # Require 2 months of data for the 3-month lookback.
+
+    constraints:
+      min_assets: 30
+      max_assets: 50

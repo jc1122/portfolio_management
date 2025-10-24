@@ -1,0 +1,55 @@
+# Strategy-Specific Example: Quality + Momentum Combo
+#
+# This example demonstrates how to combine a factor-based preselection (momentum)
+# with a thematic filter (quality). The "quality" aspect is defined by filtering
+# for companies with strong fundamentals, which we proxy here using the
+# classification system.
+#
+# Strategy: Quality and Momentum (Q-M) combo.
+# Use Case: A factor strategy that aims to capture the "quality" premium,
+#           while using momentum to time entries.
+# Key Features:
+# - Momentum preselection.
+# - "Quality" filter via classification requirements.
+
+universes:
+  strategy_quality_momentum:
+    description: "A strategy combining a quality filter with momentum preselection."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 700
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nasdaq stocks/1"
+
+    classification_requirements:
+      # --- "Quality" Filter ---
+      # Here we define "quality" by requiring assets to be classified as
+      # having strong balance sheets, high profitability, or stable earnings.
+      # This depends on the classification data available.
+      asset_class: ["equity"]
+      tags: ["strong_balance_sheet", "high_profitability", "stable_earnings"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 36
+
+    preselection:
+      # --- Momentum Factor ---
+      # After filtering for quality, we select the top 30 by momentum.
+      method: "momentum"
+      top_k: 30
+      lookback: 252
+      skip: 21
+      min_periods: 126
+
+    constraints:
+      min_assets: 15
+      max_assets: 30

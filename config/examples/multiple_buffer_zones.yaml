@@ -1,0 +1,52 @@
+# Multiple Buffer Zones Example
+#
+# The `buffer_rank` parameter in the membership policy creates a "buffer zone"
+# to prevent assets from being sold prematurely if their rank dips slightly.
+# This file demonstrates two different approaches to setting the buffer zone:
+# a "tight" buffer and a "loose" buffer.
+#
+# - Tight Buffer: A small buffer makes the portfolio more responsive to new,
+#   higher-ranked assets, but can increase turnover.
+# - Loose Buffer: A large buffer makes the portfolio more stable and reduces
+#   turnover, but it may be slower to react to new opportunities.
+
+universes:
+  # --- Universe 1: Tight Buffer Zone ---
+  # Here, the buffer is only 5 ranks deep. An existing holding must stay
+  # within the top 55 to be kept. This allows for more new assets to enter.
+  tight_buffer_zone:
+    description: "A universe with a tight buffer zone for higher responsiveness."
+    preselection:
+      method: "combined"
+      top_k: 50
+      lookback: 252
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 126
+    membership_policy:
+      enabled: true
+      min_holding_periods: 3
+      buffer_rank: 55 # Only a small buffer (50 + 5)
+    constraints:
+      min_assets: 40
+      max_assets: 55
+
+  # --- Universe 2: Loose Buffer Zone ---
+  # Here, the buffer is 25 ranks deep. An existing holding can drop to rank
+  # 75 and still be kept. This prioritizes low turnover over responsiveness.
+  loose_buffer_zone:
+    description: "A universe with a loose buffer zone for lower turnover."
+    preselection:
+      method: "combined"
+      top_k: 50
+      lookback: 252
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 126
+    membership_policy:
+      enabled: true
+      min_holding_periods: 3
+      buffer_rank: 75 # A large buffer (50 + 25)
+    constraints:
+      min_assets: 40
+      max_assets: 75

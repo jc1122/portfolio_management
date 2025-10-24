@@ -1,0 +1,60 @@
+# Minimal Membership Policy Universe
+#
+# This example illustrates how to add a basic membership policy to an existing
+# universe definition to help reduce portfolio churn and transaction costs.
+#
+# Strategy: Any strategy where turnover reduction is desired.
+# Use Case: Stabilizing a core or satellite portfolio.
+# Key Features:
+# - A simple membership policy to reduce turnover.
+# - `min_holding_periods`: Ensures an asset is held for at least 3 months.
+# - `buffer_rank`: Gives existing holdings a "grace zone" before being removed.
+
+universes:
+  minimal_membership_policy:
+    description: "A universe with a simple membership policy to reduce turnover."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 700
+      markets: ["LSE", "NYSE", "NSQ"]
+      currencies: ["GBP", "USD"]
+      categories:
+        - "lse etfs/1"
+        - "lse etfs/2"
+        - "nyse etfs"
+        - "nasdaq etfs"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 12
+
+    preselection:
+      # A preselection method is required for membership policy to work,
+      # as it needs ranked assets. Here we use a balanced combined factor.
+      method: "combined"
+      top_k: 50
+      lookback: 252
+      momentum_weight: 0.5
+      low_vol_weight: 0.5
+      min_periods: 126
+
+    membership_policy:
+      # --- Membership Policy to Reduce Churn ---
+      enabled: true
+      # An asset must be held for at least 3 rebalance periods (e.g., 3 months).
+      min_holding_periods: 3
+      # If an existing holding falls out of the top 50, but is still ranked
+      # within the top 60, it will be kept.
+      buffer_rank: 60
+
+    constraints:
+      min_assets: 30
+      max_assets: 60 # Max assets should be >= buffer_rank

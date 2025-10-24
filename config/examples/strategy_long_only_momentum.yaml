@@ -1,0 +1,50 @@
+# Strategy-Specific Example: Long-Only Momentum
+#
+# This example is tailored for a classic long-only momentum strategy.
+# It selects a concentrated portfolio of 25 US stocks that have shown
+# strong performance over the past 12 months, excluding the most recent month.
+#
+# Strategy: Concentrated US Equity Momentum.
+# Use Case: An aggressive growth-oriented satellite sleeve.
+# Key Features:
+# - Concentrated portfolio (`top_k: 25`).
+# - Classic 12-1 month momentum factor.
+# - Focused on US stocks.
+
+universes:
+  strategy_long_only_momentum:
+    description: "A concentrated, long-only momentum strategy focused on US stocks."
+
+    filter_criteria:
+      data_status: ["ok"]
+      min_history_days: 756
+      min_price_rows: 700
+      markets: ["NYSE", "NSQ"]
+      currencies: ["USD"]
+      categories:
+        - "nyse stocks/1"
+        - "nyse stocks/2"
+        - "nasdaq stocks/1"
+        - "nasdaq stocks/2"
+
+    classification_requirements:
+      asset_class: ["equity"]
+
+    return_config:
+      method: "simple"
+      frequency: "monthly"
+      handle_missing: "forward_fill"
+      max_forward_fill_days: 5
+      min_periods: 24
+
+    preselection:
+      # --- Momentum Factor ---
+      method: "momentum"
+      top_k: 25                       # A concentrated portfolio.
+      lookback: 252
+      skip: 21                        # 12-1 momentum.
+      min_periods: 126
+
+    constraints:
+      min_assets: 15
+      max_assets: 25

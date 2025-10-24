@@ -1,0 +1,52 @@
+# Performance-Optimized Example: Batch Backtest Configurations
+#
+# This file demonstrates how to define multiple, related universes that can be
+# run in a batch. This is useful for testing variations of a strategy, for
+# example, comparing different lookback periods or factor weights.
+#
+# Strategy: Testing variations of a momentum strategy.
+# Use Case: Running a "batch" of backtests overnight to compare results.
+# Key Features:
+# - Multiple universe definitions in a single file.
+# - Each universe tests a different parameter.
+
+universes:
+  # --- Momentum Strategy: 3-Month Lookback ---
+  momentum_3m:
+    description: "Momentum strategy with a 3-month lookback."
+    preselection:
+      method: "momentum"
+      top_k: 30
+      lookback: 63
+      skip: 5
+    constraints: { min_assets: 20, max_assets: 30 }
+
+  # --- Momentum Strategy: 6-Month Lookback ---
+  momentum_6m:
+    description: "Momentum strategy with a 6-month lookback."
+    preselection:
+      method: "momentum"
+      top_k: 30
+      lookback: 126
+      skip: 10
+    constraints: { min_assets: 20, max_assets: 30 }
+
+  # --- Momentum Strategy: 12-Month Lookback ---
+  momentum_12m:
+    description: "Momentum strategy with a 12-month lookback."
+    preselection:
+      method: "momentum"
+      top_k: 30
+      lookback: 252
+      skip: 21
+    constraints: { min_assets: 20, max_assets: 30 }
+
+# Note: To run all of these backtests in a batch, you would typically use a
+# script that iterates through the universe names and runs a backtest for each.
+# For example:
+#
+# for universe in momentum_3m momentum_6m momentum_12m; do
+#   python scripts/run_backtest.py my_strategy --universe $universe
+# done
+#
+# This is a common pattern for automated strategy research.
