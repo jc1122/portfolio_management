@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -137,9 +137,9 @@ class BacktestEngine:
         prices: pd.DataFrame,
         returns: pd.DataFrame,
         classifications: dict[str, str] | None = None,
-        preselection=None,
-        membership_policy=None,
-        cache=None,
+        preselection: Any = None,
+        membership_policy: Any = None,
+        cache: Any = None,
     ) -> None:
         """Initialize the backtesting engine.
 
@@ -273,8 +273,6 @@ class BacktestEngine:
                     lookback_prices,
                     trigger,
                 )
-                if should_rebalance_forced:
-                    continue
 
         # Calculate performance metrics
         equity_df = pd.DataFrame(
@@ -290,8 +288,11 @@ class BacktestEngine:
         holdings_value = Decimal(0)
         for ticker, shares in self.holdings.items():
             if ticker in prices.index and not pd.isna(prices[ticker]):
-                price = Decimal(str(float(prices[ticker])))
-                holdings_value += Decimal(str(shares)) * price
+                try:
+                    price = Decimal(str(float(prices[ticker])))
+                    holdings_value += Decimal(str(shares)) * price
+                except (ValueError, TypeError):
+                    continue
         return holdings_value + self.cash
 
     def _should_rebalance_scheduled(self, date: datetime.date) -> bool:
@@ -615,8 +616,11 @@ class BacktestEngine:
                 if share_change > 0:  # Buy
                     if ticker not in date_prices.index or pd.isna(date_prices[ticker]):
                         continue
-                    price = Decimal(str(float(date_prices[ticker])))
-                    total_buys += Decimal(str(share_change)) * price
+                    try:
+                        price = Decimal(str(float(date_prices[ticker])))
+                        total_buys += Decimal(str(share_change)) * price
+                    except (ValueError, TypeError):
+                        continue
 
             if total_buys + total_cost > self.cash:
                 # Scale back trades to fit cash constraints
