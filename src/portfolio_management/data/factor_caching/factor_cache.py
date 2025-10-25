@@ -143,6 +143,14 @@ class FactorCache:
         if enabled:
             # Check if cache_dir is writable
             try:
+                # Check if cache_dir exists and is a file (not a directory)
+                if cache_dir.exists() and cache_dir.is_file():
+                    raise NotADirectoryError(
+                        f"cache_dir path exists but is a file, not a directory: {cache_dir}. "
+                        "To fix: remove the file or use a different path. "
+                        "Example: cache_dir = Path('.cache/factors')",
+                    )
+
                 self.metadata_dir = cache_dir / "metadata"
                 self.data_dir = cache_dir / "data"
                 self.metadata_dir.mkdir(parents=True, exist_ok=True)

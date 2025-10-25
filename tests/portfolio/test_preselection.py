@@ -98,7 +98,7 @@ class TestPreselectionValidation:
     def test_skip_greater_than_lookback(self):
         """Test that skip >= lookback raises error."""
         config = PreselectionConfig(lookback=10, skip=10)
-        with pytest.raises(ValueError, match="skip must be < lookback"):
+        with pytest.raises(ValueError, match=r"skip.*must be < lookback"):
             Preselection(config)
 
     def test_invalid_min_periods(self):
@@ -110,7 +110,7 @@ class TestPreselectionValidation:
     def test_min_periods_greater_than_lookback(self):
         """Test that min_periods > lookback raises error."""
         config = PreselectionConfig(lookback=100, min_periods=150)
-        with pytest.raises(ValueError, match="min_periods must be <= lookback"):
+        with pytest.raises(ValueError, match=r"min_periods.*must be <= lookback"):
             Preselection(config)
 
     def test_combined_weights_must_sum_to_one(self):

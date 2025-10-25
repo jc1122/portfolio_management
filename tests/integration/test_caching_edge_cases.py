@@ -179,9 +179,12 @@ class TestDiskErrors:
         file_path = cache_dir / "should_be_dir"
         file_path.write_text("this is a file")
 
-        # Try to create cache with file as directory - should handle gracefully
-        with pytest.raises((OSError, FileExistsError, NotADirectoryError)):
+        # Try to create cache with file as directory - should handle gracefully by disabling cache
+        with pytest.warns(UserWarning, match="Cache directory .* is not accessible"):
             cache = FactorCache(file_path, enabled=True)
+
+        # Cache should be disabled after encountering the error
+        assert not cache.enabled
 
     def test_permission_denied_on_cache_write(self, cache_dir, sample_returns):
         """Test graceful handling when permission denied on cache write."""

@@ -11,7 +11,7 @@ Example:
     Importing and using common components from the core package.
 
     >>> from portfolio_management.core import (
-    ...     run_in_parallel,
+    ...     _run_in_parallel,
     ...     log_duration,
     ...     PortfolioManagementError
     ... )
@@ -22,7 +22,7 @@ Example:
     >>> with log_duration("Running sample parallel task"):
     ...     # Executes sample_task(i) for i in [1, 2, 3] in parallel
     ...     # The arguments must be wrapped in tuples, e.g., [(1,), (2,), (3,)]
-    ...     results = run_in_parallel(sample_task, [(1,), (2,), (3,)], max_workers=2)
+    ...     results = _run_in_parallel(sample_task, [(1,), (2,), (3,)], max_workers=2)
     ...
     >>> sorted(results) == [1, 4, 9]
     True
@@ -39,13 +39,14 @@ Key Components:
       error handling across the application.
     - **Configuration**: Global constants and mappings, such as column names
       (`STOOQ_COLUMNS`) and region-to-currency maps.
-    - **Utilities**: High-level helper functions, including `run_in_parallel`
+    - **Utilities**: High-level helper functions, including `_run_in_parallel`
       for efficient parallel processing and `log_duration` for timing code blocks.
     - **Types**: Common type aliases (`SymbolType`, `DateLike`) and TypedDicts
       for structuring data like prices and returns, enhancing static analysis.
     - **Protocols**: `typing.Protocol` definitions that establish contracts for
       key components like data loaders (`DataLoaderProtocol`) and factor
       computation engines (`FactorProtocol`), enabling a modular architecture.
+
 """
 
 from .config import (
@@ -96,8 +97,7 @@ from .types import (
     ReturnsDataFrame,
     SymbolType,
 )
-from .utils import run_in_parallel
-from .utils import log_duration
+from .utils import _run_in_parallel, log_duration
 
 __all__ = [
     # Exceptions - Base
@@ -135,7 +135,7 @@ __all__ = [
     "SYMBOL_ALIAS_MAP",
     "REGION_CURRENCY_MAP",
     # Utilities
-    "run_in_parallel",
+    "_run_in_parallel",
     "log_duration",
     # Types
     "SymbolType",

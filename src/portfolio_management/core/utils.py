@@ -32,7 +32,9 @@ Example:
     ... except RuntimeError as e:
     ...     print(f"Caught expected runtime error: {e}")
     Caught expected runtime error: Task 2 failed: Task failed for x=2
+
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,7 +49,7 @@ LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def run_in_parallel(
+def _run_in_parallel(
     func: Callable[..., T],
     args_list: list[tuple[Any, ...]],
     max_workers: int,
@@ -104,6 +106,7 @@ def run_in_parallel(
         ... except RuntimeError as e:
         ...     print(f"Caught expected error: {e}")
         Caught expected error: Task 1 failed: Failure
+
     """
     if max_workers <= 1:
         # Sequential execution for easy debugging
@@ -136,24 +139,23 @@ def run_in_parallel(
                     for f in future_to_index:
                         f.cancel()
                     raise RuntimeError(f"Task {idx} failed: {exc}") from exc
-            return [res for res in results if res is not None]
-        else:
-            # When order is not preserved, append results as they complete.
-            results_unordered: list[T] = []
-            try:
-                for future in as_completed(future_to_index):
-                    idx = future_to_index[future]
-                    try:
-                        results_unordered.append(future.result())
-                    except Exception as exc:
-                        LOGGER.error("Task %d failed: %s", idx, exc, exc_info=log_tasks)
-                        # Raise the first exception encountered.
-                        raise RuntimeError(f"Task {idx} failed: {exc}") from exc
-            finally:
-                # Ensure all other futures are cancelled on exit.
-                for f in future_to_index:
-                    f.cancel()
-            return results_unordered
+            return results  # type: ignore[return-value]
+        # When order is not preserved, append results as they complete.
+        results_unordered: list[T] = []
+        try:
+            for future in as_completed(future_to_index):
+                idx = future_to_index[future]
+                try:
+                    results_unordered.append(future.result())
+                except Exception as exc:
+                    LOGGER.error("Task %d failed: %s", idx, exc, exc_info=log_tasks)
+                    # Raise the first exception encountered.
+                    raise RuntimeError(f"Task {idx} failed: {exc}") from exc
+        finally:
+            # Ensure all other futures are cancelled on exit.
+            for f in future_to_index:
+                f.cancel()
+        return results_unordered
 
 
 @contextmanager
@@ -186,6 +188,7 @@ def log_duration(step: str) -> Generator[None, None, None]:
         >>>
         >>> # Clean up the handler to avoid affecting other tests
         >>> logger.removeHandler(handler)
+
     """
     start_time = time.perf_counter()
     try:

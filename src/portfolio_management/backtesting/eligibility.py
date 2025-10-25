@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-import warnings
 from typing import Any
 
 import pandas as pd
@@ -89,27 +88,28 @@ def compute_pit_eligibility(
     Raises:
         ValueError: If the input `returns` DataFrame is invalid or the `date` is
             outside the data range.
+
     """
     # Validate inputs
     if returns is None or returns.empty:
         raise ValueError(
             "returns DataFrame is empty or None. "
             "To fix: provide a non-empty DataFrame with returns data. "
-            "Expected format: DataFrame with dates as index, assets as columns."
+            "Expected format: DataFrame with dates as index, assets as columns.",
         )
 
     if not isinstance(returns, pd.DataFrame):
         raise ValueError(
             f"returns must be a pandas DataFrame, got {type(returns).__name__}. "
             "To fix: convert your data to a DataFrame. "
-            "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)"
+            "Example: returns = pd.DataFrame(data, index=dates, columns=tickers)",
         )
 
     if not isinstance(date, datetime.date):
         raise ValueError(
             f"date must be a datetime.date, got {type(date).__name__}. "
             "To fix: use datetime.date object. "
-            "Example: from datetime import date; eligibility_date = date(2023, 12, 31)"
+            "Example: from datetime import date; eligibility_date = date(2023, 12, 31)",
         )
 
     if min_history_days <= 0:
@@ -118,7 +118,7 @@ def compute_pit_eligibility(
             "min_history_days defines the minimum time span required. "
             "Common values: 63 (3 months), 126 (6 months), 252 (1 year). "
             "To fix: use a positive integer. "
-            "Example: min_history_days=252"
+            "Example: min_history_days=252",
         )
 
     if min_price_rows <= 0:
@@ -127,7 +127,7 @@ def compute_pit_eligibility(
             "min_price_rows defines the minimum number of valid data points. "
             "Common values: 60, 126, 252. "
             "To fix: use a positive integer. "
-            "Example: min_price_rows=252"
+            "Example: min_price_rows=252",
         )
 
     # Check if date is within data range
@@ -136,11 +136,14 @@ def compute_pit_eligibility(
         max_date = max_date.date()
 
     if date > max_date:
-        raise ValueError(
+        # If date is beyond available data, use the last available date
+        # This prevents future data leakage - we can only use data up to max_date
+        logger.warning(
             f"date ({date}) is after the last available date ({max_date}). "
-            "To fix: use a date within your data range. "
-            f"Available date range: {returns.index.min()} to {max_date}"
+            f"Using {max_date} to prevent future data leakage. "
+            f"Available date range: {returns.index.min()} to {max_date}",
         )
+        date = max_date
 
     # Filter returns to only include data up to the given date
     # Convert date to datetime for comparison
@@ -151,7 +154,7 @@ def compute_pit_eligibility(
         # No data available yet - nothing is eligible
         logger.warning(
             f"No historical data available up to {date}. "
-            "Returning all assets as ineligible."
+            "Returning all assets as ineligible.",
         )
         return pd.Series(False, index=returns.columns, name=0)
 
@@ -202,6 +205,7 @@ def compute_pit_eligibility_cached(
 
     Returns:
         pd.Series: A boolean Series indicating eligibility for each asset.
+
     """
     # Build cache config
     cache_config = {
@@ -272,6 +276,7 @@ def detect_delistings(
     Returns:
         dict[str, datetime.date]: A dictionary mapping the ticker of each
         delisted asset to its last known date with valid data.
+
     """
     cutoff_datetime = pd.Timestamp(current_date)
     lookforward_datetime = cutoff_datetime + pd.Timedelta(days=lookforward_days)
@@ -324,6 +329,7 @@ def get_asset_history_stats(
         pd.DataFrame: A DataFrame where each row corresponds to an asset and
         columns include 'ticker', 'first_valid_date', 'last_valid_date',
         'days_since_first', 'total_rows', and 'coverage_pct'.
+
     """
     cutoff_datetime = pd.Timestamp(date)
     historical_data = returns[returns.index <= cutoff_datetime]
