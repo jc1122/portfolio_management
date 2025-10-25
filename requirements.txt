@@ -11,3 +11,4 @@ riskparityportfolio>=0.2
 tqdm>=4.65.0
 jax>=0.4.0
 jaxlib>=0.4.0
+pandas

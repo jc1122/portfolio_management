@@ -1,39 +1,51 @@
-"""Core foundation utilities, exceptions, configuration, and types.
+"""Core foundation for the portfolio management toolkit.
 
-This package provides the foundation layer for the portfolio management toolkit,
-including:
+This package provides the foundational utilities, exceptions, configuration,
+and types for the entire system. It serves as the stable base layer upon
+which other components like data loading, factor computation, and portfolio
+construction are built.
 
-- Exception hierarchy for all error types
-- Configuration constants and mappings
-- Parallel execution utilities
-- Common type definitions and protocols
+The package exposes its main components at the top level for convenient access.
 
-Public API:
-    Exceptions:
-        - PortfolioManagementError (base exception)
-        - DataValidationError, ConfigurationError, DataQualityError
-        - AssetSelectionError, ClassificationError, ReturnCalculationError
-        - PortfolioConstructionError, OptimizationError, ConstraintViolationError
-        - BacktestError, RebalanceError, TransactionCostError
+Example:
+    Importing and using common components from the core package.
 
-    Configuration:
-        - STOOQ_COLUMNS, LEGACY_PREFIXES, SYMBOL_ALIAS_MAP
-        - REGION_CURRENCY_MAP, STOOQ_PANDAS_COLUMNS
+    >>> from portfolio_management.core import (
+    ...     run_in_parallel,
+    ...     log_duration,
+    ...     PortfolioManagementError
+    ... )
+    >>>
+    >>> def sample_task(x: int) -> int:
+    ...     return x * x
+    >>>
+    >>> with log_duration("Running sample parallel task"):
+    ...     # Executes sample_task(i) for i in [1, 2, 3] in parallel
+    ...     # The arguments must be wrapped in tuples, e.g., [(1,), (2,), (3,)]
+    ...     results = run_in_parallel(sample_task, [(1,), (2,), (3,)], max_workers=2)
+    ...
+    >>> sorted(results) == [1, 4, 9]
+    True
+    >>>
+    >>> try:
+    ...     raise PortfolioManagementError("Something went wrong.")
+    ... except PortfolioManagementError as e:
+    ...     print(f"Caught expected error: {e}")
+    Caught expected error: Something went wrong.
 
-    Utilities:
-        - run_in_parallel: Execute tasks in parallel with result ordering
-        - log_duration: Context manager for timing operations
-
-    Types:
-        - SymbolType, DateType, DateLike (type aliases)
-        - PriceDataFrame, ReturnsDataFrame, FactorScores (typed DataFrames)
-        - IDataLoader, IAssetFilter, IPortfolioStrategy (legacy protocols)
-
-    Protocols:
-        - CacheProtocol: Interface for factor caching
-        - DataLoaderProtocol: Interface for data loading
-        - FactorProtocol: Interface for factor computation
-        - EligibilityProtocol: Interface for eligibility computation
+Key Components:
+    - **Exceptions**: A comprehensive hierarchy of custom exceptions, with
+      `PortfolioManagementError` as the base. This allows for granular
+      error handling across the application.
+    - **Configuration**: Global constants and mappings, such as column names
+      (`STOOQ_COLUMNS`) and region-to-currency maps.
+    - **Utilities**: High-level helper functions, including `run_in_parallel`
+      for efficient parallel processing and `log_duration` for timing code blocks.
+    - **Types**: Common type aliases (`SymbolType`, `DateLike`) and TypedDicts
+      for structuring data like prices and returns, enhancing static analysis.
+    - **Protocols**: `typing.Protocol` definitions that establish contracts for
+      key components like data loaders (`DataLoaderProtocol`) and factor
+      computation engines (`FactorProtocol`), enabling a modular architecture.
 """
 
 from .config import (
@@ -84,7 +96,7 @@ from .types import (
     ReturnsDataFrame,
     SymbolType,
 )
-from .utils import _run_in_parallel as run_in_parallel
+from .utils import run_in_parallel
 from .utils import log_duration
 
 __all__ = [
