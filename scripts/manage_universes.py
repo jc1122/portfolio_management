@@ -1,13 +1,4 @@
-# ruff: noqa: E402
-"""CLI script for universe management.
-
-This script provides a command-line interface for managing investment universes.
-
-Example:
-    python scripts/manage_universes.py list
-    python scripts/manage_universes.py show core_global
-
-"""
+"""CLI script for universe management."""
 
 import argparse
 import logging
@@ -15,15 +6,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pandas as pd
-
 # Add project root to path to allow imports from src
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.assets.universes import UniverseConfigLoader, UniverseManager
 from portfolio_management.core.exceptions import PortfolioManagementError
+from portfolio_management.services import UniverseManagementService
 
 
 def get_args() -> argparse.Namespace:
@@ -96,51 +85,51 @@ def main() -> None:
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
+    service = UniverseManagementService()
+
     try:
-        # For lightweight commands, only load the config
         if args.command in ("list", "show"):
-            universes = UniverseConfigLoader.load_config(args.config)
+            universes = service.list_universes(args.config)
 
             if args.command == "list":
                 print("Available universes:")  # noqa: T201
-                for name in universes:
+                for name in universes.names:
                     print(f"- {name}")  # noqa: T201
 
             elif args.command == "show":
-                if args.name not in universes:
-                    logging.error(
-                        "Universe '%s' not found in configuration.",
-                        args.name,
-                    )
-                    sys.exit(1)
-                definition = universes[args.name]
+                definition = service.show_universe(args.config, args.name)
                 print(f"--- Universe: {args.name} ---")  # noqa: T201
                 print(definition)  # noqa: T201
 
-        # For heavy commands, load the full manager with data
         else:
-            matches_df = pd.read_csv(args.matches)
-            manager = UniverseManager(args.config, matches_df, args.prices_dir)
-
             if args.command == "load":
-                universe = manager.load_universe(args.name)
-                if universe:
-                    for key, df in universe.items():
-                        if isinstance(df, pd.DataFrame):
-                            df.to_csv(
-                                args.output_dir / f"{args.name}_{key}.csv",
-                                index=False,
-                            )
-                    print(  # noqa: T201
-                        f"Universe '{args.name}' loaded and exported to {args.output_dir}",
-                    )
+                service.load_universe(
+                    args.config,
+                    args.matches,
+                    args.prices_dir,
+                    args.name,
+                    output_dir=args.output_dir,
+                )
+                print(  # noqa: T201
+                    f"Universe '{args.name}' loaded and exported to {args.output_dir}",
+                )
 
             elif args.command == "compare":
-                comparison_df = manager.compare_universes(args.names)
-                print(comparison_df.to_string())  # noqa: T201
+                comparison = service.compare_universes(
+                    args.config,
+                    args.matches,
+                    args.prices_dir,
+                    args.names,
+                )
+                print(comparison.table.to_string())  # noqa: T201
 
             elif args.command == "validate":
-                result = manager.validate_universe(args.name)
+                result = service.validate_universe(
+                    args.config,
+                    args.matches,
+                    args.prices_dir,
+                    args.name,
+                )
                 print(result)  # noqa: T201
 
     except PortfolioManagementError:

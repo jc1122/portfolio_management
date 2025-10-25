@@ -28,8 +28,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pandas as pd
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -41,11 +39,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from portfolio_management.core.exceptions import PortfolioConstructionError
-from portfolio_management.portfolio import (
-    Portfolio,
-    PortfolioConstraints,
-    PortfolioConstructor,
-)
+from portfolio_management.services import PortfolioConstructionService
 
 logger = logging.getLogger(__name__)
 
@@ -132,95 +126,35 @@ def _configure_logging(*, verbose: bool) -> None:
     )
 
 
-def _load_returns(path: Path) -> pd.DataFrame:
-    logger.info("Loading returns from %s", path)
-    returns = pd.read_csv(path, index_col=0, parse_dates=True)
-    if returns.empty:
-        logger.warning("Returns file is empty: %s", path)
-    else:
-        logger.debug(
-            "Loaded returns with %d periods and %d assets",
-            len(returns),
-            len(returns.columns),
-        )
-    return returns
-
-
-def _load_classifications(path: Path | None) -> pd.Series | None:
-    if path is None:
-        return None
-
-    logger.info("Loading asset classifications from %s", path)
-    classifications_df = pd.read_csv(path)
-    required = {"ticker", "asset_class"}
-    if not required.issubset(classifications_df.columns):
-        missing = required - set(classifications_df.columns)
-        logger.warning(
-            "Classifications CSV missing required columns: %s",
-            ", ".join(sorted(missing)),
-        )
-        return None
-
-    series = classifications_df.set_index("ticker")["asset_class"]
-    logger.debug("Loaded %d asset classifications", len(series))
-    return series
-
-
-def _save_portfolio(portfolio: Portfolio, output_path: Path) -> None:
-    logger.info("Saving portfolio to %s", output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    weights_df = portfolio.weights.to_frame(name="weight")
-    weights_df.to_csv(output_path)
-    logger.info(
-        "Saved %d holdings (top 3: %s)",
-        portfolio.get_position_count(),
-        portfolio.get_top_holdings(3).to_dict(),
-    )
-
-
-def _save_comparison(comparison: pd.DataFrame, output_path: Path) -> None:
-    logger.info("Saving strategy comparison to %s", output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    comparison.to_csv(output_path)
-    logger.info("Saved comparison for %d strategies", len(comparison.columns))
-
-
 def run_cli(args: argparse.Namespace) -> int:
     """Execute the CLI workflow and return an exit code."""
     _configure_logging(verbose=args.verbose)
 
     try:
-        returns = _load_returns(args.returns)
-        asset_classes = _load_classifications(args.classifications)
-
-        constraints = PortfolioConstraints(
+        service = PortfolioConstructionService(logger=logger)
+        result = service.construct_from_files(
+            returns_path=args.returns,
+            output_path=args.output,
+            strategy=args.strategy,
+            compare=args.compare,
             max_weight=args.max_weight,
             min_weight=args.min_weight,
-            max_equity_exposure=args.max_equity,
-            min_bond_exposure=args.min_bond,
+            max_equity=args.max_equity,
+            min_bond=args.min_bond,
+            classifications_path=args.classifications,
         )
-
-        constructor = PortfolioConstructor(constraints=constraints)
-
-        if args.compare:
-            logger.info("Running comparison across registered strategies.")
-            strategies = constructor.list_strategies()
-            comparison = constructor.compare_strategies(
-                strategies,
-                returns,
-                constraints,
-                asset_classes,
+        if result.comparison is not None:
+            logger.info(
+                "Saved comparison for %d strategies to %s",
+                len(result.comparison.columns),
+                result.output_path,
             )
-            _save_comparison(comparison, args.output)
-        else:
-            logger.info("Constructing portfolio using strategy '%s'.", args.strategy)
-            portfolio = constructor.construct(
-                args.strategy,
-                returns,
-                constraints,
-                asset_classes,
+        elif result.portfolio is not None:
+            logger.info(
+                "Saved portfolio with %d holdings to %s",
+                result.portfolio.get_position_count(),
+                result.output_path,
             )
-            _save_portfolio(portfolio, args.output)
     except PortfolioConstructionError:
         logger.exception("Portfolio construction error.")
         return 1

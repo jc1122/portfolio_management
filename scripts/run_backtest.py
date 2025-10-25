@@ -47,7 +47,6 @@ from portfolio_management.analytics.indicators import (
 )
 from portfolio_management.backtesting import (
     BacktestConfig,
-    BacktestEngine,
     RebalanceFrequency,
 )
 from portfolio_management.config.validation import (
@@ -80,6 +79,7 @@ from portfolio_management.reporting.visualization import (
     prepare_rolling_metrics,
     prepare_transaction_costs_summary,
 )
+from portfolio_management.services import BacktestRequest, BacktestService
 
 
 def parse_date(date_str: str) -> date:
@@ -1175,40 +1175,29 @@ def main() -> int:
                 f"min_hold={membership_policy.min_holding_periods}",
             )
 
-        # Run backtest
-        if args.verbose:
-            pass
-        engine = BacktestEngine(
-            config=config,
-            strategy=strategy,
-            prices=prices,
-            returns=returns,
-            preselection=preselection,
-            membership_policy=membership_policy,
-            cache=cache,
+        def _report_cache_stats(cache_obj: Any) -> None:
+            print("\nCache Statistics:")  # noqa: T201
+            cache_obj.print_stats()
+
+        backtest_service = BacktestService(
+            results_printer=print_results,
+            results_saver=save_results,
+            cache_reporter=_report_cache_stats,
         )
-        equity_curve, metrics, rebalance_events = engine.run()
-        if args.verbose:
-            pass
-
-        # Print results
-        print_results(metrics, args.verbose)
-
-        # Print cache statistics if caching was enabled
-        if cache is not None and args.verbose:
-            print("\nCache Statistics:")
-            cache.print_stats()
-
-        # Save results
-        save_results(
-            args.output_dir,
-            config,
-            equity_curve,
-            rebalance_events,
-            metrics,
-            args.save_trades,
-            not args.no_visualize,
-            args.verbose,
+        backtest_service.run(
+            BacktestRequest(
+                config=config,
+                strategy=strategy,
+                prices=prices,
+                returns=returns,
+                preselection=preselection,
+                membership_policy=membership_policy,
+                cache=cache,
+                output_dir=args.output_dir,
+                save_trades=args.save_trades,
+                visualize=not args.no_visualize,
+                verbose=args.verbose,
+            )
         )
 
         return 0
