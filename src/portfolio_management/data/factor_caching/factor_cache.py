@@ -140,6 +140,8 @@ class FactorCache:
         self.enabled = enabled
         self.max_cache_age_days = max_cache_age_days
         self._memory_cache: dict[str, Any] = {}
+        self.metadata_dir = cache_dir / "metadata"
+        self.data_dir = cache_dir / "data"
 
         if enabled:
             # Check if cache_dir is writable
@@ -152,8 +154,6 @@ class FactorCache:
                         "Example: cache_dir = Path('.cache/factors')",
                     )
 
-                self.metadata_dir = cache_dir / "metadata"
-                self.data_dir = cache_dir / "data"
                 self.metadata_dir.mkdir(parents=True, exist_ok=True)
                 self.data_dir.mkdir(parents=True, exist_ok=True)
 
