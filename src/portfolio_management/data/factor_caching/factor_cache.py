@@ -577,15 +577,14 @@ class FactorCache:
 
         if not memory_only and self.cache_dir.exists():
             # Clear disk cache
-            count = 0
-            for path in self.metadata_dir.glob("*.json"):
-                path.unlink()
-                count += 1
-            for path in self.data_dir.glob("*.pkl"):
-                path.unlink()
-            logger.info(f"Cleared {count} cache entries")
+            import shutil
+            shutil.rmtree(self.cache_dir)
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            self.metadata_dir.mkdir(parents=True, exist_ok=True)
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Cleared all cache entries in {self.cache_dir}")
             self._stats = {"hits": 0, "misses": 0, "puts": 0}
-            return count
+            return 0
         return 0
 
     def get_stats(self) -> dict[str, int]:

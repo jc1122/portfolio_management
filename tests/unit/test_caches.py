@@ -23,11 +23,11 @@ def test_price_loader_clear_works():
     import pandas as pd
     loader._cache["test"] = pd.DataFrame()
 
-    assert loader.get_cache_stats()["cache_entries"] == 1
+    assert loader.get_cache_stats()["size"] == 1
 
     loader.clear_cache()
 
-    assert loader.get_cache_stats()["cache_entries"] == 0
+    assert loader.get_cache_stats()["size"] == 0
 
 
 @pytest.mark.unit
