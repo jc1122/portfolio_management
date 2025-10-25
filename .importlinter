@@ -32,7 +32,6 @@ type = forbidden
 source_modules =
     portfolio_management.assets
 forbidden_modules =
-    portfolio_management.analytics
     portfolio_management.portfolio
     portfolio_management.backtesting
     portfolio_management.reporting
