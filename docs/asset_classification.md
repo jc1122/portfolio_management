@@ -44,6 +44,8 @@ Before running the script, you must have the following:
 
 ## Usage Example
 
+### Basic Classification
+
 ```bash
 python scripts/classify_assets.py \
     --input /tmp/selected_assets.csv \
@@ -51,7 +53,9 @@ python scripts/classify_assets.py \
     --summary
 ```
 
-To use a manual override file:
+### Using Manual Overrides
+
+To override automated classifications for specific assets:
 
 ```bash
 python scripts/classify_assets.py \
@@ -59,6 +63,235 @@ python scripts/classify_assets.py \
     --output /tmp/classified_assets.csv \
     --overrides /path/to/my_overrides.csv
 ```
+
+### Export for Review Workflow
+
+Generate a template to review and edit classifications:
+
+```bash
+# Step 1: Generate review template
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --export-for-review /tmp/classification_review.csv
+
+# Step 2: Edit the CSV file manually (in Excel, etc.)
+# Make corrections to asset_class, geography, etc.
+
+# Step 3: Use edited file as overrides
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --output /tmp/classified_assets.csv \
+    --overrides /tmp/classification_review.csv \
+    --summary
+```
+
+## Override File Format
+
+The override CSV file allows you to manually specify classifications for specific assets. The file should have the following structure:
+
+### Required Column
+
+At least one identifier column is required:
+- `symbol`: The ticker symbol (e.g., `AAPL`, `CDR`)
+- `isin`: The ISIN code (e.g., `US0378331005`)
+
+**Recommendation**: Use `isin` when available for more reliable matching, as symbols can be ambiguous across markets.
+
+### Override Columns
+
+Any of the following columns can be included to override the automated classification:
+
+| Column | Type | Description | Example Values |
+|:-------|:-----|:------------|:---------------|
+| `asset_class` | text | Primary asset class | `Equity`, `Bond`, `Commodity`, `Real Estate`, `Currency`, `Alternative` |
+| `sub_class` | text | Asset subclass | `Large Cap`, `Government Bond`, `Precious Metals` |
+| `geography` | text | Geographic region | `North America`, `Europe`, `Asia`, `Global` |
+| `confidence` | float | Confidence score (0.0-1.0) | `1.0` (for manual overrides) |
+
+### Example Override File
+
+**File: `my_overrides.csv`**
+
+```csv
+isin,asset_class,geography,confidence
+US0378331005,Equity,North America,1.0
+PLOPTTC00011,Equity,Europe,1.0
+US5949181045,Equity,North America,1.0
+GB00B03MLX29,Bond,Europe,1.0
+```
+
+**Alternative format using symbols:**
+
+```csv
+symbol,asset_class,sub_class,geography
+AAPL,Equity,Large Cap,North America
+CDR,Equity,Mid Cap,Europe
+MSFT,Equity,Large Cap,North America
+```
+
+### Partial Overrides
+
+You can override only specific fields:
+
+```csv
+isin,asset_class
+US0378331005,Equity
+PLOPTTC00011,Alternative
+```
+
+In this case, `geography` and `sub_class` will still be determined by the automated classifier.
+
+## Classification Accuracy Tips
+
+### 1. Review Low Confidence Classifications
+
+Use the `--summary` flag to identify assets needing review:
+
+```bash
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --output /tmp/classified_assets.csv \
+    --summary
+```
+
+Look for the "Low Confidence Classifications" section in the output. Assets with confidence < 0.6 should be reviewed manually.
+
+### 2. Export and Review All Classifications
+
+For critical portfolios, review all automated classifications:
+
+```bash
+# Export for review
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --export-for-review /tmp/review.csv
+
+# Open in spreadsheet software, review/edit
+# Use as overrides
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --output /tmp/classified_assets.csv \
+    --overrides /tmp/review.csv
+```
+
+### 3. Iterative Refinement
+
+Build overrides incrementally:
+
+```bash
+# First pass: identify issues
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --export-for-review /tmp/review_v1.csv \
+    --summary
+
+# Create overrides for problematic assets
+# ... edit and save as overrides.csv ...
+
+# Second pass: apply overrides and check
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --output /tmp/classified_v2.csv \
+    --overrides /tmp/overrides.csv \
+    --summary
+```
+
+### 4. Asset Class Guidelines
+
+Use these guidelines when creating overrides:
+
+**Equity**:
+- Common stocks, ETFs tracking stock indices
+- REITs (can also be classified as Real Estate)
+- Sub-classes: Large Cap, Mid Cap, Small Cap
+
+**Bond**:
+- Government bonds, corporate bonds, bond ETFs
+- Sub-classes: Government Bond, Corporate Bond, High Yield
+
+**Commodity**:
+- Commodity ETFs, futures
+- Sub-classes: Precious Metals, Energy, Agriculture
+
+**Real Estate**:
+- REITs, real estate funds
+- Sub-classes: Residential, Commercial, Industrial
+
+**Currency**:
+- FX pairs, currency ETFs
+- Sub-classes: Major, Emerging
+
+**Alternative**:
+- Cryptocurrencies, private equity, hedge funds
+- Sub-classes: Crypto, Private Equity, Hedge Fund
+
+### 5. Geography Guidelines
+
+**North America**: US, Canada, Mexico
+**Europe**: EU countries, UK, Switzerland, Norway
+**Asia**: Japan, China, India, Southeast Asia
+**Latin America**: Brazil, Argentina, Chile, etc.
+**Middle East & Africa**: MENA region
+**Global**: Multi-region or worldwide exposure
+
+## Troubleshooting
+
+### Low Classification Accuracy
+
+**Symptom**: Many assets have low confidence scores or incorrect classifications.
+
+**Diagnosis**:
+```bash
+python scripts/classify_assets.py \
+    --input /tmp/selected_assets.csv \
+    --summary \
+    --export-for-review /tmp/review.csv
+```
+
+**Common causes**:
+- Generic asset names (e.g., "Fund A")
+- Missing category information in input
+- Ambiguous ticker symbols
+
+**Resolution**: Create overrides file for problematic assets.
+
+### Override Not Applied
+
+**Symptom**: Classification doesn't match override file.
+
+**Diagnosis**: Check identifier column matching.
+
+**Common causes**:
+- Wrong identifier (symbol vs. ISIN mismatch)
+- Typo in identifier
+- Override file not properly formatted
+
+**Resolution**:
+```bash
+# Verify override file format
+python -c "import pandas as pd; df = pd.read_csv('/tmp/overrides.csv'); print(df.head()); print(df.columns)"
+
+# Use ISIN for reliable matching
+# Check that ISINs in override file exist in input
+```
+
+### Missing Classification Columns
+
+**Symptom**: Output file missing `asset_class` or `geography` columns.
+
+**Diagnosis**: Check input file and script output.
+
+**Resolution**: Ensure input file is from `select_assets.py` and contains required metadata.
+
+## Best Practices
+
+1. **Always use `--summary` flag**: Review classification distribution before downstream use
+2. **Start with export-for-review**: Generate template, review offline, then apply
+3. **Use ISIN for overrides**: More reliable than symbols which can be ambiguous
+4. **Set confidence to 1.0 for manual overrides**: Indicates human verification
+5. **Document override rationale**: Keep notes on why specific overrides were made
+6. **Version control overrides**: Track changes to override files over time
+7. **Validate geography/asset_class combinations**: Ensure logical consistency (e.g., "US Government Bond" → "Bond" + "North America")
 
 ## Command-Line Arguments
 
