@@ -183,8 +183,9 @@ python scripts/run_backtest.py equal_weight \
     --universe config/universes.yaml:core_global \
     --start-date 2020-01-01 \
     --end-date 2023-12-31 \
+    --membership-enabled \
     --membership-buffer-rank 50 \
-    --membership-min-holding-periods 3
+    --membership-min-hold 3
 ```
 
 ### Advanced Examples
@@ -198,11 +199,12 @@ python scripts/run_backtest.py mean_variance \
     --universe config/universes.yaml:satellite_factor \
     --preselect-method momentum \
     --preselect-top-k 40 \
+    --membership-enabled \
     --membership-buffer-rank 60 \
-    --membership-min-holding-periods 6 \
+    --membership-min-hold 6 \
     --membership-max-turnover 0.20 \
-    --membership-max-new-assets 3 \
-    --membership-max-removed-assets 3 \
+    --membership-max-new 3 \
+    --membership-max-removed 3 \
     --rebalance-frequency monthly
 ```
 
@@ -221,8 +223,9 @@ python scripts/run_backtest.py risk_parity \
     --universe config/universes.yaml:core_global \
     --preselect-method combined \
     --preselect-top-k 30 \
+    --membership-enabled \
     --membership-buffer-rank 40 \
-    --membership-min-holding-periods 3 \
+    --membership-min-hold 3 \
     --membership-max-turnover 0.35 \
     --rebalance-frequency monthly
 ```
@@ -241,9 +244,10 @@ python scripts/run_backtest.py equal_weight \
     --universe config/universes.yaml:core_global \
     --preselect-method low_vol \
     --preselect-top-k 25 \
-    --membership-min-holding-periods 12 \
-    --membership-max-new-assets 2 \
-    --membership-max-removed-assets 2 \
+    --membership-enabled \
+    --membership-min-hold 12 \
+    --membership-max-new 2 \
+    --membership-max-removed 2 \
     --rebalance-frequency quarterly
 ```
 
@@ -258,10 +262,10 @@ python scripts/run_backtest.py equal_weight \
 | Parameter | Type | Description | Default | Typical Range |
 |-----------|------|-------------|---------|---------------|
 | `--membership-buffer-rank` | int | Rank threshold for keeping existing holdings | None | top_k to top_k+30 |
-| `--membership-min-holding-periods` | int | Minimum rebalance periods to hold | None | 1-12 |
+| `--membership-min-hold` | int | Minimum rebalance periods to hold | None | 1-12 |
 | `--membership-max-turnover` | float | Maximum portfolio turnover (0-1) | None | 0.20-0.50 |
-| `--membership-max-new-assets` | int | Maximum new positions per rebalance | None | 3-10 |
-| `--membership-max-removed-assets` | int | Maximum positions closed per rebalance | None | 3-10 |
+| `--membership-max-new` | int | Maximum new positions per rebalance | None | 3-10 |
+| `--membership-max-removed` | int | Maximum positions closed per rebalance | None | 3-10 |
 
 **Note**: All parameters default to `None` (disabled). Set any combination to enable membership policy.
 
@@ -382,8 +386,9 @@ python scripts/run_backtest.py mean_variance \
     --universe config/universes.yaml:core_global \
     --start-date 2018-01-01 \
     --end-date 2023-12-31 \
+    --membership-enabled \
     --membership-buffer-rank 50 \
-    --membership-min-holding-periods 3 \
+    --membership-min-hold 3 \
     --output outputs/with_policy.json
 
 # Compare results
