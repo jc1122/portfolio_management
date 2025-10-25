@@ -90,14 +90,24 @@ docs/                                # Living module guides
   ├── backtesting.md
   ├── cardinality_constraints.md     # Cardinality constraints design & stubs
   ├── fast_io.md                     # Optional fast IO with polars/pyarrow
-  ├── long_history_tests_guide.md    # Long-history integration tests guide
-  ├── long_history_tests_troubleshooting.md  # Test debugging guide
   ├── macro_signals.md               # Macroeconomic signals & regime gating
   ├── portfolio_construction.md
   ├── preselection.md                # Factor-based asset preselection guide
   ├── returns.md
   ├── statistics_caching.md          # Statistics caching guide
-  └── universes.md
+  ├── troubleshooting.md             # Comprehensive troubleshooting guide
+  ├── universes.md
+  ├── testing/                       # Testing documentation
+  │   ├── README.md                  # Testing overview and index
+  │   ├── test_strategy.md           # Testing philosophy and guidelines
+  │   ├── unit_testing.md            # Unit test best practices
+  │   ├── integration_testing.md     # Integration test patterns
+  │   └── long_history_tests.md      # Long-history validation tests
+  └── performance/                   # Performance documentation
+      ├── README.md                  # Performance overview and index
+      ├── optimization.md            # Optimization techniques
+      ├── benchmarks.md              # Benchmark results
+      └── profiling.md               # Profiling guide
 
 archive/                             # Historical documentation
   ├── refactoring/                  # Refactoring project records
@@ -510,8 +520,8 @@ pytest tests/ -m "not slow"
 
 **Documentation:**
 
-- **User Guide:** [`docs/long_history_tests_guide.md`](docs/long_history_tests_guide.md) - Expected behaviors and configurations
-- **Troubleshooting:** [`docs/long_history_tests_troubleshooting.md`](docs/long_history_tests_troubleshooting.md) - Debugging failures
+- **User Guide:** [`docs/testing/long_history_tests.md`](docs/testing/long_history_tests.md) - Expected behaviors and configurations
+- **Troubleshooting:** [`docs/troubleshooting.md#long-history-test-issues`](docs/troubleshooting.md#long-history-test-issues) - Debugging failures
 
 ### Test Markers
 
