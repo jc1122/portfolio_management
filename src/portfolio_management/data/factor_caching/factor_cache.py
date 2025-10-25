@@ -118,15 +118,14 @@ class FactorCache:
 
         """
         # Validate cache_dir
-        if not isinstance(cache_dir, Path):
-            if isinstance(cache_dir, str):
-                cache_dir = Path(cache_dir)
-            else:
-                raise ValueError(
-                    f"cache_dir must be a Path or str, got {type(cache_dir).__name__}. "
-                    "To fix: use pathlib.Path or string. "
-                    "Example: cache_dir = Path('.cache/factors')",
-                )
+        if isinstance(cache_dir, str):
+            cache_dir = Path(cache_dir)
+        elif not isinstance(cache_dir, Path):
+            raise ValueError(
+                f"cache_dir must be a Path or str, got {type(cache_dir).__name__}. "
+                "To fix: use pathlib.Path or string. "
+                "Example: cache_dir = Path('.cache/factors')",
+            )
 
         # Validate max_cache_age_days
         if max_cache_age_days is not None and max_cache_age_days < 0:

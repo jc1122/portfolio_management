@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from portfolio_management.backtesting import RebalanceEvent
 
 
+from typing import Any
+
 def prepare_allocation_history(
     rebalance_events: list[RebalanceEvent],
 ) -> pd.DataFrame:
@@ -29,13 +31,13 @@ def prepare_allocation_history(
     if not rebalance_events:
         return pd.DataFrame()
 
-    records = []
+    records: list[dict[str, Any]] = []
     for event in rebalance_events:
         total_value = float(event.post_rebalance_value)
         if total_value == 0:
             continue
 
-        record = {"date": event.date}
+        record: dict[str, Any] = {"date": event.date}
 
         # Calculate cash percentage
         record["cash_pct"] = float(event.cash_after) / total_value * 100

@@ -51,6 +51,7 @@ import numpy as np
 import pandas as pd
 
 from ...core.exceptions import InsufficientDataError, ReturnCalculationError
+from ...core.types import PriceFrame, PriceSeries, ReturnFrame, ReturnSeries
 from .config import ReturnConfig
 from .loaders import PriceLoader
 from .models import ReturnSummary
@@ -146,13 +147,13 @@ class ReturnCalculator:
         """
         if assets is None:
             raise InsufficientDataError(
-                "Assets for return preparation cannot be None.",
+                reason="Assets for return preparation cannot be None.",
                 asset_count=0,
                 required_count=1,
             )
         if not assets:
             raise InsufficientDataError(
-                "No assets provided for return calculation.",
+                reason="No assets provided for return calculation.",
                 asset_count=0,
                 required_count=1,
             )
@@ -175,7 +176,7 @@ class ReturnCalculator:
         if prices.empty:
             self._latest_summary = None
             raise InsufficientDataError(
-                "No price data available for requested assets.",
+                reason="No price data available for requested assets.",
                 asset_count=len(assets),
             )
 
@@ -183,7 +184,7 @@ class ReturnCalculator:
         if prices.empty:
             self._latest_summary = None
             raise InsufficientDataError(
-                "All price data was removed during missing-data handling.",
+                reason="All price data was removed during missing-data handling.",
                 asset_count=len(assets),
             )
 
@@ -191,7 +192,7 @@ class ReturnCalculator:
         if returns.empty:
             self._latest_summary = None
             raise InsufficientDataError(
-                "Unable to compute returns for the selected assets.",
+                reason="Unable to compute returns for the selected assets.",
                 asset_count=len(assets),
             )
 
@@ -202,7 +203,7 @@ class ReturnCalculator:
         if returns.empty:
             self._latest_summary = None
             raise InsufficientDataError(
-                "All assets were removed by the coverage filter.",
+                reason="All assets were removed by the coverage filter.",
                 asset_count=len(assets),
             )
 
@@ -217,29 +218,29 @@ class ReturnCalculator:
 
         return returns
 
-    def _calculate_simple_returns(self, prices: pd.Series) -> pd.Series:
+    def _calculate_simple_returns(self, prices: PriceSeries) -> ReturnSeries:
         """Calculate simple percentage returns ``r_t = (P_t / P_{t-1}) - 1``."""
         return prices.pct_change().dropna()
 
-    def _calculate_log_returns(self, prices: pd.Series) -> pd.Series:
+    def _calculate_log_returns(self, prices: PriceSeries) -> ReturnSeries:
         r"""Calculate log returns ``r_t = \ln(P_t / P_{t-1})``."""
-        return np.log(prices / prices.shift(1)).dropna()
+        return pd.Series(np.log(prices / prices.shift(1))).dropna()
 
     def _calculate_excess_returns(
         self,
-        prices: pd.Series,
+        prices: PriceSeries,
         risk_free_rate: float,
-    ) -> pd.Series:
+    ) -> ReturnSeries:
         """Calculate excess returns ``r_t^{ex} = r_t - r_f`` over the risk-free leg."""
         simple_returns = self._calculate_simple_returns(prices)
         daily_rf = (1 + risk_free_rate) ** (1 / 252) - 1
-        return simple_returns - daily_rf
+        return simple_returns - daily_rf  # type: ignore[no-any-return]
 
     def calculate_returns(
         self,
-        prices: pd.DataFrame,
+        prices: PriceFrame,
         config: ReturnConfig,
-    ) -> pd.DataFrame:
+    ) -> ReturnFrame:
         """Calculate returns for each column in *prices* according to *config*.
 
         This function applies the return calculation method specified in the
@@ -277,9 +278,9 @@ class ReturnCalculator:
 
         with np.errstate(divide="ignore", invalid="ignore"):
             if config.method == "log":
-                returns = np.log(filtered_prices / shifted)
+                returns = pd.DataFrame(np.log(filtered_prices / shifted))
             else:
-                returns = (filtered_prices / shifted) - 1
+                returns = pd.DataFrame((filtered_prices / shifted) - 1)
                 if config.method == "excess":
                     daily_rf = (1 + config.risk_free_rate) ** (1 / 252) - 1
                     returns = returns - daily_rf
@@ -315,9 +316,9 @@ class ReturnCalculator:
 
     def _handle_missing_forward_fill(
         self,
-        prices: pd.DataFrame,
+        prices: PriceFrame,
         max_days: int,
-    ) -> pd.DataFrame:
+    ) -> PriceFrame:
         """Forward fill gaps up to ``max_days`` for each asset."""
         before = int(prices.isna().sum().sum())
         filled = prices.ffill(limit=max_days)
@@ -325,7 +326,7 @@ class ReturnCalculator:
         logger.info("Forward filled %d missing values", before - after)
         return filled
 
-    def _handle_missing_drop(self, prices: pd.DataFrame) -> pd.DataFrame:
+    def _handle_missing_drop(self, prices: PriceFrame) -> PriceFrame:
         """Drop any row containing missing values."""
         before = len(prices)
         dropped = prices.dropna()
@@ -334,9 +335,9 @@ class ReturnCalculator:
 
     def _handle_missing_interpolate(
         self,
-        prices: pd.DataFrame,
+        prices: PriceFrame,
         max_days: int,
-    ) -> pd.DataFrame:
+    ) -> PriceFrame:
         """Linearly interpolate gaps up to ``max_days`` consecutive NaNs."""
         interpolated = prices.interpolate(
             method="linear",
@@ -349,9 +350,9 @@ class ReturnCalculator:
 
     def handle_missing_data(
         self,
-        prices: pd.DataFrame,
+        prices: PriceFrame,
         config: ReturnConfig,
-    ) -> pd.DataFrame:
+    ) -> PriceFrame:
         """Apply the configured missing-data strategy to *prices*.
 
         Args:
@@ -396,7 +397,7 @@ class ReturnCalculator:
 
         return handled.dropna(how="all")
 
-    def _align_dates(self, returns: pd.DataFrame, config: ReturnConfig) -> pd.DataFrame:
+    def _align_dates(self, returns: ReturnFrame, config: ReturnConfig) -> ReturnFrame:
         """Align return dates according to the configuration."""
         if returns.empty:
             return returns
@@ -415,10 +416,10 @@ class ReturnCalculator:
 
     def _resample_to_frequency(
         self,
-        returns: pd.DataFrame,
+        returns: ReturnFrame,
         frequency: str,
         method: str,
-    ) -> pd.DataFrame:
+    ) -> ReturnFrame:
         """Resample the returns DataFrame to the requested frequency.
 
         Args:
@@ -453,9 +454,9 @@ class ReturnCalculator:
 
     def _apply_coverage_filter(
         self,
-        returns: pd.DataFrame,
+        returns: ReturnFrame,
         min_coverage: float,
-    ) -> pd.DataFrame:
+    ) -> ReturnFrame:
         """Remove assets that do not meet the minimum data coverage threshold."""
         if returns.empty:
             return returns

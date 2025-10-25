@@ -54,19 +54,18 @@ def _read_stooq_csv(
     columns: Sequence[str] | None = None,
 ) -> pd.DataFrame:
     """Read a Stooq CSV file with the specified engine."""
-    read_kwargs = {
-        "header": None,
-        "names": STOOQ_COLUMNS,
-        "comment": "<",
-        "dtype": str,
-        "engine": engine,
-        "encoding": "utf-8",
-        "keep_default_na": False,
-        "na_filter": False,
-    }
-    if columns is not None:
-        read_kwargs["usecols"] = list(columns)
-    return pd.read_csv(file_path, **read_kwargs)
+    return pd.read_csv(
+        file_path,
+        header=None,
+        names=STOOQ_COLUMNS,
+        comment="<",
+        dtype=str,
+        engine=engine,
+        encoding="utf-8",
+        keep_default_na=False,
+        na_filter=False,
+        usecols=list(columns) if columns else None,
+    )
 
 
 def _stream_stooq_file_for_diagnostics(
@@ -104,7 +103,7 @@ def _stream_stooq_file_for_diagnostics(
         # Try fast C engine first
         try:
             chunks = pd.read_csv(
-                file_path,
+                filepath_or_buffer=file_path,
                 header=None,
                 names=STOOQ_COLUMNS,
                 comment="<",
@@ -119,7 +118,7 @@ def _stream_stooq_file_for_diagnostics(
         except (ValueError, pd.errors.ParserError):
             # Fall back to Python engine
             chunks = pd.read_csv(
-                file_path,
+                filepath_or_buffer=file_path,
                 header=None,
                 names=STOOQ_COLUMNS,
                 comment="<",
@@ -248,8 +247,10 @@ def _stream_stooq_file_for_diagnostics(
     )
 
     # Populate diagnostics
-    diagnostics["price_start"] = first_valid_date.date().isoformat()
-    diagnostics["price_end"] = last_valid_date.date().isoformat()
+    if first_valid_date:
+        diagnostics["price_start"] = first_valid_date.date().isoformat()
+    if last_valid_date:
+        diagnostics["price_end"] = last_valid_date.date().isoformat()
     diagnostics["price_rows"] = str(valid_row_count)
     diagnostics["data_status"] = _determine_data_status(
         valid_row_count,
@@ -446,8 +447,14 @@ def _summarize_valid_frame(
     )
     flags = _generate_flags(
         invalid_rows=invalid_rows,
+        non_numeric_prices=int(metrics["non_numeric_prices"]),
+        non_positive_close=int(metrics["non_positive_close"]),
+        missing_volume=int(metrics["missing_volume"]),
+        zero_volume=int(metrics["zero_volume"]),
+        zero_volume_ratio=float(metrics["zero_volume_ratio"]),
         zero_volume_severity=zero_volume_severity,
-        **metrics,
+        duplicate_dates=bool(metrics["duplicate_dates"]),
+        non_monotonic_dates=bool(metrics["non_monotonic_dates"]),
     )
 
     diagnostics["price_start"] = first_date.date().isoformat()

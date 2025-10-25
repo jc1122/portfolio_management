@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -266,7 +266,8 @@ def _read_parquet_polars(path: Path, **kwargs) -> pd.DataFrame:
     return df_pl.to_pandas()
 
 
-def _read_parquet_pyarrow(path: Path, **kwargs) -> pd.DataFrame:
+from typing import Any
+def _read_parquet_pyarrow(path: Path, **kwargs: Any) -> pd.DataFrame:
     """Read Parquet using PyArrow and convert to a pandas DataFrame."""
     table = pa.parquet.read_table(path, **kwargs)
-    return table.to_pandas()
+    return cast(pd.DataFrame, table.to_pandas())

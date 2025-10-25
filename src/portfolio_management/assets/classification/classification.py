@@ -224,10 +224,10 @@ class ClassificationOverrides:
         if not csv_path.exists():
             return cls()
         overrides_df = pd.read_csv(csv_path)
-        overrides: dict[str, dict[str, object]] = {}
+        overrides: dict[str, dict[str, str]] = {}
         for _, row in overrides_df.iterrows():
-            key = row["isin"] if pd.notna(row["isin"]) else row["symbol"]
-            overrides[key] = row.to_dict()
+            key = str(row["isin"]) if pd.notna(row["isin"]) else str(row["symbol"])
+            overrides[key] = {k: str(v) for k, v in row.to_dict().items()}
         return cls(overrides=overrides)
 
 
@@ -323,16 +323,10 @@ class AssetClassifier:
         asset_class_from_name = self._classify_by_name(asset)
         asset_class_from_cat = self._classify_by_category(asset)
 
-        if {
-            asset_class_from_name,
-            asset_class_from_cat,
-        } == {AssetClass.UNKNOWN}:
+        if asset_class_from_name == AssetClass.UNKNOWN and asset_class_from_cat == AssetClass.UNKNOWN:
             asset_class = AssetClass.UNKNOWN
             confidence = 0.5
-        elif AssetClass.UNKNOWN not in {
-            asset_class_from_name,
-            asset_class_from_cat,
-        }:
+        elif asset_class_from_name != AssetClass.UNKNOWN and asset_class_from_cat != AssetClass.UNKNOWN:
             asset_class = asset_class_from_name
             confidence = 0.9
         elif asset_class_from_name != AssetClass.UNKNOWN:
@@ -662,32 +656,32 @@ class AssetClassifier:
         asset_class: AssetClass,
     ) -> str:
         if pd.isna(asset.name):
-            return SubClass.UNKNOWN
+            return SubClass.UNKNOWN.value
         name = asset.name.lower()
         if asset_class == AssetClass.EQUITY:
             if "large cap" in name:
-                return SubClass.LARGE_CAP
+                return SubClass.LARGE_CAP.value
             if "small cap" in name:
-                return SubClass.SMALL_CAP
+                return SubClass.SMALL_CAP.value
             if "value" in name:
-                return SubClass.VALUE
+                return SubClass.VALUE.value
             if "growth" in name:
-                return SubClass.GROWTH
+                return SubClass.GROWTH.value
             if "dividend" in name:
-                return SubClass.DIVIDEND
+                return SubClass.DIVIDEND.value
         if asset_class == AssetClass.FIXED_INCOME:
             if "government" in name or "gilt" in name or "treasury" in name:
-                return SubClass.GOVERNMENT
+                return SubClass.GOVERNMENT.value
             if "corporate" in name:
-                return SubClass.CORPORATE
+                return SubClass.CORPORATE.value
             if "high yield" in name:
-                return SubClass.HIGH_YIELD
+                return SubClass.HIGH_YIELD.value
         if asset_class == AssetClass.COMMODITY and "gold" in name:
-            return SubClass.GOLD
+            return SubClass.GOLD.value
         if asset_class == AssetClass.REAL_ESTATE:
             if "reit" in name:
-                return SubClass.REIT
-        return SubClass.UNKNOWN
+                return SubClass.REIT.value
+        return SubClass.UNKNOWN.value
 
     @staticmethod
     def export_for_review(
@@ -702,8 +696,5 @@ class AssetClassifier:
                 records.append(classification)
             elif hasattr(classification, "__dict__"):
                 records.append(vars(classification))
-            else:
-                raise ValueError("Unsupported classification record type for export.")
-
         df = pd.DataFrame(records)
         df.to_csv(path, index=False)
