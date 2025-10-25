@@ -1,5 +1,15 @@
 # Project Workflow Guide
 
+## 📊 Complete System Documentation
+
+**For comprehensive workflow documentation with complete Mermaid diagrams**, see:
+
+- **[Complete Workflow Documentation](architecture/COMPLETE_WORKFLOW.md)** - Detailed Mermaid diagram covering all functionality from CSV ingestion through visualization, including all advanced features, data flows, and integration points.
+
+This guide provides a simplified overview of the two primary workflows.
+
+______________________________________________________________________
+
 ## Overview
 
 This document outlines the two primary ways to use the portfolio management toolkit: the **Managed Workflow** and the **Manual Workflow**.

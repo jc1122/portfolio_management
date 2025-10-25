@@ -1,8 +1,88 @@
 # Documentation and Cleanup Plan
 
 **Date**: October 25, 2025
-**Status**: In Progress
+**Status**: ✅ **WORKFLOW DIAGRAM COMPLETE**
 **Goal**: Make portfolio_management repository production-ready with comprehensive documentation
+
+**UPDATE (Oct 25, 2025):** Complete workflow documentation with comprehensive Mermaid diagram has been created at `docs/architecture/COMPLETE_WORKFLOW.md`. This document provides:
+
+- Full system Mermaid workflow diagram covering all functionality
+- Detailed component descriptions for every stage
+- All data flow paths and integration points
+- CLI command reference
+- Examples and use cases
+- Troubleshooting guide
+
+______________________________________________________________________
+
+## ✅ COMPLETED: Comprehensive Workflow Documentation
+
+**Location:** `docs/architecture/COMPLETE_WORKFLOW.md`
+
+**Contents:**
+
+1. **Complete Mermaid Workflow Diagram** - Comprehensive visual documentation showing:
+
+   - All 9 pipeline stages from CSV to visualization
+   - Advanced features (caching, preselection, membership policy, etc.)
+   - Optional paths and future features (stubs)
+   - Decision nodes and data flows
+   - Color-coded nodes for different component types
+
+1. **Detailed Component Descriptions** - In-depth documentation for:
+
+   - Data Preparation (incremental resume, fast I/O, quality validation)
+   - Asset Selection (liquidity, price, market cap, factor preselection)
+   - Asset Classification (geographic, type, overrides)
+   - Return Calculation (log/simple, alignment, PIT integrity)
+   - Universe Management (YAML configuration, orchestration)
+   - Portfolio Construction (3 strategies, constraints, caching)
+   - Backtesting (simulation, costs, membership policy)
+   - Performance Analytics (all metrics categories)
+   - Visualization (8+ chart types, dashboard)
+
+1. **Data Flow Paths** - Four documented workflows:
+
+   - Managed Workflow (recommended)
+   - Manual Workflow (debug/experiment)
+   - Comparison Mode (strategy research)
+   - Batch Backtesting (parallel execution)
+
+1. **Feature Integration Map** - Tables showing:
+
+   - Performance optimization features (when/how used)
+   - Risk management features (configuration)
+   - Factor & signal features (status, purpose)
+   - Constraint & policy features (implementation)
+
+1. **CLI Command Reference** - Complete examples for:
+
+   - All 7 CLI scripts
+   - Common use cases
+   - Advanced feature combinations
+
+1. **Examples & Use Cases** - 6 documented examples:
+
+   - S&P 500 Blue Chip Portfolio
+   - Low-Volatility Defensive Strategy
+   - Momentum Trend-Following
+   - Multi-Factor Balanced
+   - Batch Backtesting
+   - Real Data Visualization
+
+1. **Future Features** - Documented stubs:
+
+   - Cardinality constraints
+   - Technical indicators
+   - Macro signals & regime detection
+
+**Integration:**
+
+- ✅ README.md updated with link to complete workflow
+- ✅ docs/workflow.md updated with reference
+- ✅ docs/architecture/README.md created as overview
+- ✅ Comprehensive glossary added
+- ✅ Troubleshooting section included
 
 ______________________________________________________________________
 

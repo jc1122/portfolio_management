@@ -2,6 +2,10 @@
 
 Offline-first Python command-line toolkit for constructing and backtesting long-horizon retirement portfolios for Polish investors trading via BOŚ Dom Maklerski and mBank's MDM. The project emphasizes diversified asset allocation, factor tilts, and disciplined risk overlays, with future plans to incorporate news- and sentiment-driven signals.
 
+## 📊 Complete System Documentation
+
+**NEW:** [Complete Workflow Diagram & Documentation](docs/architecture/COMPLETE_WORKFLOW.md) - Comprehensive Mermaid diagram documenting all functionality from CSV ingestion to visualization, including all advanced features, data flows, and integration points.
+
 ## Current Capabilities
 
 - Offline-first data pipeline that ingests Stooq exports, validates quality, and produces tradeable match reports with diagnostics.
