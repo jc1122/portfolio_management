@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 
 
-class RollingStatistics:
-    """Efficient rolling statistics computation with caching.
+class StatisticsCache:
+    """Caches covariance matrices and expected returns.
 
     This class maintains cached covariance matrices and expected returns that can be
     incrementally updated when new data is added, significantly improving performance
@@ -125,10 +125,10 @@ class RollingStatistics:
             )
         return mean_returns, cov_matrix
 
-    def invalidate_cache(self) -> None:
-        """Manually invalidate the cache.
+    def clear_cache(self) -> None:
+        """Clear all cached statistics.
 
-        This forces recomputation on the next statistics request.
+        Primarily for testing to ensure test isolation.
         """
         self._cached_data = None
         self._cached_cov = None
@@ -138,6 +138,17 @@ class RollingStatistics:
         self._sum_vector = None
         self._cross_prod_matrix = None
         self._count = 0
+
+    def get_cache_stats(self) -> dict[str, int]:
+        """Get cache statistics.
+
+        Returns:
+            Dictionary with covariance_entries and returns_entries.
+        """
+        return {
+            "covariance_entries": 1 if self._cached_cov is not None else 0,
+            "returns_entries": 1 if self._cached_mean is not None else 0,
+        }
 
     def _retrieve_statistics(
         self,
@@ -338,3 +349,5 @@ class RollingStatistics:
         # Ensure the cache count matches the new window length for correctness.
 
         return mean_returns, cov_matrix
+
+RollingStatistics = StatisticsCache

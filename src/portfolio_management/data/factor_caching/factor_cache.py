@@ -139,6 +139,9 @@ class FactorCache:
         self.cache_dir = cache_dir
         self.enabled = enabled
         self.max_cache_age_days = max_cache_age_days
+        self._memory_cache: dict[str, Any] = {}
+        self.metadata_dir = cache_dir / "metadata"
+        self.data_dir = cache_dir / "data"
 
         if enabled:
             # Check if cache_dir is writable
@@ -151,8 +154,6 @@ class FactorCache:
                         "Example: cache_dir = Path('.cache/factors')",
                     )
 
-                self.metadata_dir = cache_dir / "metadata"
-                self.data_dir = cache_dir / "data"
                 self.metadata_dir.mkdir(parents=True, exist_ok=True)
                 self.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -561,23 +562,52 @@ class FactorCache:
             Number of entries deleted
 
         """
-        if not self.enabled:
-            return 0
+        return self.clear_cache()
 
-        count = 0
-        for path in self.metadata_dir.glob("*.json"):
-            path.unlink()
-            count += 1
-        for path in self.data_dir.glob("*.pkl"):
-            path.unlink()
+    def clear_cache(self, *, memory_only: bool = False) -> int:
+        """Clear cached data.
 
-        logger.info(f"Cleared {count} cache entries")
-        self._stats = {"hits": 0, "misses": 0, "puts": 0}
-        return count
+        Args:
+            memory_only: If True, only clear in-memory cache.
+                        If False, also clear disk cache.
+
+        Primarily for testing to ensure test isolation.
+        """
+        self._memory_cache.clear()
+
+        if not memory_only and self.cache_dir.exists():
+            # Clear disk cache
+            import shutil
+            count = len(list(self.metadata_dir.glob("*.json")))
+            shutil.rmtree(self.cache_dir)
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            self.metadata_dir.mkdir(parents=True, exist_ok=True)
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Cleared {count} cache entries from {self.cache_dir}")
+            self._stats = {"hits": 0, "misses": 0, "puts": 0}
+            return count
+        return 0
 
     def get_stats(self) -> dict[str, int]:
         """Get cache statistics."""
-        return self._stats.copy()
+        return self.get_cache_stats()
+
+    def get_cache_stats(self) -> dict[str, int]:
+        """Get cache statistics.
+
+        Returns:
+            Dictionary with memory_entries and disk_entries.
+        """
+        memory_entries = len(self._memory_cache)
+
+        disk_entries = 0
+        if self.cache_dir.exists() and self.data_dir.exists():
+            disk_entries = len(list(self.data_dir.glob("*.pkl")))
+
+        stats = self._stats.copy()
+        stats["memory_entries"] = memory_entries
+        stats["disk_entries"] = disk_entries
+        return stats
 
     def reset_stats(self) -> None:
         """Reset cache statistics to zero.
