@@ -1,4 +1,45 @@
-"""Return calculation engine."""
+"""Provides tools for calculating and preparing asset returns from price data.
+
+This module contains the `ReturnCalculator`, a class responsible for the
+end-to-end process of transforming raw asset prices into a clean, aligned
+DataFrame of returns suitable for portfolio analysis and construction. It
+handles missing data, various return calculation methods (simple, log, excess),
+and date alignment.
+
+Key Classes:
+    - ReturnCalculator: Orchestrates the return calculation pipeline.
+
+Usage Example:
+    >>> from pathlib import Path
+    >>> from portfolio_management.analytics.returns.calculator import ReturnCalculator
+    >>> from portfolio_management.analytics.returns.config import ReturnConfig
+    >>> from portfolio_management.assets.selection.models import SelectedAsset
+    >>>
+    >>> # Assume price CSVs exist in 'tests/data/prices'
+    >>> prices_dir = Path("tests/data/prices")
+    >>> assets = [
+    ...     SelectedAsset(symbol="AAPL", exchange="NASDAQ"),
+    ...     SelectedAsset(symbol="MSFT", exchange="NASDAQ"),
+    ... ]
+    >>> config = ReturnConfig(
+    ...     method="log",
+    ...     frequency="monthly",
+    ...     min_periods=12,
+    ...     handle_missing="forward_fill",
+    ... )
+    >>>
+    >>> calculator = ReturnCalculator()
+    >>> try:
+    ...     returns = calculator.load_and_prepare(assets, prices_dir, config)
+    ...     if not returns.empty:
+    ...         print(f"Prepared monthly returns for {returns.shape[1]} assets.")
+    ...         print(returns.head())
+    ... except FileNotFoundError:
+    ...    print("Skipping example: Test data not found.")
+    ... except Exception as e:
+    ...    print(f"An error occurred: {e}")
+
+"""
 
 from __future__ import annotations
 
@@ -21,9 +62,52 @@ logger = logging.getLogger(__name__)
 
 
 class ReturnCalculator:
-    """Prepare aligned return series ready for portfolio construction."""
+    """Prepare aligned return series ready for portfolio construction.
+
+    This class orchestrates the process of loading asset prices, handling
+    missing data, calculating returns, and resampling to a target frequency.
+    The goal is to produce a clean, aligned DataFrame of returns that can be
+    used as input for portfolio optimization or performance analysis.
+
+    The pipeline consists of the following steps:
+    1. Load prices for selected assets.
+    2. Handle missing data using a configurable strategy (e.g., ffill, drop).
+    3. Calculate returns (simple, log, or excess).
+    4. Filter assets based on minimum data availability.
+    5. Align dates across all assets.
+    6. Resample returns to the desired frequency (e.g., monthly).
+    7. Filter assets based on a minimum data coverage threshold.
+
+    Attributes:
+        price_loader (PriceLoader): An instance of a price loader to fetch
+            raw price data.
+        latest_summary (Optional[ReturnSummary]): A summary of the statistics
+            from the most recently calculated returns DataFrame.
+
+    Example:
+        >>> from pathlib import Path
+        >>> from portfolio_management.analytics.returns.calculator import ReturnCalculator
+        >>> from portfolio_management.analytics.returns.config import ReturnConfig
+        >>> from portfolio_management.assets.selection.models import SelectedAsset
+        >>>
+        >>> prices_dir = Path("tests/data/prices") # Dummy path
+        >>> assets = [SelectedAsset(symbol="FAKE")]
+        >>> config = ReturnConfig(frequency="monthly")
+        >>> calculator = ReturnCalculator()
+        >>> # This call would typically be wrapped in a try/except block
+        >>> # returns = calculator.load_and_prepare(assets, prices_dir, config)
+        >>> # if returns is not None:
+        ... #     print(returns.head())
+
+    """
 
     def __init__(self, price_loader: PriceLoader | None = None):
+        """Initializes the ReturnCalculator.
+
+        Args:
+            price_loader (Optional[PriceLoader]): A price loader instance.
+                If not provided, a default `PriceLoader` will be created.
+        """
         self.price_loader = price_loader or PriceLoader()
         self._latest_summary: ReturnSummary | None = None
 
@@ -38,7 +122,28 @@ class ReturnCalculator:
         prices_dir: Path,
         config: ReturnConfig,
     ) -> pd.DataFrame:
-        """Run the complete pipeline and return an aligned returns DataFrame."""
+        """Run the complete pipeline and return an aligned returns DataFrame.
+
+        This is the main entry point for the class. It takes a list of assets,
+        a directory of price files, and a configuration object, then executes
+        the full data preparation pipeline.
+
+        Args:
+            assets (list[SelectedAsset]): A list of assets to process.
+            prices_dir (Path): The directory where asset price CSV files are stored.
+            config (ReturnConfig): Configuration object specifying how to process
+                the returns.
+
+        Returns:
+            pd.DataFrame: A DataFrame of cleaned, aligned returns, with dates
+                as the index and asset symbols as columns.
+
+        Raises:
+            InsufficientDataError: If no assets are provided, no price data can be
+                found, or if all assets are filtered out during processing.
+            ReturnCalculationError: If the prices directory does not exist or the
+                configuration is invalid.
+        """
         if assets is None:
             raise InsufficientDataError(
                 "Assets for return preparation cannot be None.",
@@ -135,7 +240,21 @@ class ReturnCalculator:
         prices: pd.DataFrame,
         config: ReturnConfig,
     ) -> pd.DataFrame:
-        """Calculate returns for each column in *prices* according to *config*."""
+        """Calculate returns for each column in *prices* according to *config*.
+
+        This function applies the return calculation method specified in the
+        configuration (simple, log, or excess) to the price data. It also
+        filters out assets with insufficient historical data.
+
+        Args:
+            prices (pd.DataFrame): DataFrame of prices with dates as index and
+                assets as columns.
+            config (ReturnConfig): Configuration object specifying calculation
+                parameters.
+
+        Returns:
+            pd.DataFrame: DataFrame of calculated returns.
+        """
         if prices.empty:
             return pd.DataFrame()
 
@@ -233,7 +352,18 @@ class ReturnCalculator:
         prices: pd.DataFrame,
         config: ReturnConfig,
     ) -> pd.DataFrame:
-        """Apply the configured missing-data strategy to *prices*."""
+        """Apply the configured missing-data strategy to *prices*.
+
+        Args:
+            prices (pd.DataFrame): The input price data.
+            config (ReturnConfig): Configuration specifying the handling method.
+
+        Returns:
+            pd.DataFrame: Price data with missing values handled.
+
+        Raises:
+            ValueError: If an unknown missing data handling method is configured.
+        """
         if prices.empty:
             return prices
 
@@ -289,7 +419,20 @@ class ReturnCalculator:
         frequency: str,
         method: str,
     ) -> pd.DataFrame:
-        """Resample the returns DataFrame to the requested frequency."""
+        """Resample the returns DataFrame to the requested frequency.
+
+        Args:
+            returns (pd.DataFrame): DataFrame of returns, typically daily.
+            frequency (str): Target frequency ('weekly', 'monthly').
+            method (str): Return calculation method ('log' or 'simple') used to
+                determine the resampling aggregation method.
+
+        Returns:
+            pd.DataFrame: Resampled returns DataFrame.
+
+        Raises:
+            ValueError: If the frequency is not supported.
+        """
         if returns.empty or frequency == "daily":
             return returns
 
@@ -332,7 +475,12 @@ class ReturnCalculator:
 
     @staticmethod
     def export_returns(returns: pd.DataFrame, path: Path) -> None:
-        """Persist prepared returns as a CSV file."""
+        """Persist prepared returns as a CSV file.
+
+        Args:
+            returns (pd.DataFrame): The returns data to save.
+            path (Path): The file path to save the CSV to.
+        """
         returns.to_csv(path)
 
     def _summarize_returns(

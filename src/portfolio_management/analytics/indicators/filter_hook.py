@@ -1,4 +1,36 @@
-"""Filter hook for technical indicator-based asset filtering."""
+"""Filter hook for technical indicator-based asset filtering.
+
+This module provides the `FilterHook`, a class that connects the technical
+indicator computation with the asset selection pipeline. It uses an indicator
+provider to calculate signals for assets and then filters them based on the
+latest signal value.
+
+Key Classes:
+    - FilterHook: Applies indicator signals to filter a list of assets.
+
+Usage Example:
+    >>> import pandas as pd
+    >>> from portfolio_management.analytics.indicators.config import IndicatorConfig
+    >>> from portfolio_management.analytics.indicators.providers import NoOpIndicatorProvider
+    >>> from portfolio_management.analytics.indicators.filter_hook import FilterHook
+    >>>
+    >>> # Setup a no-op filter (always includes all assets)
+    >>> config = IndicatorConfig.noop()
+    >>> provider = NoOpIndicatorProvider()
+    >>> hook = FilterHook(config, provider)
+    >>>
+    >>> prices = pd.DataFrame({
+    ...     'AAPL': [100, 101, 102],
+    ...     'MSFT': [200, 201, 202]
+    ... }, index=pd.to_datetime(['2023-01-01', '2023-01-02', '2023-01-03']))
+    >>> initial_assets = ['AAPL', 'MSFT']
+    >>>
+    >>> filtered_assets = hook.filter_assets(prices, initial_assets)
+    >>> print(f"Assets before filtering: {initial_assets}")
+    Assets before filtering: ['AAPL', 'MSFT']
+    >>> print(f"Assets after filtering: {filtered_assets}")
+    Assets after filtering: ['AAPL', 'MSFT']
+"""
 
 from __future__ import annotations
 
@@ -17,49 +49,50 @@ logger = logging.getLogger(__name__)
 class FilterHook:
     """Hook for filtering assets based on technical indicator signals.
 
-    This class provides a filtering mechanism that can be plugged into
-    the asset selection pipeline to include/exclude assets based on
-    technical indicator signals.
+    This class serves as a bridge between a chosen indicator provider and the
+    asset selection process. It computes indicator signals for each asset's
+    price series and filters the asset list based on the most recent signal value.
+    Assets with a 'True' or '1.0' signal are retained, while those with 'False'
+    or '0.0' are excluded.
 
-    The hook computes indicator signals for each asset's price series
-    and filters assets based on the most recent signal value. Assets
-    with True/1.0 signals are included, while False/0.0 signals exclude
-    the asset.
+    Attributes:
+        config (IndicatorConfig): The configuration object for the indicators.
+        provider (IndicatorProvider): The provider instance used to compute signals.
 
     Example:
-        >>> from portfolio_management.analytics.indicators import (
-        ...     FilterHook, NoOpIndicatorProvider, IndicatorConfig
-        ... )
-        >>> config = IndicatorConfig.noop()
+        >>> import pandas as pd
+        >>> from .config import IndicatorConfig
+        >>> from .providers import NoOpIndicatorProvider
+        >>>
+        >>> # Using a NoOp provider which always returns True
+        >>> config = IndicatorConfig(enabled=True, provider='noop')
         >>> provider = NoOpIndicatorProvider()
         >>> hook = FilterHook(config, provider)
-        >>> prices = pd.DataFrame({
-        ...     'AAPL': [100, 101, 102],
-        ...     'MSFT': [200, 201, 202]
-        ... }, index=pd.date_range('2020-01-01', periods=3))
-        >>> filtered = hook.filter_assets(prices, ['AAPL', 'MSFT'])
-        >>> print(filtered)  # ['AAPL', 'MSFT'] - no-op includes all
-
+        >>>
+        >>> prices = pd.DataFrame({'TICKER': [10, 11, 12]})
+        >>> assets = ['TICKER']
+        >>> result = hook.filter_assets(prices, assets)
+        >>> print(result)
+        ['TICKER']
     """
 
     def __init__(self, config: IndicatorConfig, provider: IndicatorProvider):
-        """Initialize filter hook.
+        """Initialize the FilterHook.
 
         Args:
-            config: Indicator configuration
-            provider: Indicator provider implementation
-
+            config (IndicatorConfig): Indicator configuration object.
+            provider (IndicatorProvider): An indicator provider implementation
+                (e.g., `NoOpIndicatorProvider`, `TALibIndicatorProvider`).
         """
         self.config = config
         self.provider = provider
         self._validate_config()
 
     def _validate_config(self) -> None:
-        """Validate configuration.
+        """Validate the configuration.
 
         Raises:
-            ValueError: If configuration is invalid
-
+            ValueError: If the configuration is found to be invalid.
         """
         self.config.validate()
 
@@ -70,27 +103,20 @@ class FilterHook:
     ) -> list[str]:
         """Filter assets based on technical indicator signals.
 
-        For each asset, computes the indicator signal from its price series
-        and includes it only if the most recent signal is True (or >= 0.5 for
-        float signals).
+        For each asset in the input list, this method computes its technical
+        indicator signal using the configured provider. It then includes the asset
+        in the output list only if the most recent signal is True (or >= 0.5 for
+        floating-point signals).
 
         Args:
-            prices: Price DataFrame with assets as columns, dates as index
-            assets: List of asset symbols to filter
+            prices (pd.DataFrame): A DataFrame of price data, with asset symbols
+                as columns and dates as the index.
+            assets (list[str]): The list of asset symbols to be filtered.
 
         Returns:
-            Filtered list of asset symbols that pass indicator filter.
-            If indicators are disabled, returns all input assets unchanged.
-
-        Example:
-            >>> hook = FilterHook(IndicatorConfig.noop(), NoOpIndicatorProvider())
-            >>> prices = pd.DataFrame({
-            ...     'AAPL': [100, 101, 102],
-            ...     'MSFT': [200, 201, 202]
-            ... }, index=pd.date_range('2020-01-01', periods=3))
-            >>> filtered = hook.filter_assets(prices, ['AAPL', 'MSFT'])
-            >>> print(filtered)  # ['AAPL', 'MSFT']
-
+            list[str]: A new list containing only the asset symbols that passed
+            the indicator filter. If indicators are disabled in the config, this
+            method returns the original list of assets unmodified.
         """
         # If indicators disabled, return all assets
         if not self.config.enabled:

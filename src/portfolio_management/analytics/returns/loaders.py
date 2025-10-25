@@ -1,4 +1,34 @@
-"""Price data loaders for return calculation."""
+"""Price data loaders for return calculation.
+
+This module provides the `PriceLoader` class, a robust utility for reading
+financial price data from CSV files into pandas DataFrames. It is designed
+for efficiency and resilience, with features like parallel loading for speed,
+a configurable LRU cache to manage memory, and automatic data cleaning.
+
+Key Classes:
+    - PriceLoader: Loads, caches, and standardizes price data from files.
+
+Usage Example:
+    >>> from pathlib import Path
+    >>> from portfolio_management.analytics.returns.loaders import PriceLoader
+    >>> from portfolio_management.assets.selection.models import SelectedAsset
+    >>>
+    >>> # Assume 'tests/data/prices/AAPL.csv' exists
+    >>> prices_dir = Path("tests/data/prices")
+    >>> assets = [SelectedAsset(symbol="AAPL", exchange="NASDAQ")]
+    >>>
+    >>> loader = PriceLoader(cache_size=100)
+    >>> try:
+    ...     price_df = loader.load_multiple_prices(assets, prices_dir)
+    ...     if not price_df.empty:
+    ...         print(f"Loaded prices for {price_df.shape[1]} asset(s).")
+    ...         print(price_df.head())
+    ... except FileNotFoundError:
+    ...     print("Skipping example: Test data not found.")
+    ... except Exception as e:
+    ...     print(f"An error occurred: {e}")
+
+"""
 
 from __future__ import annotations
 
@@ -26,20 +56,41 @@ from portfolio_management.data.io.fast_io import Backend, read_csv_fast, select_
 class PriceLoader:
     """Utilities for reading price files into pandas objects.
 
-    This loader includes a bounded LRU cache to prevent unbounded memory growth
-    during long-running workflows or when processing wide universes with thousands
-    of unique price files.
+    This loader is designed to efficiently read and process numerous price files.
+    It includes a bounded LRU cache to prevent unbounded memory growth during
+    long-running workflows and uses a thread pool for parallel I/O operations
+    to accelerate data loading.
 
-    Args:
-        max_workers: Maximum number of concurrent threads for parallel loading.
-        cache_size: Maximum number of price series to cache. Default is 1000.
-            Set to 0 to disable caching entirely.
-        io_backend: IO backend for reading CSV files. Options:
-            - 'pandas' (default): Standard pandas CSV reader
-            - 'polars': Use polars for faster CSV parsing (requires polars)
-            - 'pyarrow': Use pyarrow for faster CSV parsing (requires pyarrow)
-            - 'auto': Automatically select fastest available backend
+    The loader also performs data validation and cleaning, such as removing
+    duplicate timestamps and non-positive price values.
 
+    Attributes:
+        max_workers (int | None): Maximum number of concurrent threads for
+            parallel loading. If None, a default is calculated based on CPU cores.
+        cache_size (int): Maximum number of price series to hold in the LRU cache.
+            Set to 0 to disable caching.
+        io_backend (Backend): The backend to use for reading CSV files. Options
+            include 'pandas', 'polars', and 'pyarrow'. 'auto' selects the
+            fastest available option.
+
+    Example:
+        >>> from pathlib import Path
+        >>> from portfolio_management.analytics.returns.loaders import PriceLoader
+        >>> from portfolio_management.assets.selection.models import SelectedAsset
+        >>>
+        >>> prices_dir = Path("tests/data/prices") # Dummy path
+        >>> assets = [
+        ...     SelectedAsset(symbol="AAPL"),
+        ...     SelectedAsset(symbol="MSFT")
+        ... ]
+        >>> loader = PriceLoader(max_workers=4, cache_size=500)
+        >>> # price_df = loader.load_multiple_prices(assets, prices_dir)
+        >>> # if price_df is not None:
+        ... #     print(price_df.info())
+        >>>
+        >>> # Check cache status
+        >>> print(loader.cache_info())
+        {'size': 0, 'maxsize': 500}
     """
 
     def __init__(
@@ -48,6 +99,18 @@ class PriceLoader:
         cache_size: int = 1000,
         io_backend: Backend = "pandas",
     ):
+        """Initializes the PriceLoader.
+
+        Args:
+            max_workers: Maximum number of concurrent threads for parallel loading.
+            cache_size: Maximum number of price series to cache. Default is 1000.
+                Set to 0 to disable caching entirely.
+            io_backend: IO backend for reading CSV files. Options:
+                - 'pandas' (default): Standard pandas CSV reader
+                - 'polars': Use polars for faster CSV parsing (requires polars)
+                - 'pyarrow': Use pyarrow for faster CSV parsing (requires pyarrow)
+                - 'auto': Automatically select fastest available backend
+        """
         self.max_workers = max_workers
         self.cache_size = max(0, cache_size)  # Ensure non-negative
         self.io_backend = io_backend
@@ -55,7 +118,23 @@ class PriceLoader:
         self._cache_lock = Lock()
 
     def load_price_file(self, path: Path) -> pd.Series:
-        """Load a single price file into a ``Series`` indexed by date."""
+        """Load a single price file into a ``Series`` indexed by date.
+
+        This method reads a CSV file, standardizes its columns, cleans the data
+        (handles duplicates, non-positive values), and returns a sorted Series
+        of close prices.
+
+        Args:
+            path (Path): The path to the price CSV file.
+
+        Returns:
+            pd.Series: A Series of close prices, indexed by date. The Series
+                will be empty if the file is empty or contains no valid data.
+
+        Raises:
+            FileNotFoundError: If the specified path does not exist.
+            ValueError: If the CSV file has an unsupported column structure.
+        """
         if not path.exists():
             raise FileNotFoundError(path)
 
@@ -111,7 +190,22 @@ class PriceLoader:
         assets: list[SelectedAsset],
         prices_dir: Path,
     ) -> pd.DataFrame:
-        """Load price data for many assets and align on the union of dates."""
+        """Load price data for many assets and align on the union of dates.
+
+        This method orchestrates the loading of price files for a list of assets
+        in parallel. It resolves file paths, submits loading tasks to a thread
+        pool, and assembles the resulting Series into a single DataFrame.
+
+        Args:
+            assets (list[SelectedAsset]): The list of assets to load prices for.
+            prices_dir (Path): The base directory containing the price CSV files.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the close prices for all successfully
+                loaded assets. The index is the union of all dates, and columns
+                are the asset symbols. Returns an empty DataFrame if no price
+                files can be loaded.
+        """
         logger.info(
             "Loading price series for %d assets from %s",
             len(assets),
@@ -229,8 +323,7 @@ class PriceLoader:
         """Return cache statistics for monitoring.
 
         Returns:
-            Dictionary with 'size' (current entries) and 'maxsize' (capacity).
-
+            dict: A dictionary with 'size' (current entries) and 'maxsize' (capacity).
         """
         with self._cache_lock:
             return {
