@@ -1,4 +1,17 @@
-"""Risk parity portfolio strategy."""
+"""Implements the Risk Parity portfolio construction strategy.
+
+This module provides the `RiskParityStrategy`, which aims to construct a
+portfolio where each asset contributes equally to the total portfolio risk.
+This approach to portfolio construction focuses on diversifying risk rather than
+allocating capital.
+
+Key Classes:
+    - RiskParityStrategy: The core class that performs risk parity optimization.
+
+Dependencies:
+    - riskparityportfolio: This module relies on the `riskparityportfolio` library
+      for its core optimization routines. It must be installed in the environment.
+"""
 
 from __future__ import annotations
 
@@ -32,14 +45,42 @@ EIGENVALUE_TOLERANCE = 1e-8
 
 
 class RiskParityStrategy(PortfolioStrategy):
-    """Risk parity portfolio strategy.
+    """Constructs a portfolio where each asset contributes equally to total risk.
 
-    Allocates capital such that each asset contributes equally to total portfolio risk.
-    Uses the riskparityportfolio library for optimization.
+    This strategy, often called "risk parity," seeks to build a more balanced
+    portfolio by ensuring that the contribution of each asset to the overall
+    portfolio volatility is the same. It is considered a more robust approach
+    to diversification than traditional capital allocation strategies.
 
-    Attributes:
-        min_periods: Minimum periods for covariance estimation (default: 252, ~1 year)
-        statistics_cache: Optional RollingStatistics instance for caching covariance matrices
+    Mathematical Formulation:
+        The objective is to find the portfolio weights `w` such that the risk
+        contribution of each asset is equal. The risk contribution of asset `i` is:
+
+        RCᵢ = wᵢ * ∂σ(w) / ∂wᵢ = wᵢ * (Σw)ᵢ / σ(w)
+
+        where:
+        - w: portfolio weights vector
+        - Σ: covariance matrix of asset returns
+        - σ(w): portfolio volatility, sqrt(w.T * Σ * w)
+
+        The optimizer solves for `w` such that RCᵢ = RCⱼ for all assets i, j.
+
+    Example:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> from portfolio_management.portfolio.strategies import RiskParityStrategy
+        >>> from portfolio_management.portfolio.constraints import PortfolioConstraints
+        >>>
+        >>> # Create returns with different volatilities
+        >>> np.random.seed(42)
+        >>> returns = pd.DataFrame({
+        ...     'LOW_VOL': np.random.normal(0, 0.05, 252),
+        ...     'HIGH_VOL': np.random.normal(0, 0.20, 252),
+        ... })
+        >>>
+        >>> strategy = RiskParityStrategy()
+        >>> print(strategy.name)
+        risk_parity
 
     """
 

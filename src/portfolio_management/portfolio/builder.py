@@ -1,4 +1,13 @@
-"""Portfolio construction orchestration."""
+"""Orchestrates the construction of portfolios using various strategies.
+
+This module provides the `PortfolioConstructor`, a high-level class that acts as a
+factory and manager for different portfolio construction strategies. It allows users
+to register custom strategies and construct portfolios by name, applying a consistent
+set of constraints.
+
+Key Classes:
+    - PortfolioConstructor: Selects and executes portfolio construction strategies.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +28,63 @@ logger = logging.getLogger(__name__)
 
 
 class PortfolioConstructor:
-    """Coordinate portfolio strategy selection and construction."""
+    """Coordinates portfolio strategy selection and construction.
+
+    This class acts as a factory for portfolio construction, allowing users to
+    register different `PortfolioStrategy` implementations and then construct
+    portfolios by referencing their registered names. It simplifies the process
+    of comparing different strategies under the same constraints.
+
+    It comes with several common strategies pre-registered, such as equal weight,
+    minimum volatility, and maximum Sharpe ratio.
+
+    Attributes:
+        _default_constraints (PortfolioConstraints): Default constraints to apply
+            if none are provided during construction.
+        _strategies (dict[str, PortfolioStrategy]): A registry of available
+            portfolio construction strategies.
+
+    Example:
+        >>> import pandas as pd
+        >>> from portfolio_management.portfolio import (
+        ...     PortfolioConstructor, PortfolioConstraints
+        ... )
+        >>>
+        >>> import numpy as np
+        >>> np.random.seed(42)
+        >>> returns = pd.DataFrame({
+        ...     'ASSET_A': np.random.normal(0, 0.01, 30),
+        ...     'ASSET_B': np.random.normal(0, 0.02, 30),
+        ... })
+        >>>
+        >>> # Initialize with default constraints
+        >>> constraints = PortfolioConstraints(max_weight=0.7)
+        >>> from portfolio_management.portfolio.strategies.mean_variance import MeanVarianceStrategy
+        >>> constructor = PortfolioConstructor(constraints=constraints)
+        >>> # The default min_periods for MeanVarianceStrategy is 252. We override it for the example.
+        >>> constructor.register_strategy(
+        ...     "mean_variance_min_vol",
+        ...     MeanVarianceStrategy(objective="min_volatility", min_periods=30)
+        ... )
+        >>>
+        >>> # Construct a minimum volatility portfolio
+        >>> portfolio = constructor.construct("mean_variance_min_vol", returns)
+        >>> # The exact weights will vary, but the sum should be 1.0
+        >>> print(portfolio.weights.sum().round(2))
+        1.0
+        >>>
+        >>> # Compare multiple strategies
+        >>> comparison = constructor.compare_strategies(
+        ...     ["equal_weight", "mean_variance_min_vol"],
+        ...     returns
+        ... )
+        >>> # The exact weights will vary, but the sums should be 1.0
+        >>> print(comparison.sum().round(2))
+        equal_weight             1.0
+        mean_variance_min_vol    1.0
+        dtype: float64
+
+    """
 
     def __init__(self, constraints: PortfolioConstraints | None = None) -> None:
         """Initialise the constructor with optional default constraints."""
@@ -31,11 +96,11 @@ class PortfolioConstructor:
         self.register_strategy(StrategyType.RISK_PARITY.value, RiskParityStrategy())
         self.register_strategy(
             "mean_variance_max_sharpe",
-            MeanVarianceStrategy("max_sharpe"),
+            MeanVarianceStrategy(objective="max_sharpe"),
         )
         self.register_strategy(
             "mean_variance_min_vol",
-            MeanVarianceStrategy("min_volatility"),
+            MeanVarianceStrategy(objective="min_volatility"),
         )
 
     def register_strategy(self, name: str, strategy: PortfolioStrategy) -> None:

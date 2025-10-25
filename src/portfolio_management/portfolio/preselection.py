@@ -13,10 +13,21 @@ Key Features:
     - No future data leakage
 
 Example:
-    >>> preselect = Preselection(method="momentum", top_k=20, lookback=252)
+    >>> from datetime import date
+    >>> import pandas as pd
+    >>> from portfolio_management.portfolio.preselection import Preselection, PreselectionConfig, PreselectionMethod
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>> historical_returns = pd.DataFrame({
+    ...     'ASSET1': np.random.normal(0, 0.01, 60),
+    ...     'ASSET2': np.random.normal(0, 0.02, 60),
+    ...     'ASSET3': np.random.normal(0, 0.03, 60)
+    ... }, index=pd.date_range(end='2022-12-30', periods=60))
+    >>> config = PreselectionConfig(method=PreselectionMethod.MOMENTUM, top_k=2, min_periods=30)
+    >>> preselect = Preselection(config)
     >>> selected_assets = preselect.select_assets(
     ...     returns=historical_returns,
-    ...     rebalance_date=date(2023, 1, 1)
+    ...     rebalance_date=date(2022, 12, 30)
     ... )
 
 """
@@ -206,9 +217,18 @@ class Preselection:
             InsufficientDataError: If insufficient data for factor calculation
 
         Examples:
-            >>> config = PreselectionConfig(method=PreselectionMethod.MOMENTUM, top_k=30)
+            >>> from datetime import date
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> np.random.seed(42)
+            >>> returns = pd.DataFrame({
+            ...     'ASSET1': np.random.normal(0, 0.01, 60),
+            ...     'ASSET2': np.random.normal(0, 0.02, 60),
+            ...     'ASSET3': np.random.normal(0, 0.03, 60)
+            ... }, index=pd.date_range(end='2022-12-30', periods=60))
+            >>> config = PreselectionConfig(method=PreselectionMethod.MOMENTUM, top_k=2, min_periods=30)
             >>> preselect = Preselection(config)
-            >>> selected = preselect.select_assets(returns, rebalance_date=date(2023, 1, 1))
+            >>> selected = preselect.select_assets(returns, rebalance_date=date(2022, 12, 30))
 
         """
         # Validate returns DataFrame

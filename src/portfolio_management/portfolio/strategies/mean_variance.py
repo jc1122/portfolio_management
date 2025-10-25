@@ -1,4 +1,20 @@
-"""Mean-variance optimization strategy."""
+"""Implements the Mean-Variance Optimization (MVO) portfolio strategy.
+
+This module provides the `MeanVarianceStrategy`, which uses the PyPortfolioOpt
+library to construct portfolios based on the principles of Modern Portfolio Theory
+(MPT) developed by Harry Markowitz. It aims to find the optimal portfolio that
+maximizes return for a given level of risk or minimizes risk for a given level
+of return.
+
+Key Classes:
+    - MeanVarianceStrategy: The core class that performs mean-variance optimization.
+      It supports various objectives, such as maximizing the Sharpe ratio or
+      minimizing portfolio volatility.
+
+Dependencies:
+    - PyPortfolioOpt: This module relies on the `pypfopt` library for its core
+      optimization routines. It must be installed in the environment.
+"""
 
 from __future__ import annotations
 
@@ -33,7 +49,54 @@ LARGE_UNIVERSE_THRESHOLD = 300
 
 
 class MeanVarianceStrategy(PortfolioStrategy):
-    """Mean-variance optimization strategy powered by PyPortfolioOpt."""
+    """Constructs a portfolio using mean-variance optimization (MVO).
+
+    This strategy leverages the PyPortfolioOpt library to find the optimal asset
+    allocation that balances risk (variance) and return. It is a cornerstone of
+    modern portfolio theory.
+
+    Mathematical Formulation:
+        The core of MVO is a quadratic optimization problem. For an objective
+        like 'max_sharpe', the optimizer solves:
+
+        maximize: (w.T * μ - r_f) / sqrt(w.T * Σ * w)
+        subject to:
+            Σw = 1 (or other constraints)
+            w_i >= 0 (long-only)
+
+        where:
+        - w: portfolio weights vector
+        - μ: expected returns vector
+        - Σ: covariance matrix of asset returns
+        - r_f: risk-free rate
+
+    Supported Objectives:
+        - `max_sharpe`: Finds the tangency portfolio with the highest Sharpe ratio.
+        - `min_volatility`: Finds the portfolio with the minimum possible risk.
+        - `efficient_risk`: Finds the portfolio on the efficient frontier for a
+          given target risk level.
+
+    Example:
+        >>> import pandas as pd
+        >>> from portfolio_management.portfolio.strategies import MeanVarianceStrategy
+        >>> from portfolio_management.portfolio.constraints import PortfolioConstraints
+        >>>
+        >>> import numpy as np
+        >>> returns = pd.DataFrame({
+        ...     'STABLE_ASSET': np.random.normal(0.001, 0.01, 252),
+        ...     'GROWTH_ASSET': np.random.normal(0.005, 0.05, 252),
+        ... })
+        >>>
+        >>> # Find the portfolio that minimizes volatility
+        >>> strategy = MeanVarianceStrategy(objective="min_volatility", min_periods=30)
+        >>> constraints = PortfolioConstraints(min_weight=0.1, max_weight=0.9)
+        >>> portfolio = strategy.construct(returns, constraints)
+        >>>
+        >>> # The exact weights will vary, but the stable asset should have a high weight
+        >>> print(portfolio.weights['STABLE_ASSET'] > 0.5)
+        True
+
+    """
 
     _VALID_OBJECTIVES: ClassVar[set[str]] = {
         "max_sharpe",

@@ -1,4 +1,15 @@
-"""Portfolio constraints and guardrails."""
+"""Data models for defining portfolio investment constraints.
+
+This module provides data classes for specifying constraints to be used during
+portfolio optimization. These constraints help ensure that the resulting portfolio
+adheres to specific investment rules, risk limits, and diversification requirements.
+
+Key Classes:
+    - PortfolioConstraints: Defines basic constraints like min/max weights and
+      group exposure limits.
+    - CardinalityConstraints: Defines rules for the number of assets in a portfolio.
+    - CardinalityMethod: Enumerates the different methods for enforcing cardinality.
+"""
 
 from __future__ import annotations
 
@@ -8,16 +19,33 @@ from enum import Enum
 
 @dataclass(frozen=True)
 class PortfolioConstraints:
-    """Portfolio investment constraints and guardrails.
+    """Defines basic investment constraints and guardrails for a portfolio.
+
+    This data class holds common constraints that can be applied during the
+    optimization process to ensure the portfolio meets diversification and
+    exposure mandates.
 
     Attributes:
-        max_weight: Maximum weight for any single asset (default: 0.25)
-        min_weight: Minimum weight for any single asset (default: 0.0)
-        max_equity_exposure: Maximum total equity allocation (default: 0.90)
-        min_bond_exposure: Minimum total bond/cash allocation (default: 0.10)
-        sector_limits: Optional dict mapping sector names to max weights
-        require_full_investment: Whether weights must sum to 1.0 (default: True)
+        max_weight (float): Maximum weight for any single asset.
+        min_weight (float): Minimum weight for any single asset.
+        max_equity_exposure (float): Maximum total allocation to equity assets.
+        min_bond_exposure (float): Minimum total allocation to bond/cash assets.
+        sector_limits (dict[str, float] | None): A dictionary mapping sector names
+            to their maximum allowed weight in the portfolio.
+        require_full_investment (bool): If True, forces the sum of all asset
+            weights to equal 1.0.
 
+    Configuration Example (YAML):
+        ```yaml
+        constraints:
+          max_weight: 0.15
+          min_weight: 0.01
+          max_equity_exposure: 0.80
+          sector_limits:
+            Technology: 0.30
+            Healthcare: 0.25
+          require_full_investment: true
+        ```
     """
 
     max_weight: float = 0.25
@@ -64,45 +92,55 @@ class CardinalityMethod(str, Enum):
 
 @dataclass(frozen=True)
 class CardinalityConstraints:
-    """Cardinality constraints for portfolio optimization.
+    """Defines constraints on the number of assets in a portfolio.
 
-    Cardinality constraints limit the number of non-zero positions in the portfolio,
-    which is useful for controlling transaction costs, simplifying portfolio management,
-    and enforcing minimum investment sizes.
+    Cardinality constraints limit the number of non-zero positions, which is
+    critical for managing transaction costs, improving liquidity, and adhering
+    to fund mandates that limit the number of holdings.
 
-    Two approaches are supported:
-    1. **Preselection** (current): Filter assets before optimization using factors
-    2. **Integrated** (future): Enforce cardinality within the optimizer itself
+    Mathematical Formulation:
+        Let w ∈ ℝⁿ be the portfolio weights and z ∈ {0,1}ⁿ be binary indicators
+        where zᵢ = 1 if asset i is included in the portfolio, and 0 otherwise.
+
+        1. Position Limit:
+           min_assets ≤ Σᵢ zᵢ ≤ max_assets
+
+        2. Linking weights and indicators:
+           min_position_size * zᵢ ≤ wᵢ ≤ max_weight * zᵢ
+
+        This formulation requires a Mixed-Integer Programming (MIP) solver.
 
     Attributes:
-        enabled: Whether cardinality constraints are active (default: False)
-        method: Method for enforcing cardinality (default: PRESELECTION)
-        max_assets: Maximum number of non-zero positions (None = unlimited)
-        min_position_size: Minimum weight for non-zero positions (default: 0.01)
-        group_limits: Optional dict mapping group names to max positions per group
-        enforce_in_optimizer: Whether to enforce within optimizer vs preselection
-            (default: False, requires method != PRESELECTION)
+        enabled (bool): Whether cardinality constraints are active.
+        method (CardinalityMethod): The method for enforcing cardinality.
+            'preselection' is the default and filters assets before optimization.
+            Other methods like 'miqp' integrate constraints into the optimizer.
+        max_assets (int | None): Maximum number of non-zero positions.
+        min_position_size (float): The minimum weight for any non-zero position.
+        group_limits (dict[str, int] | None): A dictionary mapping asset groups
+            to the maximum number of positions allowed in that group.
+        enforce_in_optimizer (bool): If True, integrates the constraints directly
+            into the optimization problem, which requires a MIP-capable solver.
+            Defaults to False, relying on pre-selection.
 
-    Example:
-        >>> # Simple cardinality: max 30 assets
-        >>> constraints = CardinalityConstraints(
-        ...     enabled=True,
-        ...     max_assets=30,
-        ...     min_position_size=0.02
-        ... )
+    Configuration Example (YAML):
+        ```yaml
+        cardinality:
+          enabled: true
+          method: preselection
+          max_assets: 50
+          min_position_size: 0.015
+          group_limits:
+            equity: 40
+            alternatives: 5
+        ```
 
-        >>> # Group-based cardinality: max 20 equity, max 10 bonds
-        >>> constraints = CardinalityConstraints(
-        ...     enabled=True,
-        ...     max_assets=30,
-        ...     group_limits={"equity": 20, "fixed_income": 10}
-        ... )
-
-    Design Notes:
-        - Preselection (current): Fast, deterministic, factor-driven filtering
-        - MIQP (future): Optimal but requires commercial solver (Gurobi/CPLEX)
-        - Heuristic (future): Good approximate solutions, no special solver needed
-        - Relaxation (future): Continuous optimization + rounding heuristics
+    Performance Notes:
+        - `preselection`: Very fast, suitable for all optimizers. Sub-optimal
+          as it doesn't consider correlations during selection.
+        - `miqp`: Provides the optimal solution but is computationally expensive
+          (NP-hard) and requires a specialized solver (e.g., Gurobi, CBC).
+          Complexity scales exponentially with the number of assets.
 
     """
 

@@ -14,14 +14,13 @@ Example:
     >>> policy = MembershipPolicy(
     ...     buffer_rank=50,
     ...     min_holding_periods=3,
-    ...     max_turnover=0.30,
     ...     max_new_assets=5,
     ...     max_removed_assets=5
     ... )
     >>>
     >>> # Apply policy at rebalance
     >>> current_holdings = ["AAPL", "MSFT", "GOOGL"]
-    >>> preselected_ranks = pd.Series({"AAPL": 1, "MSFT": 2, "AMZN": 3, "TSLA": 4, ...})
+    >>> preselected_ranks = pd.Series({"AAPL": 1, "MSFT": 2, "AMZN": 3, "TSLA": 4})
     >>> holding_periods = {"AAPL": 5, "MSFT": 2, "GOOGL": 1}
     >>>
     >>> final_candidates = apply_membership_policy(
@@ -80,7 +79,6 @@ class MembershipPolicy:
         >>> policy = MembershipPolicy(
         ...     buffer_rank=50,
         ...     min_holding_periods=3,
-        ...     max_turnover=0.30,
         ...     max_new_assets=5,
         ...     max_removed_assets=5
         ... )
@@ -244,7 +242,7 @@ def apply_membership_policy(  # noqa: PLR0913
 
     Example:
         >>> current_holdings = ["AAPL", "MSFT", "GOOGL"]
-        >>> ranks = pd.Series({"AAPL": 1, "MSFT": 2, "AMZN": 3, "GOOGL": 45, ...})
+        >>> ranks = pd.Series({"AAPL": 1, "MSFT": 2, "AMZN": 3, "GOOGL": 45})
         >>> holding_periods = {"AAPL": 5, "MSFT": 2, "GOOGL": 1}
         >>> policy = MembershipPolicy(
         ...     buffer_rank=50,

@@ -1,4 +1,12 @@
-"""Equal weight portfolio strategy."""
+"""A simple, non-optimizing strategy that assigns equal weight to all assets.
+
+This module provides the `EqualWeightStrategy`, which implements the classic "1/N"
+portfolio allocation. It serves as a fundamental baseline for comparison against
+more complex optimization-based strategies.
+
+Key Classes:
+    - EqualWeightStrategy: Implements the equal-weight allocation logic.
+"""
 
 from __future__ import annotations
 
@@ -15,10 +23,45 @@ logger = logging.getLogger(__name__)
 
 
 class EqualWeightStrategy(PortfolioStrategy):
-    """Equal-weight (1/N) portfolio strategy.
+    """Implements the equal-weight (1/N) portfolio construction strategy.
 
-    Assigns equal weight to all assets, subject to constraints.
-    This is the simplest baseline strategy and requires minimal historical data.
+    This strategy assigns an equal weight to every asset in the investment
+    universe. It is a simple, transparent, and computationally inexpensive
+    approach that serves as a common benchmark.
+
+    The main assumption is that there is no information available to suggest
+    that any single asset will outperform another.
+
+    Mathematical Formulation:
+        Given N assets in the portfolio, the weight for each asset i is:
+        wᵢ = 1 / N
+
+    This strategy does not perform any optimization and only considers the number
+    of available assets. It will, however, validate the resulting portfolio
+    against basic constraints (e.g., `max_weight`).
+
+    Example:
+        >>> import pandas as pd
+        >>> from portfolio_management.portfolio.strategies import EqualWeightStrategy
+        >>> from portfolio_management.portfolio.constraints import PortfolioConstraints
+        >>>
+        >>> returns = pd.DataFrame({
+        ...     'ASSET_A': [0.01, 0.02],
+        ...     'ASSET_B': [0.03, -0.01],
+        ...     'ASSET_C': [0.02, 0.01],
+        ...     'ASSET_D': [-0.01, 0.01],
+        ... })
+        >>>
+        >>> strategy = EqualWeightStrategy()
+        >>> constraints = PortfolioConstraints(max_weight=0.3)
+        >>> portfolio = strategy.construct(returns, constraints)
+        >>>
+        >>> print(portfolio.weights)
+        ASSET_A    0.25
+        ASSET_B    0.25
+        ASSET_C    0.25
+        ASSET_D    0.25
+        dtype: float64
     """
 
     @property
