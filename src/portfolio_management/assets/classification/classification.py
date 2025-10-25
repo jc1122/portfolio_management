@@ -1,14 +1,26 @@
-"""Asset classification for portfolio construction.
+"""Provides a rule-based engine for asset classification.
 
-This module provides a taxonomy and data models for classifying assets into
-different categories, such as asset class, geography, and sector. This
-classification is a key input for portfolio construction and analysis.
+This module defines the taxonomy (enums), data structures, and logic required
+to classify assets into categories such as asset class, geography, and sub-class.
+The classification process is a crucial step in preparing a filtered asset
+universe for portfolio construction and analysis.
 
-Key components:
-- AssetClass, Geography, SubClass: Enums for the classification taxonomy.
-- AssetClassification: Dataclass to hold the classification result for an asset.
-- ClassificationOverrides: A class to manage manual classification overrides from a CSV file.
-- AssetClassifier: The main class that performs rule-based classification.
+Pipeline Position:
+    Asset Selection -> **Asset Classification** -> Universe Loading
+
+    1.  **Input**: A list of `SelectedAsset` objects that have passed initial
+       filtering.
+    2.  **Process**: The `AssetClassifier` applies a set of rules based on asset
+       metadata (e.g., name, category, currency) to assign a classification.
+       Manual overrides can be provided to handle exceptions.
+    3.  **Output**: A pandas DataFrame containing the original asset identifiers
+       along with their assigned classifications and a confidence score.
+
+Key Components:
+    - `AssetClass`, `Geography`, `SubClass`: Enums for the classification taxonomy.
+    - `AssetClassification`: Dataclass holding the classification result for an asset.
+    - `ClassificationOverrides`: Manages manual classification overrides from a CSV file.
+    - `AssetClassifier`: The main engine that performs the rule-based classification.
 
 Usage Example:
     from pathlib import Path
@@ -19,38 +31,38 @@ Usage Example:
         ClassificationOverrides
     )
 
-    # 1. Load selected assets
+    # 1. Define selected assets (output from the selection stage)
     selected_assets = [
         SelectedAsset(
-            symbol="TEST.US", isin="US0000000000", name="Test Equity Fund", market="US",
-            region="North America", currency="USD", category="etf", price_start="2020-01-01",
-            price_end="2023-01-01", price_rows=756, data_status="ok", data_flags="",
-            stooq_path="path/test.us.txt", resolved_currency="USD", currency_status="matched"
+            symbol="FUND.US", isin="US0123456789", name="Global Equity Fund",
+            market="US", region="North America", currency="USD", category="etf",
+            price_start="2020-01-01", price_end="2023-01-01", price_rows=756,
+            data_status="ok", data_flags="", stooq_path="path/fund.us.txt",
+            resolved_currency="USD", currency_status="matched"
+        ),
+        SelectedAsset(
+            symbol="BOND.UK", isin="GB0009876543", name="UK Government Gilt",
+            market="UK", region="Europe", currency="GBP", category="bond",
+            price_start="2018-01-01", price_end="2023-01-01", price_rows=1260,
+            data_status="ok", data_flags="", stooq_path="path/bond.uk.txt",
+            resolved_currency="GBP", currency_status="matched"
         )
     ]
 
-    # 2. Load overrides (optional)
-    overrides = ClassificationOverrides.from_csv(Path("path/to/overrides.csv"))
+    # 2. Load manual overrides from a CSV file (optional)
+    # Assume 'overrides.csv' contains a row to re-classify FUND.US
+    # overrides = ClassificationOverrides.from_csv(Path("path/to/overrides.csv"))
 
-    # 3. Classify assets
-    classifier = AssetClassifier(overrides=overrides)
+    # 3. Initialize and run the classifier
+    classifier = AssetClassifier() # or AssetClassifier(overrides=overrides)
     classified_df = classifier.classify_universe(selected_assets)
 
     # 4. Review results
-    print(classified_df.head())
-
-Limitations and Recommendations:
-    The current rule-based classifier is simple and relies on keywords in the asset's
-    name and category. This can be effective for many assets, but it has limitations:
-    - It may misclassify assets with ambiguous names.
-    - It does not handle complex financial instruments well.
-    - The sub-class and sector classifications are very basic.
-
-    For improved accuracy, consider the following:
-    - Expanding the keyword lists.
-    - Using more sophisticated NLP techniques for name analysis.
-    - Integrating with external data sources for more detailed asset information.
-    - Utilizing the manual override system for known exceptions.
+    print(classified_df[['symbol', 'asset_class', 'geography', 'confidence']].head())
+    # Expected output might look like:
+    #     symbol   asset_class        geography  confidence
+    # 0  FUND.US        equity    north_america         0.9
+    # 1  BOND.UK  fixed_income   united_kingdom         0.7
 """
 
 from __future__ import annotations
@@ -117,7 +129,22 @@ class SubClass(str, Enum):
 
 @dataclass
 class AssetClassification:
-    """Represents the classification of a single asset."""
+    """Represents the classification of a single asset.
+
+    This data structure holds the complete classification profile for an asset
+    after it has been processed by the `AssetClassifier`.
+
+    Attributes:
+        symbol: The unique ticker symbol for the asset.
+        isin: The International Securities Identification Number.
+        name: The human-readable name of the asset.
+        asset_class: The broad asset class (e.g., 'equity', 'fixed_income').
+        sub_class: The more granular sub-class (e.g., 'large_cap', 'government').
+        geography: The geographical region of the asset.
+        sector: The industry sector (optional, often populated by external data).
+        confidence: A score from 0.0 to 1.0 indicating the classifier's
+            confidence in the result. 1.0 indicates a manual override.
+    """
 
     symbol: str
     isin: str
@@ -131,13 +158,68 @@ class AssetClassification:
 
 @dataclass
 class ClassificationOverrides:
-    """Holds manual classification overrides, loaded from a CSV file."""
+    """Manages manual classification overrides loaded from a CSV file.
+
+    This class provides a mechanism to manually set the classification for
+    specific assets, bypassing the rule-based engine. Overrides are indexed by
+    ISIN or symbol, with ISIN taking precedence.
+
+    Attributes:
+        overrides: A dictionary where keys are asset identifiers (ISIN or symbol)
+            and values are dictionaries of classification fields to override.
+
+    Configuration (CSV Format):
+        The CSV file should contain columns that match the `AssetClassification`
+        attributes. The 'symbol' or 'isin' column is required for matching.
+
+        Example `overrides.csv`:
+        ```csv
+        symbol,isin,asset_class,sub_class,geography
+        AMZN.US,US0231351067,equity,large_cap,north_america
+        BRK.A,US0846701086,equity,value,north_america
+        ```
+
+    Example:
+        >>> from pathlib import Path
+        >>> import io
+        >>>
+        >>> csv_lines = [
+        ...     "symbol,isin,asset_class,sub_class,geography",
+        ...     "AMZN.US,US0231351067,equity,large_cap,north_america",
+        ...     "BRK.A,US0846701086,equity,value,north_america"
+        ... ]
+        >>> csv_content = "\\n".join(csv_lines)
+        >>>
+        >>> # In a real scenario, you would provide a file path.
+        >>> # For this example, we simulate the file with an in-memory buffer.
+        >>> with open("overrides.csv", "w") as f:
+        ...     _ = f.write(csv_content)
+        >>>
+        >>> overrides = ClassificationOverrides.from_csv("overrides.csv")
+        >>> amzn_override = overrides.overrides.get("US0231351067")
+        >>> print(amzn_override['asset_class'])
+        equity
+        >>> import os
+        >>> os.remove("overrides.csv")
+    """
 
     overrides: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @classmethod
     def from_csv(cls, path: pathlib.Path | str) -> ClassificationOverrides:
-        """Load overrides from a CSV file."""
+        """Load classification overrides from a CSV file.
+
+        The CSV file must contain a 'symbol' or 'isin' column to identify the
+        asset. Other columns should correspond to `AssetClassification` fields
+        (e.g., 'asset_class', 'sub_class', 'geography').
+
+        Args:
+            path: The file path to the CSV containing the overrides.
+
+        Returns:
+            A `ClassificationOverrides` instance populated with the data from
+            the CSV file. Returns an empty instance if the path does not exist.
+        """
         csv_path = pathlib.Path(path)
         if not csv_path.exists():
             return cls()
@@ -150,10 +232,45 @@ class ClassificationOverrides:
 
 
 class AssetClassifier:
-    """Rule-based classifier for assets.
+    """Applies a rule-based engine to classify assets.
 
-    This classifier uses a series of rules to determine the asset class, geography,
-    and sub-class of an asset. It also supports manual overrides for specific assets.
+    This classifier determines an asset's class, sub-class, and geography by
+    applying a series of rules based on keywords found in the asset's metadata
+    (e.g., name, category). It is designed to provide a baseline classification
+    that can be augmented with manual overrides for improved accuracy.
+
+    The classification logic is primarily handled by the `_classify_dataframe`
+    method, which uses vectorized pandas operations for efficiency.
+
+    Attributes:
+        overrides (ClassificationOverrides): A collection of manual overrides
+            that will take precedence over the rule-based engine.
+
+    Methods:
+        - `classify_universe`: Classifies a list of assets and returns a DataFrame.
+        - `classify_asset`: Classifies a single asset.
+
+    Example:
+        >>> from portfolio_management.assets.selection import SelectedAsset
+        >>>
+        >>> assets = [
+        ...     SelectedAsset(
+        ...         symbol="AAPL.US", isin="US0378331005", name="Apple Inc. Equity",
+        ...         market="US", region="North America", currency="USD", category="stock",
+        ...         price_start="2010-01-01", price_end="2023-01-01", price_rows=3276,
+        ...         data_status="ok", data_flags="", stooq_path="", resolved_currency="USD",
+        ...         currency_status="matched"
+        ...     )
+        ... ]
+        >>> classifier = AssetClassifier()
+        >>> results = classifier.classify_universe(assets)
+        >>> result_series = results.iloc[0]
+        >>> result_series['symbol']
+        'AAPL.US'
+        >>> result_series['asset_class']
+        'equity'
+        >>> result_series['geography']
+        'north_america'
     """
 
     EQUITY_KEYWORDS: ClassVar[set[str]] = {"stock", "equity", "shares", "fund", "etf"}
@@ -174,7 +291,20 @@ class AssetClassifier:
         self.overrides = overrides or ClassificationOverrides()
 
     def classify_asset(self, asset: SelectedAsset) -> AssetClassification:
-        """Classify a single asset using keyword rules and manual overrides."""
+        """Classifies a single asset using keyword-based rules.
+
+        This method first checks for a manual override for the asset. If none
+        is found, it applies rules based on the asset's name and category to
+        determine its classification. This method is suitable for classifying
+        individual assets but is less efficient than `classify_universe` for
+        large batches.
+
+        Args:
+            asset: The `SelectedAsset` instance to classify.
+
+        Returns:
+            An `AssetClassification` instance containing the classification results.
+        """
         override = self.overrides.overrides.get(
             asset.isin,
         ) or self.overrides.overrides.get(asset.symbol)
@@ -232,7 +362,23 @@ class AssetClassifier:
         )
 
     def classify_universe(self, assets: list[SelectedAsset]) -> pd.DataFrame:
-        """Classify an iterable of assets and return a DataFrame of results."""
+        """Classifies a list of assets and returns a DataFrame of results.
+
+        This is the primary method for bulk classification. It converts the list
+        of assets into a pandas DataFrame and uses efficient, vectorized
+        operations to apply the classification rules.
+
+        Args:
+            assets: A list of `SelectedAsset` objects to be classified.
+
+        Returns:
+            A pandas DataFrame where each row represents an asset and columns
+            contain the classification results (e.g., 'asset_class', 'geography').
+
+        Raises:
+            DataValidationError: If the input is None or not a list.
+            ClassificationError: If assets cannot be serialized for processing.
+        """
         if assets is None:
             raise DataValidationError(
                 "Assets to classify cannot be None.",
@@ -431,7 +577,7 @@ class AssetClassifier:
 
         result_df["asset_class"] = asset_class.astype(str)
         result_df["sub_class"] = sub_class.astype(str)
-        result_df["geography"] = geography
+        result_df["geography"] = geography.apply(lambda x: x.value)
         result_df["sector"] = None
         result_df["confidence"] = confidence
 

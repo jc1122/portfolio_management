@@ -1,11 +1,53 @@
-"""Universe management for portfolio construction.
+"""Orchestrates the creation of investment universes from configuration.
 
-This module provides data models and logic for defining, loading, and managing
-investment universes.
+This module brings together asset selection and classification to construct
+complete, analysis-ready investment universes. It is the primary entry point
+for the business logic layer when it needs to access a defined set of assets
+and their associated data, such as historical returns.
 
-Key components:
-- UniverseDefinition: A dataclass to hold the definition of a single universe.
-- UniverseConfigLoader: A class to load universe definitions from a YAML file.
+Pipeline Position:
+    Asset Selection & Classification -> **Universe Loading** -> Portfolio Construction
+
+    1.  **Input**: A universe name and a YAML configuration file that defines
+       the rules for one or more universes.
+    2.  **Process**:
+        - The `UniverseConfigLoader` parses the YAML file into `UniverseDefinition` objects.
+        - The `UniverseManager` uses the definition to:
+            a. Run the `AssetSelector` to get a filtered list of assets.
+            b. Run the `AssetClassifier` on the filtered assets.
+            c. Apply any final classification-based filters.
+            d. Calculate historical returns for the final asset list.
+    3.  **Output**: A dictionary containing DataFrames for the final assets,
+       their classifications, and their historical returns.
+
+Key Components:
+    - `UniverseManager`: The main engine for loading and managing universes.
+    - `UniverseDefinition`: A dataclass that holds the complete configuration for a universe.
+    - `UniverseConfigLoader`: A static class for loading universe definitions from YAML.
+
+Example:
+    >>> from pathlib import Path
+    >>> import pandas as pd
+    >>> from portfolio_management.assets.universes import UniverseManager
+
+    # Assume the following are available:
+    # - A 'universes.yaml' file in the 'config/' directory.
+    # - A 'tradeable_matches.csv' file with asset metadata.
+    # - A 'prices/' directory with historical price data.
+
+    # Conceptual example:
+    # >>> manager = UniverseManager(
+    # ...     config_path=Path("config/universes.yaml"),
+    # ...     matches_df=pd.read_csv("data/tradeable_matches.csv"),
+    ...     prices_dir=Path("data/prices/")
+    # ... )
+    # >>>
+    # >>> # Load a universe defined in the YAML file
+    # >>> my_universe = manager.load_universe("my_equity_universe")
+    # >>>
+    # >>> if my_universe:
+    # ...     print(f"Loaded {len(my_universe['assets'])} assets.")
+    # ...     print("Columns in returns table:", my_universe['returns'].columns.tolist())
 """
 
 from __future__ import annotations
@@ -36,7 +78,26 @@ from ..selection.selection import AssetSelector, FilterCriteria, SelectedAsset
 
 @dataclass
 class UniverseDefinition:
-    """Definition of an investment universe."""
+    """Represents the complete configuration for a single investment universe.
+
+    This dataclass holds all the parameters needed to construct a universe,
+    from initial filtering to final return calculation. It is typically
+    instantiated by `UniverseConfigLoader` from a YAML file.
+
+    Attributes:
+        description: A human-readable description of the universe.
+        filter_criteria: An instance of `FilterCriteria` defining the rules for
+            the initial asset selection.
+        classification_requirements: A dictionary specifying required classification
+            values. Assets not matching these values will be filtered out after
+            classification. Example: `{'asset_class': ['equity']}`.
+        return_config: A `ReturnConfig` object defining how historical returns
+            should be calculated for the assets in the universe.
+        constraints: A dictionary of hard constraints for the universe, such as
+            `{'max_assets': 100}`.
+        technical_indicators: An `IndicatorConfig` object for configuring
+            the calculation of technical indicators like SMA or RSI.
+    """
 
     description: str
     filter_criteria: FilterCriteria
@@ -56,11 +117,48 @@ class UniverseDefinition:
 
 
 class UniverseConfigLoader:
-    """Loads universe definitions from a YAML file."""
+    """Loads and parses universe definitions from a YAML configuration file.
+
+    This is a static utility class that provides a single method, `load_config`,
+    to read a YAML file and convert it into a dictionary of `UniverseDefinition`
+    objects.
+
+    Configuration (YAML Format):
+        The YAML file must have a top-level key `universes`, which contains a
+        mapping of universe names to their definitions.
+
+        Example `universes.yaml`:
+        ```yaml
+        universes:
+          us_equity_large_cap:
+            description: "US Large Cap Equities"
+            filter_criteria:
+              min_history_days: 1825 # 5 years
+              markets: ["US"]
+              categories: ["Stock"]
+            classification_requirements:
+              asset_class: ["equity"]
+              sub_class: ["large_cap"]
+            return_config:
+              window: 252
+              min_periods: 200
+        ```
+    """
 
     @staticmethod
     def load_config(path: Path) -> dict[str, UniverseDefinition]:
-        """Load and parse the universe configuration file."""
+        """Loads and parses the universe configuration file.
+
+        Args:
+            path: The file path to the universe YAML configuration.
+
+        Returns:
+            A dictionary mapping universe names to `UniverseDefinition` instances.
+
+        Raises:
+            ConfigurationError: If the file is not found, cannot be parsed,
+                is badly structured, or contains invalid parameter values.
+        """
         if not path.exists():
             raise ConfigurationError(f"Universe config file not found: {path}")
 
@@ -114,10 +212,52 @@ class UniverseConfigLoader:
 
 
 class UniverseManager:
-    """Manages the creation and loading of investment universes."""
+    """Orchestrates the loading and construction of investment universes.
+
+    This class is the main entry point for accessing investment universes. It
+    combines configuration, asset metadata, and price data to produce a
+    fully-formed universe, including selected assets, their classifications,
+    and their historical returns.
+
+    Attributes:
+        config_path (Path): Path to the universe YAML configuration file.
+        matches_df (pd.DataFrame): DataFrame containing metadata for all
+            tradeable assets.
+        prices_dir (Path): Path to the directory containing historical price data.
+        universes (dict[str, UniverseDefinition]): A dictionary of loaded
+            universe definitions, keyed by universe name.
+        asset_selector (AssetSelector): An instance of the asset selection engine.
+        asset_classifier (AssetClassifier): An instance of the asset classification engine.
+        return_calculator (ReturnCalculator): An instance of the return calculation engine.
+
+    Example:
+        # This is a conceptual example. In a real scenario, you would provide
+        # valid paths and a pre-populated DataFrame.
+        #
+        # from pathlib import Path
+        # import pandas as pd
+        #
+        # manager = UniverseManager(
+        #     config_path=Path("config/universes.yaml"),
+        #     matches_df=pd.read_csv("data/tradeable_matches.csv"),
+        #     prices_dir=Path("data/prices/")
+        # )
+        #
+        # # List available universes
+        # print(manager.list_universes())
+        #
+        # # Load a specific universe
+        # us_equity = manager.load_universe("us_equity_large_cap")
+    """
 
     def __init__(self, config_path: Path, matches_df: pd.DataFrame, prices_dir: Path):
-        """Initialize the UniverseManager."""
+        """Initializes the UniverseManager.
+
+        Args:
+            config_path: Path to the universe YAML configuration file.
+            matches_df: DataFrame containing metadata for all tradeable assets.
+            prices_dir: Path to the directory containing historical price data.
+        """
         self.config_path = config_path
         self.matches_df = matches_df
         self.prices_dir = prices_dir
@@ -144,14 +284,33 @@ class UniverseManager:
         name: str,
         use_cache: bool = True,
         strict: bool = True,
-    ) -> dict[str, pd.DataFrame] | None:
-        """Load a universe by name.
+    ) -> dict[str, pd.DataFrame | pd.Series] | None:
+        """Loads and constructs a universe by its configured name.
+
+        This method executes the full universe creation pipeline:
+        1. Selects assets based on the universe's `filter_criteria`.
+        2. Classifies the selected assets.
+        3. Filters the assets based on `classification_requirements`.
+        4. Calculates returns for the final set of assets.
 
         Args:
-            name: Universe identifier.
-            use_cache: Whether to return cached results when available.
-            strict: When False, recover from errors by returning ``None`` or partial results.
+            name: The name of the universe to load, as defined in the YAML config.
+            use_cache: If True, returns a cached result if available.
+            strict: If True, exceptions during the loading process will be
+                raised. If False, errors are logged and the method may return
+                None or partial results.
 
+        Returns:
+            A dictionary containing the universe data, including DataFrames for
+            'assets', 'classifications', and 'returns', and a Series for
+            'metadata'. Returns None if the universe cannot be loaded and
+            `strict` is False.
+
+        Raises:
+            UniverseLoadError: If any stage of the loading process fails and
+                `strict` is True.
+            InsufficientDataError: If no assets are selected or remain after
+                filtering and `strict` is True.
         """
         logger = logging.getLogger(__name__)
 
