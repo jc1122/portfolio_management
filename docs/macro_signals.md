@@ -1,21 +1,44 @@
 # Macroeconomic Signal Provider and Regime Gating
 
+⚠️ **STATUS: INFRASTRUCTURE COMPLETE - FUTURE FEATURE** ⚠️
+
+**Current Implementation**: Complete data models and provider infrastructure with NoOp regime logic  
+**Production Ready**: Data loading and configuration system  
+**Planned Enhancement**: Regime detection logic and asset class gating
+
 ## Overview
 
 The macro module provides infrastructure for loading macroeconomic time series from Stooq data directories and defining regime configurations that can influence asset selection decisions. This feature enables future integration of macroeconomic context into portfolio construction workflows.
 
-## Current Implementation Status
+## Implementation Status
 
-**Status: Infrastructure Complete, Logic is NoOp (Stubbed)**
+**✅ Complete Components**:
+- Data models (`MacroSeries`, `RegimeConfig`)
+- Provider infrastructure (`MacroSignalProvider`)
+- Configuration system for regime rules
+- Integration hooks in asset selection
+- Comprehensive test coverage
 
-The current implementation provides:
+**⚠️ NoOp Components (Stubbed)**:
+- Regime detection logic (always returns "neutral")
+- Asset class filtering (passes all assets unchanged)
+- Score adjustment (returns 1.0 for all assets)
+- Custom gating rules (not yet implemented)
 
-- ✅ Complete data models and provider infrastructure
-- ✅ Configuration system for regime rules
-- ✅ Integration hooks in asset selection
-- ⚠️ **NoOp regime logic** - all gating returns neutral signals and passes selections through unchanged
+**Design Philosophy**: This documented NoOp behavior ensures the system is ready for future regime detection logic without affecting current selection workflows. All infrastructure is production-ready; only the business logic awaits implementation.
 
-This documented NoOp behavior ensures the system is ready for future regime detection logic without affecting current selection workflows.
+## Current Behavior (NoOp Regime Logic)
+
+All gating methods currently return neutral signals and pass selections through unchanged:
+
+| Method | Current Behavior | Future Behavior |
+|--------|-----------------|-----------------|
+| `apply_gating()` | Returns all assets unchanged | Filter by regime-appropriate asset classes |
+| `get_current_regime()` | Returns `{'recession': 'neutral', 'risk_sentiment': 'neutral'}` | Detect actual regime from macro data |
+| `filter_by_asset_class()` | Returns all assets unchanged | Exclude/include asset classes by regime |
+| `adjust_selection_scores()` | Returns score 1.0 for all assets | Modify scores based on macro conditions |
+
+**Production Impact**: Zero - regime configuration can be specified but has no effect on selection.
 
 ## Components
 
@@ -181,32 +204,119 @@ All tests verify NoOp behavior and document future integration points.
 
 When implementing actual regime logic:
 
-1. **Regime Detection**
+### Phase 1: Basic Regime Detection
 
+**Priority: High**  
+**Estimated Effort**: 2-3 weeks
+
+1. **Regime Detection**
    - Load macro indicators via `MacroSignalProvider`
    - Implement detection rules in `RegimeGate.get_current_regime()`
-   - Return actual regime classifications
+   - Return actual regime classifications (recession, risk-off, etc.)
+   - **Interface Contract**: Return dict with keys `recession`, `risk_sentiment`, `mode`
+
+2. **Testing**
+   - Unit tests with synthetic macro data
+   - Integration tests with real Stooq data
+   - Validate regime transitions
+   - Document expected behavior
+
+### Phase 2: Asset Class Filtering
+
+**Priority: Medium**  
+**Estimated Effort**: 1-2 weeks  
+**Depends On**: Phase 1
 
 1. **Asset Class Filtering**
+   - Implement `filter_by_asset_class()` to exclude/include by regime
+   - Example rules:
+     * Recession: Exclude equities, favor bonds/cash
+     * Risk-off: Reduce equity exposure, increase defensives
+     * Expansion: Normal allocation
+   - **Interface Contract**: Returns filtered list of `SelectedAsset`
 
-   - Implement `filter_by_asset_class()` to exclude asset classes in risk-off regimes
-   - Example: exclude equities during recession, favor bonds/cash
+2. **Configuration**
+   - Extend `RegimeConfig` with asset class rules
+   - Example: `asset_class_rules = {"recession": {"allow": ["bonds", "cash"]}}`
+
+### Phase 3: Score Adjustment
+
+**Priority: Low**  
+**Estimated Effort**: 1 week  
+**Depends On**: Phase 1
 
 1. **Score Adjustment**
+   - Implement `adjust_selection_scores()` to modify attractiveness
+   - Example adjustments:
+     * Risk-off: Reduce equity scores by 20%, increase bond scores by 20%
+     * Recession: Penalize cyclical sectors, favor defensives
+   - **Interface Contract**: Returns list of `(asset, adjusted_score)` tuples
 
-   - Implement `adjust_selection_scores()` to modify asset attractiveness
-   - Example: reduce equity scores in risk-off, increase defensive asset scores
+2. **Validation**
+   - Backtest with and without adjustment
+   - Measure impact on risk-adjusted returns
+   - Document score adjustment methodology
+
+### Phase 4: Custom Rules (Advanced)
+
+**Priority**: Low  
+**Estimated Effort**: 2-3 weeks  
+**Depends On**: Phases 1-3
 
 1. **Custom Rules**
-
    - Support user-defined regime rules via `custom_rules` dict
    - Allow flexible regime definitions beyond built-in indicators
+   - Example: `{"volatility_spike": {"vix_threshold": 30, "action": "reduce_equity"}}`
 
-1. **Integration with AssetSelector**
+2. **Rule Engine**
+   - Parse and validate custom rules
+   - Execute rules in priority order
+   - Log rule application and results
 
-   - Check `criteria.regime_config` in `AssetSelector.select_assets()`
-   - Apply `RegimeGate` if `config.is_enabled()` returns True
-   - Log regime state and gating decisions
+## Implementation Roadmap
+
+### Interface Contracts (Current)
+
+These interfaces are production-ready and stable:
+
+**`MacroSignalProvider`**:
+```python
+def locate_series(ticker: str) -> MacroSeries | None: ...
+def locate_multiple_series(tickers: list[str]) -> dict[str, MacroSeries]: ...
+def load_series_data(ticker: str, start_date: str, end_date: str) -> pd.DataFrame | None: ...
+```
+
+**`RegimeConfig`**:
+```python
+@dataclass
+class RegimeConfig:
+    enable_gating: bool = False
+    recession_indicator: str | None = None
+    risk_off_threshold: float | None = None
+    custom_rules: dict[str, Any] | None = None
+    
+    def is_enabled() -> bool: ...
+    def validate() -> None: ...
+```
+
+**`RegimeGate`** (NoOp):
+```python
+def apply_gating(assets: list[SelectedAsset], date: str | None) -> list[SelectedAsset]: ...
+def get_current_regime(date: str | None) -> dict[str, str]: ...
+def filter_by_asset_class(assets: list[SelectedAsset], allowed_classes: list[str]) -> list[SelectedAsset]: ...
+def adjust_selection_scores(assets: list[SelectedAsset], date: str | None) -> list[tuple[SelectedAsset, float]]: ...
+```
+
+### Extension Points
+
+When implementing regime logic, modify these methods:
+
+1. **`get_current_regime()`**: Change return from `"neutral"` to actual regime
+2. **`apply_gating()`**: Add actual filtering logic instead of pass-through
+3. **`filter_by_asset_class()`**: Implement asset class rules
+4. **`adjust_selection_scores()`**: Implement score adjustment rules
+
+**Backward Compatibility**: Ensure `enable_gating=False` preserves NoOp behavior for existing users.
 
 ## Example: Future Complete Workflow
 

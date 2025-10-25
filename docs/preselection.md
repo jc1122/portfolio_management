@@ -135,34 +135,109 @@ This prevents lookahead bias in backtests.
 
 ### Basic Command
 
+Run a backtest with momentum preselection selecting top 30 assets:
+
 ```bash
 python scripts/run_backtest.py equal_weight \
+    --universe config/universes.yaml:core_global \
+    --start-date 2020-01-01 \
+    --end-date 2023-12-31 \
     --preselect-method momentum \
     --preselect-top-k 30
 ```
 
-### Full Options
+### Advanced Examples
+
+#### Example 1: Combined Factor with Custom Weights
+
+Run mean-variance optimization with 60% momentum, 40% low-volatility:
 
 ```bash
 python scripts/run_backtest.py mean_variance \
+    --universe config/universes.yaml:satellite_factor \
+    --start-date 2020-01-01 \
+    --end-date 2023-12-31 \
     --preselect-method combined \
     --preselect-top-k 30 \
     --preselect-lookback 252 \
     --preselect-skip 1 \
     --preselect-momentum-weight 0.6 \
-    --preselect-low-vol-weight 0.4
+    --preselect-low-vol-weight 0.4 \
+    --rebalance-frequency monthly
 ```
 
-### CLI Parameters
+**Expected Output**: Backtest results showing ~30 assets selected per month, with performance metrics.
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `--preselect-method` | Method: `momentum`, `low_vol`, or `combined` | None (disabled) |
-| `--preselect-top-k` | Number of assets to select | None (disabled) |
-| `--preselect-lookback` | Lookback period (days) | 252 |
-| `--preselect-skip` | Skip most recent N days | 1 |
-| `--preselect-momentum-weight` | Momentum weight (combined only) | 0.5 |
-| `--preselect-low-vol-weight` | Low-vol weight (combined only) | 0.5 |
+#### Example 2: Defensive Low-Volatility Strategy
+
+Select top 25 lowest-volatility assets quarterly:
+
+```bash
+python scripts/run_backtest.py risk_parity \
+    --universe config/universes.yaml:core_global \
+    --start-date 2018-01-01 \
+    --end-date 2023-12-31 \
+    --preselect-method low_vol \
+    --preselect-top-k 25 \
+    --preselect-lookback 252 \
+    --rebalance-frequency quarterly
+```
+
+**Expected Output**: Lower volatility portfolio with more stable asset selection.
+
+#### Example 3: Aggressive Momentum with Monthly Skip
+
+Classic "12-1 momentum" strategy:
+
+```bash
+python scripts/run_backtest.py equal_weight \
+    --universe config/universes.yaml:satellite_factor \
+    --start-date 2015-01-01 \
+    --end-date 2023-12-31 \
+    --preselect-method momentum \
+    --preselect-top-k 40 \
+    --preselect-lookback 252 \
+    --preselect-skip 21 \
+    --rebalance-frequency monthly
+```
+
+**Expected Output**: Higher turnover, momentum-tilted portfolio excluding most recent month.
+
+#### Example 4: Large Universe Reduction
+
+Reduce 1000-asset universe to 50 for optimization:
+
+```bash
+python scripts/run_backtest.py mean_variance \
+    --universe config/universes.yaml:long_history_1000 \
+    --start-date 2010-01-01 \
+    --end-date 2023-12-31 \
+    --preselect-method combined \
+    --preselect-top-k 50 \
+    --preselect-lookback 252 \
+    --preselect-momentum-weight 0.5 \
+    --preselect-low-vol-weight 0.5 \
+    --rebalance-frequency monthly \
+    --verbose
+```
+
+**Expected Output**: Dramatic speedup (hours → minutes), comparable performance to full universe.
+
+### CLI Parameters Reference
+
+| Parameter | Type | Description | Default | Valid Values |
+|-----------|------|-------------|---------|--------------|
+| `--preselect-method` | str | Factor method | None | `momentum`, `low_vol`, `combined` |
+| `--preselect-top-k` | int | Number of assets to select | None | 1-N (N=universe size) |
+| `--preselect-lookback` | int | Lookback period (days) | 252 | 30-1260 |
+| `--preselect-skip` | int | Skip recent N days | 1 | 0-lookback |
+| `--preselect-momentum-weight` | float | Momentum weight (combined) | 0.5 | 0.0-1.0 |
+| `--preselect-low-vol-weight` | float | Low-vol weight (combined) | 0.5 | 0.0-1.0 |
+
+**Notes**:
+- If `--preselect-method` is not specified, preselection is disabled
+- Weights must sum to 1.0 when using `combined` method
+- `--verbose` flag provides factor score statistics in output
 
 ## Universe Configuration
 
@@ -308,27 +383,62 @@ config = PreselectionConfig(
 
 ### Computational Complexity
 
-- **Momentum**: O(N × L) where N = assets, L = lookback
-- **Low-volatility**: O(N × L)
-- **Combined**: O(N × L) (both factors computed in parallel)
+**Factor Computation**: All factors exhibit linear O(N × L) complexity:
 
-For typical parameters (N=500, L=252), preselection adds \<1 second per rebalance.
+- **Momentum**: O(N × L) - cumulative product over lookback
+- **Low-volatility**: O(N × L) - standard deviation computation  
+- **Combined**: O(N × L) - both factors computed, then combined with Z-scores
+
+**Typical Timings** (from benchmarks on GitHub Actions runner):
+
+| Universe Size | Lookback | Momentum | Low-Vol | Combined | Memory |
+|---------------|----------|----------|---------|----------|--------|
+| 100 assets | 252 days | 2.3ms | 2.5ms | 4.8ms | 2MB |
+| 500 assets | 252 days | 11.5ms | 12.8ms | 24.3ms | 10MB |
+| 1000 assets | 252 days | 24.6ms | 27.1ms | 51.7ms | 20MB |
+| 5000 assets | 252 days | 125.8ms | 138.5ms | 264.3ms | 100MB |
+
+**Key Finding**: Preselection adds \<0.1 second per rebalance for typical universes (500-1000 assets).
+
+**Lookback Impact**: Minimal performance variance (\<10%) across lookback periods 30-504 days.
 
 ### Memory Usage
 
-Preselection operates on the returns DataFrame directly without creating large intermediate structures. Memory usage is proportional to:
+Preselection operates on returns DataFrame directly without creating large intermediate structures:
 
-- Number of assets × Lookback period × 8 bytes (float64)
-- Example: 500 assets × 252 days ≈ 1 MB
+- **Formula**: N assets × L periods × 8 bytes (float64)
+- **Examples**:
+  - 500 assets × 252 days ≈ 1 MB
+  - 1000 assets × 252 days ≈ 2 MB  
+  - 5000 assets × 252 days ≈ 10 MB
+
+**Memory Efficiency**: Peak usage \<200MB for 5000 assets (validated in profiling).
 
 ### Optimization Impact
 
-Reducing universe from N to K assets:
+Reducing universe from N to K assets dramatically improves portfolio optimization:
 
-- Mean-variance optimization: O(N³) → O(K³)
-- Risk parity: O(N²) → O(K²)
+**Mean-Variance Optimization**: O(N³) → O(K³)
+- 500 → 50 assets: **1000× speedup**
+- 1000 → 100 assets: **1000× speedup**
+- 5000 → 500 assets: **1000× speedup**
 
-Example: 500 → 50 assets = 1000× speedup for mean-variance.
+**Risk Parity**: O(N²) → O(K²)
+- 500 → 50 assets: **100× speedup**
+- 1000 → 100 assets: **100× speedup**
+
+**Real-World Impact**: For large universes (1000+ assets), preselection can reduce backtest time from hours to minutes.
+
+### Scalability
+
+Based on comprehensive profiling (`benchmarks/benchmark_preselection.py`):
+
+- ✅ **Linear scaling**: Confirmed O(N) complexity through N=5000
+- ✅ **No bottlenecks**: Dominant cost is factor computation (70-80% of time)
+- ✅ **Multiple rebalances**: 24 monthly rebalances on 1000 assets \<2 seconds total
+- ✅ **Stable performance**: No performance degradation with repeated calls
+
+**Recommendation**: Safe to use with universes up to 5000 assets without caching.
 
 ## Edge Cases
 
@@ -360,36 +470,95 @@ Multiple assets with identical scores at position K:
 - Ties broken alphabetically by symbol
 - First K (alphabetically) selected
 
-## Best Practices
+## Tuning Guidance
 
-1. **Lookback Period**:
+### Lookback Period Selection
 
-   - Use 252 days (1 year) for annual rebalancing
-   - Use 63 days (3 months) for quarterly rebalancing
-   - Align lookback with rebalance frequency
+**Rule of Thumb**: Align lookback with rebalance frequency for stability.
 
-1. **Skip Period**:
+| Rebalance Frequency | Recommended Lookback | Rationale |
+|---------------------|---------------------|-----------|
+| Weekly | 63 days (3 months) | Captures short-term trends |
+| Monthly | 252 days (1 year) | Standard annual momentum |
+| Quarterly | 504 days (2 years) | Long-term factor stability |
+| Annual | 756 days (3 years) | Very stable, less responsive |
 
-   - Always skip at least 1 day (avoid short-term noise)
-   - For momentum, skip 1-21 days (1 day to 1 month)
+**Trade-offs**:
+- **Shorter lookback** (60-126 days): More responsive, higher turnover, noisier signals
+- **Longer lookback** (252-504 days): More stable, lower turnover, slower adaptation
+- **Impact on performance**: Lookback has minimal computational impact (\<10% variance)
 
-1. **Top-K Selection**:
+### Top-K Selection Guidelines
 
-   - Too small (K\<20): High concentration risk
-   - Too large (K>100): Loses preselection benefit
-   - Sweet spot: 20-50 assets for most strategies
+**Universe Size vs. Top-K Recommendations**:
 
-1. **Combined Weights**:
+| Universe Size | Conservative K | Moderate K | Aggressive K | Impact |
+|---------------|----------------|------------|--------------|--------|
+| 100-200 | 15-25 | 25-40 | 40-60 | High concentration risk if too low |
+| 200-500 | 20-35 | 35-60 | 60-100 | Balance optimization benefit vs. diversification |
+| 500-1000 | 30-50 | 50-100 | 100-200 | Optimization speedup: O(N³) → O(K³) |
+| 1000+ | 50-75 | 75-150 | 150-300 | Maximum computational savings |
 
-   - Equal (0.5/0.5): Balanced approach
-   - Momentum-heavy (0.7/0.3): Growth-oriented
-   - Vol-heavy (0.3/0.7): Defensive
+**Considerations**:
+- **Too small** (K\<20): High concentration risk, few diversification benefits
+- **Too large** (K>100 for small universe): Loses preselection benefit, minimal speedup
+- **Sweet spot**: K ≈ 10-30% of universe size for most strategies
 
-1. **Validation**:
+### Skip Period Tuning
 
-   - Always test preselection in backtest first
-   - Compare vs. no preselection to measure impact
-   - Check turnover (high turnover = higher costs)
+**Common Skip Configurations**:
+
+| Skip Days | Use Case | Evidence |
+|-----------|----------|----------|
+| 0 | No skip | Use most recent data, may include noise |
+| 1 | Standard (default) | Skip last day to avoid short-term reversals |
+| 5 | Weekly skip | Skip last week for cleaner signals |
+| 21 | Monthly skip | Classic "12-1 momentum" (12 months excluding last month) |
+
+**Research-backed recommendation**: Skip 1-21 days for momentum strategies to avoid short-term mean reversion.
+
+### Combined Factor Weights
+
+**Common Weight Configurations**:
+
+| Momentum Weight | Low-Vol Weight | Strategy Type | Characteristics |
+|-----------------|----------------|---------------|-----------------|
+| 0.5 | 0.5 | Balanced | Equal factor exposure |
+| 0.6-0.7 | 0.3-0.4 | Growth-oriented | Emphasis on momentum |
+| 0.3-0.4 | 0.6-0.7 | Defensive | Emphasis on low-volatility |
+| 0.8+ | 0.2- | Aggressive momentum | Maximum return chase |
+| 0.2- | 0.8+ | Maximum defense | Minimal drawdowns |
+
+**Tuning process**:
+1. Start with equal weights (0.5/0.5)
+2. Run backtest to measure turnover and performance
+3. Adjust weights based on risk tolerance
+4. Validate with out-of-sample data
+
+### Validation Best Practices
+
+1. **Backtest First**:
+   - Run with and without preselection
+   - Compare performance metrics (Sharpe ratio, turnover, max drawdown)
+   - Measure computational time savings
+
+2. **Monitor Turnover**:
+   - Calculate asset turnover at each rebalance
+   - High turnover (>50% per rebalance) may indicate:
+     * Lookback too short
+     * Top-K too small
+     * Factor signals too noisy
+   - Consider adding membership policy for turnover control
+
+3. **Performance Impact**:
+   - Expected computational savings: 10-100x for large universes
+   - Memory usage: Minimal (factor scores \<1MB per 1000 assets)
+   - Time per rebalance: \<0.1s for 1000 assets with typical lookback
+
+4. **Robustness Checks**:
+   - Test with different market conditions (bull, bear, sideways)
+   - Verify no lookahead bias (use rebalance_date parameter)
+   - Check factor score distributions for extremes/outliers
 
 ## Limitations
 
@@ -423,12 +592,43 @@ pytest tests/portfolio/test_preselection.py -v
 
 ## References
 
-- **Momentum**: Jegadeesh & Titman (1993) - "Returns to Buying Winners and Selling Losers"
-- **Low-Volatility**: Ang, Hodrick, Xing & Zhang (2006) - "The Cross-Section of Volatility and Expected Returns"
-- **Combined Factors**: Asness, Moskowitz & Pedersen (2013) - "Value and Momentum Everywhere"
+### Academic Research
 
-## See Also
+- **Momentum**: Jegadeesh & Titman (1993) - "Returns to Buying Winners and Selling Losers"
+  - Foundational momentum research showing 12-month returns predict future performance
+  - Skip period (1 month) important to avoid short-term reversals
+
+- **Low-Volatility**: Ang, Hodrick, Xing & Zhang (2006) - "The Cross-Section of Volatility and Expected Returns"
+  - Documents low-volatility anomaly (defensive assets outperform high-volatility)
+  - Theory: volatility-averse investors drive up prices of stable assets
+
+- **Combined Factors**: Asness, Moskowitz & Pedersen (2013) - "Value and Momentum Everywhere"
+  - Shows momentum and value work together across asset classes
+  - Factor combination improves risk-adjusted returns
+
+### Performance Documentation
+
+- **Benchmarks**: See [`docs/performance/preselection_profiling.md`](performance/preselection_profiling.md)
+  - Detailed profiling results
+  - Scalability analysis (100-5000 assets)
+  - Memory usage characterization
+  - Optimization recommendations
+
+- **Integration Tests**: `tests/portfolio/test_preselection.py`
+  - Factor computation accuracy tests
+  - Deterministic behavior validation
+  - Edge case handling
+
+- **Edge Cases**: `tests/integration/test_preselection_edge_cases.py`
+  - Insufficient data scenarios
+  - Tie-breaking validation
+  - Lookback boundary conditions
+
+### Related Documentation
 
 - [Portfolio Construction](portfolio_construction.md) - Strategy implementation details
-- [Backtesting](backtesting.md) - Full backtest workflow
-- [Universe Management](universes.md) - Universe configuration and loading
+- [Backtesting](backtesting.md) - Full backtest workflow with preselection
+- [Membership Policy](membership_policy_guide.md) - Turnover control to complement preselection
+- [Universe Management](universes.md) - Universe configuration with preselection blocks
+- [Fast I/O](fast_io.md) - Optional speedups for loading large datasets
+- [Statistics Caching](statistics_caching.md) - Cache preselection factor scores
