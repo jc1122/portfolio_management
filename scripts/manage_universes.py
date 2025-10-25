@@ -22,8 +22,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.assets.universes import UniverseConfigLoader, UniverseManager
 from portfolio_management.core.exceptions import PortfolioManagementError
+from portfolio_management.services import UniverseManagementService
 
 
 def get_args() -> argparse.Namespace:
@@ -97,33 +97,38 @@ def main() -> None:
     )
 
     try:
+        service = UniverseManagementService()
         # For lightweight commands, only load the config
         if args.command in ("list", "show"):
-            universes = UniverseConfigLoader.load_config(args.config)
-
             if args.command == "list":
+                names = service.list_universes(args.config)
                 print("Available universes:")  # noqa: T201
-                for name in universes:
+                for name in names:
                     print(f"- {name}")  # noqa: T201
 
             elif args.command == "show":
-                if args.name not in universes:
-                    logging.error(
-                        "Universe '%s' not found in configuration.",
-                        args.name,
+                try:
+                    definition = service.get_universe_definition(
+                        args.config, args.name
                     )
+                except KeyError as exc:  # pragma: no cover - defensive
+                    logging.error(str(exc))
                     sys.exit(1)
-                definition = universes[args.name]
+
                 print(f"--- Universe: {args.name} ---")  # noqa: T201
                 print(definition)  # noqa: T201
 
         # For heavy commands, load the full manager with data
         else:
             matches_df = pd.read_csv(args.matches)
-            manager = UniverseManager(args.config, matches_df, args.prices_dir)
 
             if args.command == "load":
-                universe = manager.load_universe(args.name)
+                universe = service.load_universe(
+                    config_path=args.config,
+                    matches=matches_df,
+                    prices_dir=args.prices_dir,
+                    name=args.name,
+                )
                 if universe:
                     for key, df in universe.items():
                         if isinstance(df, pd.DataFrame):
@@ -136,11 +141,21 @@ def main() -> None:
                     )
 
             elif args.command == "compare":
-                comparison_df = manager.compare_universes(args.names)
+                comparison_df = service.compare_universes(
+                    config_path=args.config,
+                    matches=matches_df,
+                    prices_dir=args.prices_dir,
+                    names=args.names,
+                )
                 print(comparison_df.to_string())  # noqa: T201
 
             elif args.command == "validate":
-                result = manager.validate_universe(args.name)
+                result = service.validate_universe(
+                    config_path=args.config,
+                    matches=matches_df,
+                    prices_dir=args.prices_dir,
+                    name=args.name,
+                )
                 print(result)  # noqa: T201
 
     except PortfolioManagementError:
