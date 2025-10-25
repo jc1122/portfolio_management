@@ -1,21 +1,61 @@
-"""Asset selection and filtering for portfolio construction.
+"""Performs preselection and filtering of assets for universe construction.
 
-This module provides data models and filtering logic for selecting assets
-from the tradeable universe based on data quality, history, and user-defined
-criteria. It serves as the foundation for portfolio construction by ensuring
-only high-quality, appropriate assets are included in the investment universe.
+This module provides the tools to filter a large list of tradeable assets
+down to a smaller, high-quality subset suitable for portfolio construction.
+It acts as the first-pass filter before more detailed analysis, such as
+classification or return calculation, is performed.
 
-Key components:
-- FilterCriteria: Configuration dataclass for asset selection parameters
-- SelectedAsset: Data model representing a selected asset with metadata
-- AssetSelector: Main filtering and selection logic (to be implemented)
+Pipeline Position:
+    Raw Asset Data -> **Asset Selection/Preselection** -> Asset Classification
+
+    1.  **Input**: A DataFrame of raw asset metadata (e.g., from
+       `tradeable_matches.csv`).
+    2.  **Process**: The `AssetSelector` applies a series of filters defined by
+       a `FilterCriteria` object. These filters check for data quality,
+       sufficient historical data, and specific market characteristics.
+    3.  **Output**: A list of `SelectedAsset` objects representing the assets
+       that passed all filtering stages.
+
+Key Components:
+    - `AssetSelector`: The main engine that runs the filtering pipeline.
+    - `FilterCriteria`: A dataclass that defines all filtering parameters.
+    - `SelectedAsset`: A dataclass representing a single asset that has
+      passed the selection process.
 
 Example:
-    >>> from portfolio_management.assets.selection import FilterCriteria, SelectedAsset
-    >>> criteria = FilterCriteria.default()
-    >>> criteria.min_history_days = 504  # Require 2 years of data
-    >>> criteria.markets = ["UK", "US"]  # Focus on UK and US markets
+    >>> import pandas as pd
+    >>> from portfolio_management.assets.selection import AssetSelector, FilterCriteria
 
+    # 1. Assume 'matches_df' is a DataFrame loaded from 'tradeable_matches.csv'
+    # For this example, we'll create a dummy DataFrame.
+    >>> matches_df = pd.DataFrame({
+    ...     'symbol': ['AAPL.US', 'BAD.UK'], 'isin': ['US0378331005', 'GB00B1XFGM60'],
+    ...     'name': ['Apple Inc', 'Bad Data PLC'], 'market': ['US', 'UK'],
+    ...     'region': ['North America', 'Europe'], 'currency': ['USD', 'GBP'],
+    ...     'category': ['Stock', 'Stock'], 'price_start': ['2010-01-01', '2023-01-01'],
+    ...     'price_end': ['2023-12-31', '2023-12-31'], 'price_rows': [3522, 252],
+    ...     'data_status': ['ok', 'error'], 'data_flags': ['', 'missing_data'],
+    ...     'stooq_path': ['path/aapl.us.txt', 'path/bad.uk.txt'],
+    ...     'resolved_currency': ['USD', 'GBP'], 'currency_status': ['matched', 'matched']
+    ... })
+
+    # 2. Define the filtering criteria
+    >>> criteria = FilterCriteria(
+    ...     min_history_days=365 * 2,  # Require at least 2 years of history
+    ...     data_status=['ok'],         # Only accept assets with 'ok' status
+    ...     markets=['US']              # Only include assets from the US market
+    ... )
+
+    # 3. Initialize the selector and run the selection process
+    >>> selector = AssetSelector()
+    >>> selected_assets = selector.select_assets(matches_df, criteria)
+
+    # 4. Review the results
+    >>> print(f"Selected {len(selected_assets)} asset(s).")
+    Selected 1 asset(s).
+    >>> if selected_assets:
+    ...     print(f"Selected asset symbol: {selected_assets[0].symbol}")
+    Selected asset symbol: AAPL.US
 """
 
 from __future__ import annotations
@@ -34,50 +74,44 @@ if TYPE_CHECKING:
 
 @dataclass
 class FilterCriteria:
-    """Configuration for asset filtering and selection.
+    """Defines the parameters for filtering assets.
 
-    This dataclass defines the criteria used to filter assets from the tradeable
-    universe. It supports filtering by data quality, history requirements, market
-    characteristics, and explicit allow/block lists.
+    This dataclass holds all configurable parameters used by the `AssetSelector`
+    to filter the tradeable universe. It allows for detailed control over data
+    quality, history requirements, market characteristics, and inclusion/exclusion lists.
 
     Attributes:
-        data_status: List of acceptable data status values (default: ["ok"]).
-            Typically "ok" for clean data, may include "warning" for less strict filtering.
-        min_history_days: Minimum number of days of price history required (default: 252).
-            252 trading days ≈ 1 year of data.
-        max_gap_days: Maximum allowed gap in days between consecutive prices (default: 10).
-            Helps ensure data continuity without excessive missing periods.
-        min_price_rows: Minimum number of price rows required (default: 252).
-            Should align with min_history_days for daily data.
-        zero_volume_severity: Optional filter for zero-volume severity levels.
-            If None, no filtering on zero-volume. Otherwise, filters to assets
-            with severity in the provided list (e.g., ["low", "medium"]).
-        markets: Optional list of market codes to include (e.g., ["UK", "US"]).
-            If None, all markets are included.
-        regions: Optional list of region codes to include (e.g., ["Europe", "North America"]).
-            If None, all regions are included.
-        currencies: Optional list of currency codes to include (e.g., ["GBP", "USD"]).
-            If None, all currencies are included.
-        categories: Optional list of asset categories to include (e.g., ["ETF", "Stock"]).
-            If None, all categories are included.
-        allowlist: Optional set of symbols that must be included regardless of other filters.
-            Useful for forcing inclusion of specific assets.
-        blocklist: Optional set of symbols that must be excluded regardless of other filters.
-            Useful for excluding specific assets known to have issues.
-        regime_config: Optional RegimeConfig for macroeconomic regime-based gating.
-            If None, no regime gating is applied. When provided, regime rules may
-            modify selection (currently NoOp stub that leaves selection unchanged).
+        data_status: List of acceptable data quality status values (e.g., ["ok"]).
+        min_history_days: The minimum number of calendar days of price history required.
+        max_gap_days: Maximum allowed gap in days between consecutive price points.
+        min_price_rows: The minimum number of data rows (e.g., trading days) required.
+        zero_volume_severity: Filters assets based on the severity of zero-volume
+            trading days (e.g., ["low", "medium"]). If None, this filter is disabled.
+        markets: A list of market codes to include (e.g., ["US", "UK"]). If None,
+            assets from all markets are considered.
+        regions: A list of geographic regions to include (e.g., ["North America"]).
+            If None, assets from all regions are considered.
+        currencies: A list of currency codes to include (e.g., ["USD", "EUR"]).
+            If None, assets in all currencies are considered.
+        categories: A list of asset categories to include (e.g., ["Stock", "ETF"]).
+            If None, assets of all categories are considered.
+        allowlist: A set of symbols or ISINs to include, bypassing other filters.
+            These assets will be included if they exist in the input data.
+        blocklist: A set of symbols or ISINs to explicitly exclude from the output.
+            Blocklisted assets are removed regardless of whether they pass other filters.
+        regime_config: Configuration for macroeconomic regime-based filtering.
+            If None, no regime-based gating is applied.
 
     Example:
+        >>> # Create a strict filter for US large-cap stocks
         >>> criteria = FilterCriteria(
-        ...     data_status=["ok"],
-        ...     min_history_days=504,  # 2 years
-        ...     markets=["UK", "US"],
-        ...     currencies=["GBP", "USD", "EUR"],
-        ...     blocklist={"BADTICKER.UK"}
+        ...     min_history_days=365 * 5,
+        ...     data_status=['ok'],
+        ...     markets=['US'],
+        ...     categories=['Stock'],
+        ...     blocklist={'DO-NOT-TRADE.US'}
         ... )
-        >>> criteria.validate()  # Raises ValueError if invalid
-
+        >>> criteria.validate()  # No error raised
     """
 
     data_status: list[str] = field(default_factory=lambda: ["ok"])
@@ -101,8 +135,9 @@ class FilterCriteria:
                 empty required lists).
 
         Example:
-            >>> criteria = FilterCriteria(min_history_days=-1)
-            >>> criteria.validate()  # Raises ValueError
+            >>> # This will raise a ValueError because min_history_days is negative.
+            >>> # criteria = FilterCriteria(min_history_days=-1)
+            >>> # criteria.validate()
 
         """
         if self.min_history_days <= 0:
@@ -224,30 +259,45 @@ class SelectedAsset:
 
 
 class AssetSelector:
-    """Select assets from a tradeable universe based on filtering criteria.
+    """Filters a universe of assets based on a set of criteria.
 
-    This class implements a multi-stage filtering pipeline to select high-quality
-    assets suitable for portfolio construction. Each filtering stage can be applied
-    independently or as part of the full selection pipeline.
+    This class acts as a preselection engine, applying a multi-stage filtering
+    pipeline to a DataFrame of asset metadata. It is stateless and its primary
+    entry point is the `select_assets` method.
 
-    Filtering stages (applied in order):
-    1. Data Quality: Filter by data_status and zero_volume_severity
-    2. History: Filter by minimum price history and row counts
-    3. Characteristics: Filter by market, region, currency, category
-    4. Allow/Block Lists: Apply explicit inclusion/exclusion rules
+    The filtering pipeline is executed in a specific order to ensure that the
+    most efficient filters are applied first.
 
-    Attributes:
-        None (stateless class)
+    Filtering Stages:
+        1.  **Data Quality**: Removes assets with unacceptable `data_status` or
+            `zero_volume_severity`.
+        2.  **History**: Enforces minimum data history (`min_history_days`) and
+            row count (`min_price_rows`).
+        3.  **Characteristics**: Filters by market, region, currency, and category.
+        4.  **Allow/Block Lists**: Applies manual overrides to include or exclude
+            specific assets.
 
     Example:
         >>> import pandas as pd
         >>> from portfolio_management.assets.selection import AssetSelector, FilterCriteria
+        >>>
+        >>> # Assume 'matches_df' is a DataFrame with asset metadata.
+        >>> matches_df = pd.DataFrame({
+        ...     'symbol': ['AAPL.US', 'BAD.UK'], 'isin': ['US0378331005', 'GB00B1XFGM60'],
+        ...     'name': ['Apple Inc', 'Bad Data PLC'], 'market': ['US', 'UK'],
+        ...     'region': ['North America', 'Europe'], 'currency': ['USD', 'GBP'],
+        ...     'category': ['Stock', 'Stock'], 'price_start': ['2010-01-01', '2023-01-01'],
+        ...     'price_end': ['2023-12-31', '2023-12-31'], 'price_rows': [3522, 252],
+        ...     'data_status': ['ok', 'error'], 'data_flags': ['' , ''],
+        ...     'stooq_path': ['' , ''], 'resolved_currency': ['USD', 'GBP'],
+        ...     'currency_status': ['matched', 'matched']
+        ... })
+        >>>
+        >>> criteria = FilterCriteria(data_status=['ok'], markets=['US'])
         >>> selector = AssetSelector()
-        >>> matches_df = pd.read_csv('data/metadata/tradeable_matches.csv')
-        >>> criteria = FilterCriteria(markets=['UK', 'US'])
-        >>> selected = selector.select_assets(matches_df, criteria)
-        >>> print(f"Selected {len(selected)} assets")
-
+        >>> selected_assets = selector.select_assets(matches_df, criteria)
+        >>> print(selected_assets[0].symbol)
+        AAPL.US
     """
 
     def __init__(self) -> None:
@@ -341,9 +391,16 @@ class AssetSelector:
             Filtered DataFrame with only assets meeting quality criteria.
 
         Example:
+            >>> import pandas as pd
             >>> selector = AssetSelector()
-            >>> criteria = FilterCriteria(data_status=['ok'])
+            >>> df = pd.DataFrame({
+            ...     'data_status': ['ok', 'ok', 'error', 'ok'],
+            ...     'data_flags': ['', 'zero_volume_severity=high', '', 'zero_volume_severity=low']
+            ... })
+            >>> criteria = FilterCriteria(data_status=['ok'], zero_volume_severity=['low'])
             >>> filtered = selector._filter_by_data_quality(df, criteria)
+            >>> len(filtered)
+            1
 
         """
         import logging
@@ -410,7 +467,7 @@ class AssetSelector:
 
         Example:
             >>> AssetSelector._calculate_history_days("2020-01-01", "2025-10-15")
-            2119
+            2114
             >>> AssetSelector._calculate_history_days("invalid", "2025-10-15")
             0
             >>> AssetSelector._calculate_history_days(None, "2025-10-15")
@@ -487,9 +544,17 @@ class AssetSelector:
             Filtered DataFrame with only assets meeting history criteria.
 
         Example:
+            >>> import pandas as pd
             >>> selector = AssetSelector()
-            >>> criteria = FilterCriteria(min_history_days=252)
+            >>> df = pd.DataFrame({
+            ...     'price_start': ['2020-01-01', '2022-01-01', '2023-01-01'],
+            ...     'price_end': ['2023-01-01', '2023-01-01', '2023-06-01'],
+            ...     'price_rows': [756, 252, 126]
+            ... })
+            >>> criteria = FilterCriteria(min_history_days=365, min_price_rows=200)
             >>> filtered = selector._filter_by_history(df, criteria)
+            >>> len(filtered)
+            2
 
         """
         logger = logging.getLogger(__name__)
@@ -565,9 +630,18 @@ class AssetSelector:
             Filtered DataFrame with only assets matching all specified characteristics.
 
         Example:
+            >>> import pandas as pd
             >>> selector = AssetSelector()
+            >>> df = pd.DataFrame({
+            ...     'market': ['US', 'US', 'UK', 'DE'],
+            ...     'region': ['North America', 'North America', 'Europe', 'Europe'],
+            ...     'resolved_currency': ['USD', 'USD', 'GBP', 'EUR'],
+            ...     'category': ['Stock', 'ETF', 'Stock', 'ETF']
+            ... })
             >>> criteria = FilterCriteria(markets=['UK', 'US'], currencies=['GBP', 'USD'])
             >>> filtered = selector._filter_by_characteristics(df, criteria)
+            >>> len(filtered)
+            3
 
         """
         logger = logging.getLogger(__name__)
@@ -690,9 +764,16 @@ class AssetSelector:
             Filtered DataFrame after applying list-based filters.
 
         Example:
+            >>> import pandas as pd
             >>> selector = AssetSelector()
+            >>> df = pd.DataFrame({
+            ...     'symbol': ['AAPL.US', 'MSFT.US', 'GOOG.US'],
+            ...     'isin': ['US0378331005', 'US5949181045', 'US02079K3059']
+            ... })
             >>> criteria = FilterCriteria(allowlist={'AAPL.US', 'MSFT.US'})
             >>> filtered = selector._apply_lists(df, criteria)
+            >>> sorted(filtered['symbol'].tolist())
+            ['AAPL.US', 'MSFT.US']
 
         """
         logger = logging.getLogger(__name__)
@@ -808,15 +889,29 @@ class AssetSelector:
         matches_df: pd.DataFrame,
         criteria: FilterCriteria,
     ) -> list[SelectedAsset]:
-        """Run the full asset selection pipeline.
+        """Runs the full asset selection pipeline on a DataFrame of assets.
+
+        This is the main entry point for the `AssetSelector`. It takes a DataFrame
+        of asset metadata and a `FilterCriteria` object, then applies the
+        entire filtering pipeline in sequence.
 
         Args:
-            matches_df: DataFrame of matched assets.
-            criteria: Filtering criteria.
+            matches_df: A DataFrame containing the raw metadata for all assets
+                to be considered for selection. Must include columns specified
+                in `FilterCriteria` and `SelectedAsset`.
+            criteria: A `FilterCriteria` object that defines the rules for the
+                selection process.
 
         Returns:
-            A list of SelectedAsset objects that pass all filters.
+            A list of `SelectedAsset` objects, each representing an asset that
+            passed all stages of the filtering pipeline. Returns an empty list
+            if no assets pass the filters.
 
+        Raises:
+            DataValidationError: If `matches_df` is None or is missing required
+                columns, or if the `criteria` object is invalid.
+            AssetSelectionError: If an allowlist is provided but no assets are
+                selected, indicating a potential configuration issue.
         """
         logger = logging.getLogger(__name__)
 
