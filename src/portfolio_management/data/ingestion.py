@@ -1,4 +1,36 @@
-"""Stooq data ingestion and indexing utilities."""
+"""Stooq data ingestion and indexing utilities.
+
+This module provides functions to scan a directory of Stooq data files,
+parse their metadata from file paths, and build a structured index. This
+index is a critical first step in the data preparation pipeline, enabling
+efficient lookup and processing of price data.
+
+Key Functions:
+    - build_stooq_index: The main entry point to create an index of all
+      Stooq price files.
+    - derive_region_and_category: A helper to infer metadata from file paths.
+
+Usage Example:
+    >>> from pathlib import Path
+    >>>
+    >>> # Create a dummy data directory
+    >>> data_dir = Path("stooq_data")
+    >>> data_dir.mkdir(exist_ok=True)
+    >>> (data_dir / "daily").mkdir(exist_ok=True)
+    >>> (data_dir / "daily" / "us").mkdir(exist_ok=True)
+    >>> (data_dir / "daily" / "us" / "nasdaq").mkdir(exist_ok=True)
+    >>> (data_dir / "daily" / "us" / "nasdaq" / "aapl.us.txt").write_text("...")
+    3
+    >>>
+    >>> # Build the index
+    >>> index = build_stooq_index(data_dir)
+    >>> print(index[0].ticker)
+    AAPL.US
+    >>> print(index[0].region)
+    us
+    >>> print(index[0].category)
+    nasdaq
+"""
 
 from __future__ import annotations
 
@@ -74,7 +106,23 @@ def _collect_relative_paths(base_dir: Path, max_workers: int) -> list[str]:
 
 
 def derive_region_and_category(rel_path: Path) -> tuple[str, str]:
-    """Infer region and category from the relative path within the tree."""
+    """Infer region and category from the relative path within the tree.
+
+    Parses a file path to extract structured metadata based on conventions
+    of the Stooq data layout.
+
+    Args:
+        rel_path: The relative path of a Stooq data file.
+
+    Returns:
+        A tuple containing the inferred region and category.
+
+    Example:
+        >>> from pathlib import Path
+        >>> p = Path("daily/us/nasdaq stocks/aapl.us.txt")
+        >>> derive_region_and_category(p)
+        ('us', 'nasdaq stocks')
+    """
     parts = list(rel_path.parts)
     region = ""
     category = ""
@@ -96,7 +144,22 @@ def build_stooq_index(
     data_dir: Path,
     max_workers: int | None = None,
 ) -> list[StooqFile]:
-    """Create an index describing all unpacked Stooq price files."""
+    """Create an index describing all unpacked Stooq price files.
+
+    Scans the data directory in parallel, collects all `.txt` files, and
+    builds a list of `StooqFile` objects containing metadata for each file.
+
+    Args:
+        data_dir: The root directory of the unpacked Stooq data.
+        max_workers: The maximum number of parallel workers to use for scanning.
+                     Defaults to the number of CPU cores.
+
+    Returns:
+        A list of `StooqFile` objects, each representing a data file.
+
+    Raises:
+        DataDirectoryNotFoundError: If the specified `data_dir` does not exist.
+    """
     if not data_dir.exists():
         raise DataDirectoryNotFoundError(data_dir)
 

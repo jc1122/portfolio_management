@@ -1,22 +1,17 @@
 """Diagnostics and currency helpers for Stooq price data.
 
-This module centralizes the data-quality analysis utilities that power the
-tradeable preparation pipeline. It exposes helpers for summarizing price files,
-inferring listing currencies, and maintaining aggregated diagnostics that the
-CLI scripts re-export for downstream workflows.
+This module centralizes data-quality analysis utilities for the pipeline. It
+provides functions for summarizing price files, inferring currencies from metadata,
+and resolving discrepancies between different data sources.
 
 Key Functions:
-    summarize_price_file: Stream through Stooq file to compute diagnostics (NEW: streaming)
-    summarize_clean_price_frame: Compute diagnostics from existing DataFrame
-    infer_currency: Guess trading currency from Stooq metadata
-    resolve_currency: Reconcile broker vs. Stooq currency with LSE policy
+    - summarize_price_file: Computes diagnostics for a Stooq file via streaming
+      to minimize memory usage.
+    - infer_currency: Guesses the trading currency from Stooq metadata.
+    - resolve_currency: Reconciles broker and Stooq currencies with a policy for
+      special cases like the London Stock Exchange (LSE).
+    - log_summary_counts: Logs aggregate statistics for data quality.
 
-Performance:
-    The streaming implementation (_stream_stooq_file_for_diagnostics) reduces memory
-    usage by 43.7% compared to loading full DataFrames, with only an 8.8% time overhead.
-    This is critical when processing 70,000+ files in production.
-
-    For details, see docs/streaming_performance.md
 """
 
 from __future__ import annotations
@@ -83,7 +78,7 @@ def _stream_stooq_file_for_diagnostics(
     significantly reducing memory usage compared to loading the full DataFrame.
 
     Returns:
-        Tuple of (diagnostics dict, status string)
+        A tuple containing a diagnostics dictionary and a status string.
 
     """
     if not file_path.exists():
@@ -472,22 +467,18 @@ def summarize_price_file(
     base_dir: pathlib.Path,
     stooq_file: StooqFile,
 ) -> dict[str, str]:
-    """Extract diagnostics and validation flags from a Stooq price file.
+    """Extract diagnostics from a Stooq price file using streaming.
 
-    This function uses a streaming approach to minimize memory usage by reading
-    the file in chunks and accumulating statistics incrementally, rather than
-    loading the entire file into a DataFrame.
+    This function minimizes memory usage by reading the file in chunks and
+    accumulating statistics, rather than loading the entire file.
 
-    Pipeline:
-    1. Stream through the CSV file in chunks
-    2. Validate dates and extract valid rows incrementally
-    3. Accumulate data quality metrics
-    4. Generate diagnostic flags
-    5. Determine overall data status
+    Args:
+        base_dir: The root directory where Stooq data is stored.
+        stooq_file: A `StooqFile` object representing the file to analyze.
 
     Returns:
-        Dictionary with keys: price_start, price_end, price_rows, data_status, data_flags
-
+        A dictionary of diagnostics, including date range, row count, and
+        data quality flags.
     """
     file_path = base_dir / stooq_file.rel_path
     diagnostics, status = _stream_stooq_file_for_diagnostics(file_path)
@@ -500,13 +491,28 @@ def summarize_price_file(
 
 
 def summarize_clean_price_frame(price_frame: pd.DataFrame) -> dict[str, str]:
-    """Generate diagnostics from an already cleaned Stooq price frame."""
+    """Generate diagnostics from an already cleaned pandas DataFrame.
+
+    Args:
+        price_frame: A DataFrame containing price data with 'date', 'close',
+                     and 'volume' columns.
+
+    Returns:
+        A dictionary of diagnostics.
+    """
     valid_price_frame, valid_dates, invalid_rows = _validate_dates(price_frame)
     return _summarize_valid_frame(valid_price_frame, valid_dates, invalid_rows)
 
 
 def infer_currency(stooq_file: StooqFile) -> str | None:
-    """Guess the trading currency from the Stooq region/category."""
+    """Guess the trading currency from the Stooq region or category.
+
+    Args:
+        stooq_file: A `StooqFile` object.
+
+    Returns:
+        The inferred currency code (e.g., 'USD'), or None if not found.
+    """
     region_key = (stooq_file.region or "").lower()
     return REGION_CURRENCY_MAP.get(region_key)
 
@@ -526,7 +532,26 @@ def resolve_currency(
     *,
     lse_policy: str = "broker",
 ) -> tuple[str, str, str, str]:
-    """Determine effective currency and status for reporting."""
+    """Determine the effective currency and its resolution status.
+
+    Reconciles the currency from the broker's tradeable instrument list with
+    the one inferred from Stooq's data, applying special policies for exchanges
+    like the LSE where multiple currencies may be used.
+
+    Args:
+        instrument: The tradeable instrument from the broker.
+        stooq_file: The matched Stooq file.
+        inferred_currency: The currency inferred from Stooq data.
+        lse_policy: The policy for LSE listings ('broker', 'stooq', 'strict').
+                    Defaults to 'broker'.
+
+    Returns:
+        A tuple containing:
+        - The expected currency (from the broker).
+        - The inferred currency (from Stooq).
+        - The resolved currency.
+        - The resolution status (e.g., 'match', 'mismatch', 'override').
+    """
     expected = (instrument.currency or "").upper()
     inferred = (inferred_currency or "").upper()
     market = (instrument.market or "").upper()
@@ -581,7 +606,12 @@ def log_summary_counts(
     currency_counts: Mapping[str, int],
     data_status_counts: Mapping[str, int],
 ) -> None:
-    """Log aggregate summaries for currency and data validation statuses."""
+    """Log aggregate summaries for currency and data validation statuses.
+
+    Args:
+        currency_counts: A mapping from currency status to its count.
+        data_status_counts: A mapping from data status to its count.
+    """
     if currency_counts:
         summary = ", ".join(
             f"{key}={count}" for key, count in sorted(currency_counts.items())
@@ -595,7 +625,14 @@ def log_summary_counts(
 
 
 def collect_available_extensions(entries: Sequence[StooqFile]) -> set[str]:
-    """Return the set of ticker extensions present in the Stooq index."""
+    """Return the set of ticker extensions present in the Stooq index.
+
+    Args:
+        entries: A sequence of `StooqFile` objects.
+
+    Returns:
+        A set of all unique ticker extensions (e.g., {'.US', '.UK'}).
+    """
     return {
         entry.ticker[entry.ticker.find(".") :].upper() if "." in entry.ticker else ""
         for entry in entries
