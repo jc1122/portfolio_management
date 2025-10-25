@@ -1017,7 +1017,7 @@ class TestAssetHistoryStatsEdgeCases:
         stats_b = stats[stats["ticker"] == "B_Abrupt"].iloc[0]
 
         # Last valid date should be around day 299
-        assert stats_b["last_valid_date"] == returns.index[299].date()
+        assert stats_b["last_valid_date"] == str(returns.index[299].date())
 
         # Total rows should be 300
         assert stats_b["total_rows"] == 300

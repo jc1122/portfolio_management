@@ -159,7 +159,7 @@ def compute_pit_eligibility(
         return pd.Series(False, index=returns.columns, name=0)
 
     # For each asset, find first non-NaN observation
-    first_valid_idx = historical_data.apply(pd.Series.first_valid_index)
+    first_valid_idx = historical_data.apply(lambda x: x.first_valid_index())
 
     # Calculate days since first valid observation
     days_since_first = pd.Series(index=returns.columns, dtype=float)
@@ -168,10 +168,10 @@ def compute_pit_eligibility(
         if pd.isna(first_date):
             # No valid observations at all
             days_since_first[ticker] = 0
-        else:
-            # Calculate days between first valid and current date
-            days_diff = (cutoff_datetime - pd.Timestamp(first_date)).days
-            days_since_first[ticker] = days_diff
+            continue
+        # Calculate days between first valid and current date
+        days_diff = (cutoff_datetime - pd.Timestamp(first_date)).days
+        days_since_first[ticker] = days_diff
 
     # Count non-NaN observations up to the date
     rows_count = historical_data.notna().sum()
@@ -188,7 +188,7 @@ def compute_pit_eligibility_cached(
     min_history_days: int = 252,
     min_price_rows: int = 252,
     cache: Any | None = None,
-) -> pd.Series:
+) -> pd.Series[bool]:
     """Compute PIT eligibility with optional caching to improve performance.
 
     This function is a wrapper around `compute_pit_eligibility` that adds a
@@ -294,7 +294,7 @@ def detect_delistings(
             # No valid data at all
             continue
 
-        last_valid_date = pd.Timestamp(last_valid_idx)
+        last_valid_date = pd.to_datetime(last_valid_idx)
 
         # Check if last valid date is at or before current date
         if last_valid_date <= cutoff_datetime:
@@ -366,8 +366,8 @@ def get_asset_history_stats(
                 },
             )
         else:
-            first_valid_ts = pd.Timestamp(first_valid)
-            last_valid_ts = pd.Timestamp(last_valid)
+            first_valid_ts = pd.to_datetime(first_valid)
+            last_valid_ts = pd.to_datetime(last_valid)
 
             days_since = (cutoff_datetime - first_valid_ts).days
             total_rows = ticker_data.notna().sum()
@@ -379,8 +379,8 @@ def get_asset_history_stats(
             stats.append(
                 {
                     "ticker": ticker,
-                    "first_valid_date": first_valid_ts.date(),
-                    "last_valid_date": last_valid_ts.date(),
+                    "first_valid_date": str(first_valid_ts.date()),
+                    "last_valid_date": str(last_valid_ts.date()),
                     "days_since_first": days_since,
                     "total_rows": total_rows,
                     "coverage_pct": coverage_pct,

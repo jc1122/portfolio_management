@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import importlib
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -224,7 +224,7 @@ class RiskParityStrategy(PortfolioStrategy):
             },
         )
 
-    def _load_backend(self):
+    def _load_backend(self) -> Any:
         try:
             return importlib.import_module("riskparityportfolio")
         except ImportError as err:  # pragma: no cover - dependency check
@@ -252,7 +252,7 @@ class RiskParityStrategy(PortfolioStrategy):
         vols = returns.std(ddof=0)
         if (vols <= 0).any():
             raise OptimizationError(strategy_name=self.name)
-        inv_vol = 1.0 / vols.to_numpy()
+        inv_vol = 1.0 / vols.to_numpy().astype(float)
         weights = pd.Series(inv_vol / inv_vol.sum(), index=returns.columns, dtype=float)
         self.validate_constraints(weights, constraints, asset_classes)
         return Portfolio(

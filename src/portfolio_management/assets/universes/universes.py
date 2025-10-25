@@ -339,7 +339,7 @@ class UniverseManager:
         if not selected_assets:
             message = f"No assets selected for universe '{name}'."
             if strict:
-                raise InsufficientDataError(message, asset_count=0)
+                raise InsufficientDataError(reason=message, asset_count=0)
             logger.warning(message)
             return None
 
@@ -363,7 +363,7 @@ class UniverseManager:
         if classified_df.empty:
             message = f"No assets remain after classification filtering for universe '{name}'."
             if strict:
-                raise InsufficientDataError(message, asset_count=0)
+                raise InsufficientDataError(reason=message, asset_count=0)
             logger.warning(message)
             return None
 
@@ -432,7 +432,7 @@ class UniverseManager:
 
     def compare_universes(self, names: list[str]) -> pd.DataFrame:
         """Compare multiple universes."""
-        stats = []
+        stats: list[dict[str, Any]] = []
         for name in names:
             universe = self.load_universe(name, strict=False)
             if not universe:
@@ -440,12 +440,22 @@ class UniverseManager:
                 continue
 
             returns_df = universe["returns"]
+            mean_return = (
+                returns_df.mean().mean()
+                if isinstance(returns_df.mean(), pd.Series)
+                else returns_df.mean()
+            )
+            volatility = (
+                returns_df.std().mean()
+                if isinstance(returns_df.std(), pd.Series)
+                else returns_df.std()
+            )
             stats.append(
                 {
                     "name": name,
                     "asset_count": len(universe["assets"]),
-                    "mean_return": returns_df.mean().mean() * 252,
-                    "volatility": returns_df.std().mean() * (252**0.5),
+                    "mean_return": mean_return * 252,
+                    "volatility": volatility * (252**0.5),
                 },
             )
         return pd.DataFrame(stats)

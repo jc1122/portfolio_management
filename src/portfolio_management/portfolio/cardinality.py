@@ -46,7 +46,7 @@ References:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -302,7 +302,7 @@ def optimize_with_cardinality_relaxation(
     )
 
 
-def get_cardinality_optimizer(method: str):
+def get_cardinality_optimizer(method: str) -> Any:
     """Get optimizer function for specified cardinality method (stub).
 
     Factory function to retrieve the appropriate optimizer implementation

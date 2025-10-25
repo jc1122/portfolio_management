@@ -183,7 +183,7 @@ def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
         An iterable of candidate ticker strings.
     """
     if not symbol:
-        return []
+        return
 
     original = symbol.strip()
     normalized = original.replace(" ", "").upper()
