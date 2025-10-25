@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 if TYPE_CHECKING:
-    from portfolio_management.core.types import DateLike
+    pass
 
 
 def date_to_timestamp(date: datetime.date | pd.Timestamp | str) -> pd.Timestamp:

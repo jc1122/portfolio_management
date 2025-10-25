@@ -21,7 +21,7 @@ from __future__ import annotations
 import importlib
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -32,6 +32,7 @@ from portfolio_management.core.exceptions import (
     InsufficientDataError,
     OptimizationError,
 )
+from portfolio_management.core.types import ReturnFrame, ReturnSeries
 from portfolio_management.portfolio.models import Portfolio
 
 from .base import PortfolioStrategy
@@ -205,7 +206,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             risk_models,
         )
 
-        attempts = [
+        attempts: list[dict[str, Any]] = [
             {
                 "cov": cov_matrix,
                 "solver": None,
@@ -241,7 +242,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             )
 
         final_weights: pd.Series | None = None
-        final_ef = None
+        final_ef: Any = None
         last_error: OptimizationError | None = None
 
         for attempt in attempts:
@@ -314,7 +315,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             exp_ret = float(fallback_weights @ mu_vector)
             vol = float(np.sqrt(fallback_weights @ cov_matrix @ fallback_weights))
             sharpe = exp_ret / vol if vol > 0 else 0.0
-            metadata = {
+            metadata: dict[str, Any] = {
                 "n_assets": int(fallback_weights.size),
                 "expected_return": exp_ret,
                 "volatility": vol,
@@ -346,7 +347,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             metadata=metadata,
         )
 
-    def _load_backend(self):
+    def _load_backend(self) -> tuple[Any, Any, Any, Any]:
         try:
             module = importlib.import_module("pypfopt")
             expected_returns = importlib.import_module("pypfopt.expected_returns")
@@ -407,7 +408,12 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 message="Not enough return observations for mean-variance optimisation.",
             )
 
-    def _estimate_moments(self, returns: pd.DataFrame, expected_returns, risk_models):
+    def _estimate_moments(
+        self,
+        returns: ReturnFrame,
+        expected_returns: Any,
+        risk_models: Any,
+    ) -> tuple[pd.Series, pd.DataFrame]:
         # Use cached statistics if available
         if self._statistics_cache is not None:
             # Populate cache metadata for consistency without relying on it
@@ -453,7 +459,9 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
         return mu, cov_matrix
 
-    def _fallback_covariance(self, returns: pd.DataFrame, risk_models) -> pd.DataFrame:
+    def _fallback_covariance(
+        self, returns: ReturnFrame, risk_models: Any
+    ) -> pd.DataFrame:
         """Compute a regularised covariance matrix without optional dependencies."""
         cov_matrix = risk_models.sample_cov(returns, frequency=252)
         base = cov_matrix.to_numpy()
@@ -470,7 +478,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
         self,
         mu: pd.Series,
         cov_matrix: pd.DataFrame,
-        constraints,
+        constraints: PortfolioConstraints,
     ) -> tuple[pd.Series, dict[str, float]]:
         """Compute a long-only tangency portfolio using a closed-form approximation."""
         subset = min(200, len(mu))
@@ -516,11 +524,11 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
     def _initialise_frontier(
         self,
-        efficient_frontier_cls,
+        efficient_frontier_cls: Any,
         mu: pd.Series,
         cov_matrix: pd.DataFrame,
         constraints: PortfolioConstraints,
-    ):
+    ) -> Any:
         """Initialise the efficient frontier with box constraints."""
         return efficient_frontier_cls(
             mu,
@@ -530,12 +538,12 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
     def _build_frontier(
         self,
-        efficient_frontier_cls,
+        efficient_frontier_cls: Any,
         mu: pd.Series,
         cov_matrix: pd.DataFrame,
         constraints: PortfolioConstraints,
         asset_classes: pd.Series | None,
-    ):
+    ) -> Any:
         """Create an EfficientFrontier instance with all applicable constraints."""
         ef = self._initialise_frontier(
             efficient_frontier_cls,
@@ -604,25 +612,26 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
     def _apply_sector_limits(
         self,
-        ef,
+        ef: Any,
         constraints: PortfolioConstraints,
         asset_classes: pd.Series,
         index_map: dict[str, int],
     ) -> None:
         tickers = list(index_map.keys())
         sector_series = asset_classes.reindex(tickers)
-        for sector, limit in constraints.sector_limits.items():
-            mask = sector_series.str.lower() == sector.lower()
-            tickers = sector_series[mask].index.tolist()
-            idxs = self._indices_for(index_map, tickers)
-            if idxs:
-                ef.add_constraint(
-                    lambda w, idxs=idxs, limit=limit: sum(w[i] for i in idxs) <= limit,
-                )
+        if constraints.sector_limits:
+            for sector, limit in constraints.sector_limits.items():
+                mask = sector_series.str.lower() == sector.lower()
+                tickers = sector_series[mask].index.tolist()
+                idxs = self._indices_for(index_map, tickers)
+                if idxs:
+                    ef.add_constraint(
+                        lambda w, idxs=idxs, limit=limit: sum(w[i] for i in idxs) <= limit,
+                    )
 
     def _apply_asset_class_limits(
         self,
-        ef,
+        ef: Any,
         constraints: PortfolioConstraints,
         asset_classes: pd.Series,
         index_map: dict[str, int],
@@ -656,7 +665,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 >= limit,
             )
 
-    def _optimise_frontier(self, ef, objective: str | None = None) -> None:
+    def _optimise_frontier(self, ef: Any, objective: str | None = None) -> None:
         target_objective = objective or self._objective
         try:
             if target_objective == "max_sharpe":
@@ -671,7 +680,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
                 message=f"Mean-variance optimisation failed: {err}",
             ) from err
 
-    def _extract_weights(self, ef) -> pd.Series:
+    def _extract_weights(self, ef: Any) -> ReturnSeries:
         cleaned_weights = ef.clean_weights()
         weights = pd.Series(cleaned_weights, dtype=float)
         weights = weights[weights > 0]
@@ -682,7 +691,7 @@ class MeanVarianceStrategy(PortfolioStrategy):
             )
         return weights / weights.sum()
 
-    def _summarise_portfolio(self, ef) -> dict[str, float]:
+    def _summarise_portfolio(self, ef: Any) -> dict[str, float]:
         try:
             expected_ret, volatility, sharpe = ef.portfolio_performance(
                 verbose=False,
@@ -702,6 +711,4 @@ class MeanVarianceStrategy(PortfolioStrategy):
 
     @staticmethod
     def _indices_for(index_map: dict[str, int], tickers: Sequence[str]) -> list[int]:
-        if not isinstance(tickers, Sequence):  # Defensive guard for dynamic inputs.
-            tickers = list(tickers)
         return [index_map[t] for t in tickers if t in index_map]
