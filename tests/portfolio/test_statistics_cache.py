@@ -157,7 +157,7 @@ class TestStatisticsCache:
         stats = StatisticsCache()
 
         # Populate cache with the initial window
-        _ = stats.get_covariance_matrix(sample__returns, annualize=False)
+        _ = stats.get_covariance_matrix(sample_returns, annualize=False)
         cache_key1 = stats._cache_key
 
         # Shift the window forward by one month worth of data
