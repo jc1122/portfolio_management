@@ -335,7 +335,7 @@ class TestGetAssetHistoryStats:
         # Asset A should have ~401 rows
         stats_a = stats[stats["ticker"] == "A"].iloc[0]
         assert stats_a["total_rows"] == 401
-        assert stats_a["first_valid_date"] == returns.index[0].date()
+        assert stats_a["first_valid_date"] == str(returns.index[0].date())
 
     def test_stats_for_late_starter(self, sample_returns_with_late_starter):
         """Test statistics for late-starting asset."""
@@ -352,7 +352,7 @@ class TestGetAssetHistoryStats:
         # Asset C should have ~101 rows (started at day 300)
         stats_c = stats[stats["ticker"] == "C"].iloc[0]
         assert stats_c["total_rows"] == 101
-        assert stats_c["first_valid_date"] == returns.index[300].date()
+        assert stats_c["first_valid_date"] == str(returns.index[300].date())
         assert stats_c["days_since_first"] == 100
 
     def test_stats_for_delisted_asset(self, sample_returns_with_delisting):
@@ -369,7 +369,7 @@ class TestGetAssetHistoryStats:
 
         # Asset B should show last valid date at day 299
         stats_b = stats[stats["ticker"] == "B"].iloc[0]
-        assert stats_b["last_valid_date"] == returns.index[299].date()
+        assert stats_b["last_valid_date"] == str(returns.index[299].date())
         assert stats_b["total_rows"] == 300  # Days 0-299
 
     def test_stats_with_no_data(self):

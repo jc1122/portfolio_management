@@ -165,10 +165,11 @@ def _write_report(
 ) -> None:
     """Write a list of dataclasses to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if data and not isinstance(data[0], dict):
+    records: list[dict]
+    if data and hasattr(data[0], "__dataclass_fields__"):
         records = [asdict(item) for item in data]
     else:
-        records = data
+        records = data  # type: ignore[assignment]
     report_frame = pd.DataFrame.from_records(records, columns=columns)
     report_frame.to_csv(output_path, index=False)
 
