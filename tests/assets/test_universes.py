@@ -66,6 +66,7 @@ def prices_dir(tmp_path: Path) -> Path:
     return tmp_path
 
 
+@pytest.mark.integration
 class TestUniverseConfigLoader:
     """Tests for the UniverseConfigLoader class."""
 
@@ -90,6 +91,7 @@ class TestUniverseConfigLoader:
             UniverseConfigLoader.load_config(config_path)
 
 
+@pytest.mark.integration
 class TestUniverseManager:
     """Tests for the UniverseManager class."""
 

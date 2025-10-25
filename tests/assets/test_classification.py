@@ -43,6 +43,7 @@ def sample_asset() -> SelectedAsset:
     )
 
 
+@pytest.mark.integration
 class TestAssetClassifier:
     """Tests for the AssetClassifier class."""
 
@@ -221,6 +222,7 @@ class TestAssetClassifier:
         assert df["asset_class"].iloc[0] == "equity"
 
 
+@pytest.mark.integration
 class TestClassificationOverrides:
     """Tests for the ClassificationOverrides class."""
 

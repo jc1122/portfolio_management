@@ -1,12 +1,14 @@
 """Integration tests for prepare_tradeable_data incremental resume."""
 
 from __future__ import annotations
+import pytest
 
 import subprocess
 import sys
 from pathlib import Path
 
 
+@pytest.mark.integration
 def test_incremental_resume_skips_when_unchanged(tmp_path: Path) -> None:
     """Test that incremental resume skips processing when inputs unchanged."""
     # Set up directories
@@ -90,6 +92,7 @@ def test_incremental_resume_skips_when_unchanged(tmp_path: Path) -> None:
     )
 
 
+@pytest.mark.integration
 def test_incremental_resume_reruns_when_tradeable_changed(tmp_path: Path) -> None:
     """Test that incremental resume reruns when tradeable files change."""
     # Set up directories
@@ -178,6 +181,7 @@ def test_incremental_resume_reruns_when_tradeable_changed(tmp_path: Path) -> Non
     )
 
 
+@pytest.mark.integration
 def test_help_shows_incremental_flags() -> None:
     """Test that help message includes incremental resume flags."""
     result = subprocess.run(

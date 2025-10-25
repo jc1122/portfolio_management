@@ -12,6 +12,7 @@ from portfolio_management.core.exceptions import (
 from portfolio_management.macro.provider import MacroSignalProvider
 
 
+@pytest.mark.integration
 class TestMacroSignalProviderInit:
     """Tests for MacroSignalProvider initialization."""
 
@@ -41,6 +42,7 @@ class TestMacroSignalProviderInit:
             MacroSignalProvider(nonexistent)
 
 
+@pytest.mark.integration
 class TestLocateSeries:
     """Tests for locate_series method."""
 
@@ -97,6 +99,7 @@ class TestLocateSeries:
         assert "pmi.txt" in series.rel_path
 
 
+@pytest.mark.integration
 class TestLocateMultipleSeries:
     """Tests for locate_multiple_series method."""
 
@@ -154,6 +157,7 @@ class TestLocateMultipleSeries:
         assert len(series_dict) == 0
 
 
+@pytest.mark.integration
 class TestLoadSeriesData:
     """Tests for load_series_data method."""
 
@@ -236,6 +240,7 @@ GDP.US,D,2020-01-04,0,108,112,106,110,1300,0
             provider.load_series_data("gdp.us")
 
 
+@pytest.mark.integration
 class TestGenerateSearchPaths:
     """Tests for _generate_search_paths method."""
 
@@ -265,6 +270,7 @@ class TestGenerateSearchPaths:
         assert any("gdp.txt" in p for p in paths)
 
 
+@pytest.mark.integration
 class TestParsePathMetadata:
     """Tests for _parse_path_metadata method."""
 

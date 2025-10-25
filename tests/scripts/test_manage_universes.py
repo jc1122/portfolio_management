@@ -53,6 +53,7 @@ def mock_args_load(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(sys, "argv", test_args)
 
 
+@pytest.mark.integration
 class TestLazyLoading:
     """Tests to verify lazy loading behavior."""
 
@@ -107,6 +108,7 @@ class TestLazyLoading:
                 mock_read_csv.assert_called_once()
 
 
+@pytest.mark.integration
 class TestBehaviorPreservation:
     """Tests to verify that behavior remains the same."""
 

@@ -73,6 +73,7 @@ def test_cli_summary_output(
     assert "Asset Class Breakdown" in captured
 
 
+@pytest.mark.integration
 def test_cli_writes_output_file(tmp_path: Path, assets_csv: Path) -> None:
     output_path = tmp_path / "classified.csv"
     args = parse_args(

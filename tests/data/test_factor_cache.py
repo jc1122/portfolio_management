@@ -35,6 +35,7 @@ def factor_cache(cache_dir):
     return FactorCache(cache_dir, enabled=True)
 
 
+@pytest.mark.integration
 class TestCacheMetadata:
     """Test CacheMetadata dataclass."""
 
@@ -96,6 +97,7 @@ class TestCacheMetadata:
         assert restored.entry_type == original.entry_type
 
 
+@pytest.mark.integration
 class TestFactorCache:
     """Test FactorCache functionality."""
 
@@ -157,6 +159,7 @@ class TestFactorCache:
         assert hash1 != hash2
 
 
+@pytest.mark.integration
 class TestFactorScoreCaching:
     """Test factor score caching."""
 
@@ -244,6 +247,7 @@ class TestFactorScoreCaching:
         assert cached is None  # Should miss because data changed
 
 
+@pytest.mark.integration
 class TestPITEligibilityCaching:
     """Test PIT eligibility caching."""
 
@@ -297,6 +301,7 @@ class TestPITEligibilityCaching:
         pd.testing.assert_series_equal(cached_pit, eligibility)
 
 
+@pytest.mark.integration
 class TestCacheManagement:
     """Test cache management operations."""
 
@@ -387,6 +392,7 @@ class TestCacheManagement:
         assert cached is None
 
 
+@pytest.mark.integration
 class TestDisabledCache:
     """Test that disabled cache works correctly."""
 
@@ -414,6 +420,7 @@ class TestDisabledCache:
         assert count == 0
 
 
+@pytest.mark.integration
 class TestCacheCorrectnessEquivalence:
     """Test that caching doesn't change computational results."""
 
