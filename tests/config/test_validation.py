@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.config.validation import (
     ValidationResult,

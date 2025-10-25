@@ -5,6 +5,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.core.exceptions import InsufficientDataError
 from portfolio_management.portfolio.preselection import (

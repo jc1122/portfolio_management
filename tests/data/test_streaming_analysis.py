@@ -1,5 +1,8 @@
 """Tests for streaming diagnostics functionality in analysis module."""
 
+import pytest
+pytestmark = pytest.mark.integration
+
 import pathlib
 import tempfile
 

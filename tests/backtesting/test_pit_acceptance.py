@@ -11,6 +11,7 @@ These tests verify the acceptance criteria from the issue:
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.backtesting.eligibility import compute_pit_eligibility
 from portfolio_management.backtesting.engine import BacktestConfig, BacktestEngine

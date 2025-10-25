@@ -4,6 +4,7 @@ from datetime import date
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.utils.date_utils import (
     date_to_timestamp,

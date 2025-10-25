@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.data.io.fast_io import (
     get_available_backends,

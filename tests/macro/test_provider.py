@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.core.exceptions import (
     DataDirectoryNotFoundError,

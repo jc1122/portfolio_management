@@ -1,6 +1,7 @@
 """Tests for indicator configuration."""
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.analytics.indicators import IndicatorConfig
 

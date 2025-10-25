@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.integration
 
 # Import the main function to test
 from scripts.manage_universes import main

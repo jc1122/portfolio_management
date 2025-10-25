@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import pytest
+pytestmark = pytest.mark.integration
+
 import subprocess
 import sys
 from pathlib import Path

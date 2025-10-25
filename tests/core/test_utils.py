@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.core.utils import _run_in_parallel
 

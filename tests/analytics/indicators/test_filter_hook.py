@@ -2,6 +2,7 @@
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.analytics.indicators import (
     FilterHook,

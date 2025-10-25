@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.assets.selection import AssetSelector, FilterCriteria
 

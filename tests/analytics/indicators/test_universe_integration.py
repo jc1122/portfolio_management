@@ -4,6 +4,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.integration
+
 import yaml
 
 from portfolio_management.assets.universes import (

@@ -3,6 +3,7 @@
 from datetime import date
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.utils.validation import (
     validate_date_range,

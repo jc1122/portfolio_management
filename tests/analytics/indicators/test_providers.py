@@ -1,5 +1,8 @@
 """Tests for indicator providers."""
 
+import pytest
+pytestmark = pytest.mark.integration
+
 import pandas as pd
 
 from portfolio_management.analytics.indicators import (

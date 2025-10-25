@@ -7,6 +7,7 @@ import types
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management import portfolio as portfolio_module
 from portfolio_management.core import exceptions as exc

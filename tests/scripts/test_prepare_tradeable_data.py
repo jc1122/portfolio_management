@@ -15,6 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.integration
 
 pd = pytest.importorskip("pandas")
 ptd = pytest.importorskip("scripts.prepare_tradeable_data")

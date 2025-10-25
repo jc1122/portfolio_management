@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.data.factor_caching import CacheMetadata, FactorCache
 

@@ -1,6 +1,7 @@
 """Tests for macro data models."""
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.macro.models import MacroSeries, RegimeConfig
 

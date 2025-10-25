@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.assets.selection import SelectedAsset
 from scripts.classify_assets import parse_args, run_cli

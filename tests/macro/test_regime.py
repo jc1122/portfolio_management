@@ -1,5 +1,8 @@
 """Tests for RegimeGate and regime-based selection gating."""
 
+import pytest
+pytestmark = pytest.mark.integration
+
 from dataclasses import dataclass
 
 from portfolio_management.macro.models import RegimeConfig

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.portfolio.membership import (
     MembershipPolicy,

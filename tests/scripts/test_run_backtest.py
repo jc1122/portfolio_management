@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+pytestmark = pytest.mark.integration
 
 
 # Copy of the optimized load_data function for testing

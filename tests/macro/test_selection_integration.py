@@ -1,6 +1,7 @@
 """Tests for integration of macro regime gating with asset selection."""
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from portfolio_management.assets.selection import FilterCriteria
 from portfolio_management.macro.models import RegimeConfig
