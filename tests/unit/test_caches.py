@@ -81,7 +81,8 @@ def test_factor_cache_clear_works(tmp_path):
     assert stats["memory_entries"] == 1
     assert stats["disk_entries"] == 1
 
-    cache.clear_cache()
+    deleted_count = cache.clear_cache()
+    assert deleted_count == 0 # Metadata dir is empty
 
     stats = cache.get_cache_stats()
     assert stats["memory_entries"] == 0
