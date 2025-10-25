@@ -7,5 +7,6 @@ pandas-stubs
 types-PyYAML
 pytest
 pytest-xdist
+pytest-timeout
 mdformat
 gitlint
