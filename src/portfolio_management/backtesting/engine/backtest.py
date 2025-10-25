@@ -1,7 +1,33 @@
 """Core backtesting engine for historical portfolio simulation.
 
-This module provides the BacktestEngine class that orchestrates portfolio
-simulation over historical data with rebalancing and transaction costs.
+This module provides the `BacktestEngine`, a class that orchestrates portfolio
+simulation over historical data. It handles rebalancing, transaction costs,
+cash management, and performance tracking to provide a realistic assessment
+of a given portfolio strategy.
+
+Key Classes:
+    - BacktestEngine: The main engine for running backtest simulations.
+
+Usage Example:
+    >>> import pandas as pd
+    >>> from portfolio_management.backtesting.models import BacktestConfig
+    >>> from portfolio_management.backtesting.engine.backtest import BacktestEngine
+    >>> from portfolio_management.portfolio.strategy import PortfolioStrategy
+    >>>
+    >>> # Assume config, strategy, prices, and returns are defined
+    >>> # config = BacktestConfig(...)
+    >>> # strategy = PortfolioStrategy(...)
+    >>> # prices = pd.DataFrame(...)
+    >>> # returns = pd.DataFrame(...)
+    >>>
+    >>> # engine = BacktestEngine(config, strategy, prices, returns)
+    >>> # try:
+    ... #     equity_curve, metrics, events = engine.run()
+    ... #     print(f"Final Equity: {equity_curve['equity'].iloc[-1]:.2f}")
+    ... #     print(f"Sharpe Ratio: {metrics.sharpe_ratio:.2f}")
+    ... # except InsufficientHistoryError as e:
+    ... #     print(f"Error: {e}")
+
 """
 
 from __future__ import annotations
@@ -38,8 +64,70 @@ from portfolio_management.core.exceptions import (
 class BacktestEngine:
     """Historical portfolio backtesting engine.
 
-    Simulates portfolio performance over historical data with realistic
-    transaction costs, rebalancing logic, and cash management.
+    Simulates the performance of a portfolio strategy over a historical period,
+    incorporating realistic constraints like transaction costs, rebalancing
+    schedules, and point-in-time data eligibility.
+
+    The engine iterates day by day through the historical price data, tracks the
+    portfolio's value, and triggers rebalancing events based on the configured
+    frequency. At each rebalance, it uses the provided strategy to determine a
+    new target portfolio and executes the necessary trades.
+
+    Workflow:
+        1. Initialize with configuration, strategy, and historical data.
+        2. Iterate through each day in the backtest period.
+        3. On each day, update the total portfolio equity value.
+        4. Check if a scheduled rebalancing is due.
+        5. On a rebalancing day:
+           a. Determine the universe of eligible assets (PIT eligibility).
+           b. Apply preselection and membership policies to get candidate assets.
+           c. Call the portfolio strategy to get target weights.
+           d. Calculate required trades (buys/sells).
+           e. Compute and deduct transaction costs.
+           f. Update cash and holdings.
+        6. After the simulation, calculate final performance metrics.
+
+    Attributes:
+        config (BacktestConfig): The configuration settings for the backtest.
+        strategy (PortfolioStrategy): The portfolio construction strategy to be tested.
+        prices (pd.DataFrame): DataFrame of historical prices.
+        returns (pd.DataFrame): DataFrame of historical returns.
+        classifications (dict[str, str] | None): Asset class mappings for constraints.
+        preselection: Optional preselection filter for asset screening.
+        membership_policy: Optional policy to control portfolio turnover.
+        cache: Optional cache for factors and eligibility data to improve performance.
+        cost_model (TransactionCostModel): The model for calculating trade costs.
+        holdings (dict[str, int]): The current number of shares held for each asset.
+        cash (Decimal): The current cash balance in the portfolio.
+        rebalance_events (list[RebalanceEvent]): A log of all rebalancing events.
+        equity_curve (list[tuple[datetime.date, float]]): A daily log of portfolio equity.
+
+    Example:
+        >>> from portfolio_management.backtesting.models import BacktestConfig
+        >>> from portfolio_management.portfolio.strategy import EqualWeightStrategy
+        >>> from portfolio_management.utils.testing import create_dummy_data
+        >>>
+        >>> start_date = datetime.date(2022, 1, 1)
+        >>> end_date = datetime.date(2023, 12, 31)
+        >>> prices, returns = create_dummy_data(['AAPL', 'MSFT'], start_date, end_date)
+        >>>
+        >>> config = BacktestConfig(
+        ...     start_date=start_date,
+        ...     end_date=end_date,
+        ...     initial_capital=Decimal("100000.00"),
+        ...     rebalance_frequency=RebalanceFrequency.QUARTERLY,
+        ...     commission_pct=Decimal("0.001")
+        ... )
+        >>> strategy = EqualWeightStrategy(min_history_periods=60)
+        >>>
+        >>> engine = BacktestEngine(config, strategy, prices, returns)
+        >>> equity_curve, metrics, events = engine.run()
+        >>>
+        >>> print(f"Backtest finished with {len(events)} rebalances.")
+        >>> print(f"Final portfolio value: ${metrics.final_value:,.2f}")
+        >>> print(f"Annualized Return: {metrics.annualized_return:.2%}")
+        >>> print(f"Sharpe Ratio: {metrics.sharpe_ratio:.2f}")
+
     """
 
     def __init__(
@@ -66,8 +154,7 @@ class BacktestEngine:
             cache: Optional FactorCache instance for caching factor scores and PIT eligibility.
 
         Raises:
-            InsufficientHistoryError: If data doesn't cover backtest period.
-
+            InsufficientHistoryError: If data doesn't cover the backtest period.
         """
         self.config = config
         self.strategy = strategy
@@ -119,9 +206,19 @@ class BacktestEngine:
     def run(self) -> tuple[pd.DataFrame, PerformanceMetrics, list[RebalanceEvent]]:
         """Execute the backtest simulation.
 
-        Returns:
-            Tuple of (equity_curve_df, performance_metrics, rebalance_events).
+        This is the main entry point to start the backtest. It iterates through
+        the specified time period, manages the portfolio, and calculates results.
 
+        Returns:
+            A tuple containing:
+            - pd.DataFrame: The daily equity curve of the portfolio.
+            - PerformanceMetrics: A summary of key performance indicators.
+            - list[RebalanceEvent]: A detailed log of all rebalancing events.
+
+        Raises:
+            InsufficientHistoryError: If the provided data does not cover the
+                configured backtest period.
+            RebalanceError: If a fatal error occurs during a rebalancing attempt.
         """
         # Filter data to backtest period
         # Convert index to dates for comparison

@@ -1,6 +1,47 @@
-"""Core data models for backtesting framework.
+"""Core data models for the backtesting framework.
 
-This module contains configuration, event tracking, and results models.
+This module defines the data structures used to configure, run, and analyze
+backtests. It includes models for configuration settings, event tracking, and
+performance results, ensuring a standardized and type-safe interface across
+the backtesting engine.
+
+Key Classes:
+    - BacktestConfig: A dataclass for all backtest configuration settings.
+    - RebalanceEvent: A record of a single portfolio rebalancing event.
+    - PerformanceMetrics: A container for all calculated performance metrics.
+    - RebalanceFrequency: An Enum for specifying rebalancing frequency.
+    - RebalanceTrigger: An Enum for the cause of a rebalancing event.
+
+Usage Example:
+    >>> from datetime import date
+    >>> from decimal import Decimal
+    >>> from portfolio_management.backtesting.models import (
+    ...     BacktestConfig, RebalanceFrequency, RebalanceEvent, RebalanceTrigger
+    ... )
+    >>>
+    >>> # 1. Configure a backtest
+    >>> config = BacktestConfig(
+    ...     start_date=date(2022, 1, 1),
+    ...     end_date=date(2023, 12, 31),
+    ...     rebalance_frequency=RebalanceFrequency.QUARTERLY,
+    ...     commission_pct=0.001
+    ... )
+    >>> print(f"Backtest will run from {config.start_date} to {config.end_date}.")
+    Backtest will run from 2022-01-01 to 2023-12-31.
+    >>>
+    >>> # 2. Record a rebalancing event
+    >>> event = RebalanceEvent(
+    ...     date=date(2022, 4, 1),
+    ...     trigger=RebalanceTrigger.SCHEDULED,
+    ...     trades={'AAPL': 100, 'MSFT': -50},
+    ...     costs=Decimal('25.50'),
+    ...     pre_rebalance_value=Decimal('105000.00'),
+    ...     post_rebalance_value=Decimal('104974.50'),
+    ...     cash_before=Decimal('10000.00'),
+    ...     cash_after=Decimal('2474.50')
+    ... )
+    >>> print(f"Rebalanced on {event.date}, incurred ${event.costs} in costs.")
+    Rebalanced on 2022-04-01, incurred $25.50 in costs.
 """
 
 from __future__ import annotations
@@ -14,7 +55,7 @@ from portfolio_management.core.exceptions import InvalidBacktestConfigError
 
 
 class RebalanceFrequency(Enum):
-    """Supported rebalancing frequencies."""
+    """Enumeration for supported rebalancing frequencies."""
 
     DAILY = "daily"
     WEEKLY = "weekly"
@@ -24,31 +65,34 @@ class RebalanceFrequency(Enum):
 
 
 class RebalanceTrigger(Enum):
-    """Type of rebalance trigger."""
+    """Enumeration for the cause of a rebalance event."""
 
-    SCHEDULED = "scheduled"  # Calendar-based
-    OPPORTUNISTIC = "opportunistic"  # Threshold-based
-    FORCED = "forced"  # Manual override
+    SCHEDULED = "scheduled"  # Calendar-based (e.g., monthly)
+    OPPORTUNISTIC = "opportunistic"  # Threshold-based (e.g., weight drift)
+    FORCED = "forced"  # Manual override or initial portfolio setup
 
 
 @dataclass(frozen=True)
 class BacktestConfig:
     """Configuration for a backtest run.
 
-    Attributes:
-        start_date: First date of the backtest period.
-        end_date: Last date of the backtest period.
-        initial_capital: Starting portfolio value (default: 100,000).
-        rebalance_frequency: How often to rebalance (default: monthly).
-        rebalance_threshold: Drift threshold for opportunistic rebalancing (default: 0.20 = 20%).
-        commission_pct: Commission as percentage of trade value (default: 0.001 = 0.1%).
-        commission_min: Minimum commission per trade (default: 0.0).
-        slippage_bps: Slippage in basis points (default: 5.0 = 0.05%).
-        cash_reserve_pct: Minimum cash reserve as percentage (default: 0.01 = 1%).
-        use_pit_eligibility: Enable point-in-time eligibility filtering (default: True).
-        min_history_days: Minimum days of history for PIT eligibility (default: 252 = 1 year).
-        min_price_rows: Minimum price rows for PIT eligibility (default: 252).
+    This dataclass holds all the parameters needed to define a backtest simulation.
+    It is immutable to ensure that the configuration cannot be changed during a run.
 
+    Attributes:
+        start_date (datetime.date): The first date of the backtest period.
+        end_date (datetime.date): The last date of the backtest period.
+        initial_capital (Decimal): The starting portfolio value.
+        rebalance_frequency (RebalanceFrequency): How often to rebalance.
+        rebalance_threshold (float): The weight drift threshold for opportunistic rebalancing.
+        commission_pct (float): Commission as a percentage of trade value.
+        commission_min (float): Minimum commission fee per trade.
+        slippage_bps (float): Slippage cost in basis points.
+        cash_reserve_pct (float): The minimum percentage of the portfolio to hold as cash.
+        lookback_periods (int): The rolling window size for parameter estimation (e.g., returns).
+        use_pit_eligibility (bool): If True, enables point-in-time eligibility filtering.
+        min_history_days (int): The minimum calendar days of history for PIT eligibility.
+        min_price_rows (int): The minimum number of price observations for PIT eligibility.
     """
 
     start_date: datetime.date
@@ -68,7 +112,7 @@ class BacktestConfig:
     min_price_rows: int = 252  # Minimum price rows for eligibility
 
     def __post_init__(self) -> None:
-        """Validate configuration values."""
+        """Validate configuration values after initialization."""
         if self.start_date >= self.end_date:
             raise InvalidBacktestConfigError(
                 config_field="start_date",
@@ -121,18 +165,21 @@ class BacktestConfig:
 
 @dataclass
 class RebalanceEvent:
-    """Record of a portfolio rebalancing event.
+    """A detailed record of a single portfolio rebalancing event.
+
+    This dataclass captures the state of the portfolio immediately before and
+    after a rebalance, along with details of the trades executed and costs incurred.
 
     Attributes:
-        date: Date of the rebalance.
-        trigger: What caused the rebalance.
-        trades: Dict mapping ticker to share change (positive = buy, negative = sell).
-        costs: Total transaction costs incurred.
-        pre_rebalance_value: Portfolio value before rebalancing.
-        post_rebalance_value: Portfolio value after rebalancing.
-        cash_before: Cash balance before rebalancing.
-        cash_after: Cash balance after rebalancing.
-
+        date (datetime.date): The date on which the rebalance occurred.
+        trigger (RebalanceTrigger): The reason for the rebalance (e.g., scheduled, forced).
+        trades (dict[str, int]): A mapping of asset tickers to the number of shares
+            traded. Positive values are buys, negative values are sells.
+        costs (Decimal): The total transaction costs (commission + slippage) for the event.
+        pre_rebalance_value (Decimal): The total portfolio value before rebalancing.
+        post_rebalance_value (Decimal): The total portfolio value after rebalancing.
+        cash_before (Decimal): The cash balance before the rebalance.
+        cash_after (Decimal): The cash balance after executing trades and paying costs.
     """
 
     date: datetime.date
@@ -147,24 +194,27 @@ class RebalanceEvent:
 
 @dataclass
 class PerformanceMetrics:
-    """Performance metrics for a backtest run.
+    """A container for the performance metrics of a backtest run.
+
+    This dataclass holds all the key statistics calculated from a backtest's
+    equity curve, providing a comprehensive summary of the strategy's performance
+    and risk characteristics.
 
     Attributes:
-        total_return: Cumulative return over the period.
-        annualized_return: Annualized return (CAGR).
-        annualized_volatility: Annualized standard deviation of returns.
-        sharpe_ratio: Risk-adjusted return (assuming 0% risk-free rate).
-        sortino_ratio: Downside risk-adjusted return.
-        max_drawdown: Maximum peak-to-trough decline.
-        calmar_ratio: Return over max drawdown.
-        expected_shortfall_95: Average loss in worst 5% of days.
-        win_rate: Percentage of positive return days.
-        avg_win: Average gain on positive days.
-        avg_loss: Average loss on negative days.
-        turnover: Average portfolio turnover per period.
-        total_costs: Sum of all transaction costs.
-        num_rebalances: Total number of rebalancing events.
-
+        total_return (float): The cumulative return over the entire backtest period.
+        annualized_return (float): The annualized geometric mean return (CAGR).
+        annualized_volatility (float): The annualized standard deviation of daily returns.
+        sharpe_ratio (float): The risk-adjusted return (assumes a 0% risk-free rate).
+        sortino_ratio (float): The downside risk-adjusted return.
+        max_drawdown (float): The largest peak-to-trough decline in portfolio value.
+        calmar_ratio (float): The annualized return divided by the max drawdown.
+        expected_shortfall_95 (float): The average loss on the worst 5% of days (CVaR).
+        win_rate (float): The percentage of days with positive returns.
+        avg_win (float): The average return on days with positive returns.
+        avg_loss (float): The average return on days with negative returns.
+        turnover (float): The average portfolio turnover per rebalancing period.
+        total_costs (Decimal): The sum of all transaction costs incurred.
+        num_rebalances (int): The total number of rebalancing events.
     """
 
     total_return: float
@@ -181,3 +231,4 @@ class PerformanceMetrics:
     turnover: float
     total_costs: Decimal
     num_rebalances: int
+    final_value: Decimal = Decimal("0.0")
