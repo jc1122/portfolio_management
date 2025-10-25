@@ -34,6 +34,7 @@ dev = [
     "types-PyYAML",
     "pytest",
     "pytest-xdist",
+    "pytest-timeout",
     "mdformat",
     "gitlint",
 ]
@@ -263,10 +264,16 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 norecursedirs = ["data", "archive", ".git", "__pycache__", "*.egg-info"]
 markers = [
+  "unit: marks tests as fast, isolated unit tests",
   "integration: marks tests as integration tests",
   "slow: marks tests as slow",
+  "performance: marks tests as performance benchmarks",
+  "requires_data: marks tests that rely on large external datasets",
+  "e2e: marks tests that execute full end-to-end workflows",
 ]
 addopts = "--strict-markers"
+timeout = 60
+timeout_method = "thread"
 
 [tool.coverage.run]
 branch = true
