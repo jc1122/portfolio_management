@@ -508,13 +508,27 @@ After running tests:
 1. **Document Findings:** Record any new edge cases discovered
 1. **Update Tests:** Add new test cases for new features
 
+## Troubleshooting Long-History Tests
+
+For detailed troubleshooting of long-history test failures, see the [Troubleshooting Guide](../troubleshooting.md#long-history-test-issues) which includes:
+
+- Test timeout solutions
+- Optimization failure fixes
+- PIT eligibility issues
+- Determinism failures
+- Cache validation problems
+- Membership policy violations
+- Memory issues
+
 ## Related Documentation
 
-- [Troubleshooting Guide](long_history_tests_troubleshooting.md) - Debugging failures
-- [Backtesting Guide](backtesting.md) - Backtest framework details
-- [Preselection Guide](preselection.md) - Preselection feature
-- [Membership Policy](membership_policy.md) - Turnover management
-- [Caching](caching.md) - Performance optimization
+- [Troubleshooting Guide](../troubleshooting.md) - Comprehensive troubleshooting
+- [Testing Overview](overview.md) - Test organization and structure
+- [Test Strategy](test_strategy.md) - Testing best practices
+- [Backtesting Guide](../backtesting.md) - Backtest framework details
+- [Preselection Guide](../preselection.md) - Preselection feature
+- [Membership Policy](../membership_policy.md) - Turnover management
+- [Caching Reliability](../caching_reliability.md) - Performance optimization
 
 ## Maintenance
 
