@@ -1,11 +1,17 @@
 """Regime gating for asset selection (currently NoOp stubs).
 
-This module provides regime-based gating that can modify asset selection
-based on macroeconomic conditions. Currently implemented as NoOp stubs that
-always return neutral signals and leave selection unchanged.
+This module provides a `RegimeGate` class for modifying asset selection based
+on macroeconomic conditions. The current implementation is a NoOp (No Operation)
+stub, meaning it serves as a placeholder and does not perform any actual
+filtering or scoring adjustments. It always returns neutral signals and leaves
+the asset selection unchanged, regardless of configuration.
 
-Future implementations will add actual regime detection logic based on
-macro series data.
+This placeholder design allows the surrounding system to be built with regime
+gating in mind, with the expectation that functional logic will be added in
+the future without requiring changes to the system's interface.
+
+Key Classes:
+- `RegimeGate`: Applies NoOp regime rules to an asset selection.
 """
 
 from __future__ import annotations
@@ -14,7 +20,6 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-
     from portfolio_management.assets.selection import SelectedAsset
     from portfolio_management.macro.models import RegimeConfig
 
@@ -24,40 +29,42 @@ LOGGER = logging.getLogger(__name__)
 class RegimeGate:
     """Apply regime-based gating to asset selection (currently NoOp).
 
-    This class applies regime rules to modify asset selection based on
-    macroeconomic conditions. The current implementation is a NoOp stub
-    that always returns neutral signals and leaves selection unchanged.
-
-    This documented behavior ensures the system is ready for future regime
-    logic without affecting current selection workflows.
+    This class is designed to apply rules to an asset selection based on
+    macroeconomic conditions. However, the current implementation is a NoOp
+    stub. It always returns neutral signals and leaves the selection unchanged,
+    irrespective of the provided configuration. This ensures that the system
+    is ready for future regime logic without affecting current workflows.
 
     Attributes:
-        config: RegimeConfig defining detection rules and gating behavior.
+        config (RegimeConfig): A configuration object that defines the rules for
+                               regime detection. Currently, this configuration
+                               is logged but not used for any logic.
 
     Example:
-        >>> from portfolio_management.macro import RegimeConfig
+        >>> from portfolio_management.macro.models import RegimeConfig
         >>> from portfolio_management.macro.regime import RegimeGate
-        >>> config = RegimeConfig(enable_gating=False)  # NoOp
+        >>>
+        >>> # Mock asset class for the example
+        >>> class MockAsset:
+        ...     def __init__(self, symbol):
+        ...         self.symbol = symbol
+        >>>
+        >>> assets = [MockAsset("AAPL"), MockAsset("GOOG")]
+        >>> config = RegimeConfig(enable_gating=True)
         >>> gate = RegimeGate(config)
-        >>> # Apply gating (currently does nothing)
-        >>> filtered_assets = gate.apply_gating(selected_assets)
-        >>> # Assets unchanged (pass-through behavior)
-        >>> assert filtered_assets == selected_assets
-
+        >>>
+        >>> # The apply_gating method returns the original assets without changes.
+        >>> filtered_assets = gate.apply_gating(assets)
+        >>> assert filtered_assets is assets
     """
 
     def __init__(self, config: RegimeConfig) -> None:
         """Initialize the RegimeGate.
 
         Args:
-            config: RegimeConfig defining gating rules.
-
-        Example:
-            >>> from portfolio_management.macro import RegimeConfig
-            >>> from portfolio_management.macro.regime import RegimeGate
-            >>> config = RegimeConfig()
-            >>> gate = RegimeGate(config)
-
+            config: A `RegimeConfig` object that defines the gating rules.
+                    This is stored for future use but does not affect the
+                    current NoOp behavior.
         """
         self.config = config
         LOGGER.info(
@@ -70,28 +77,20 @@ class RegimeGate:
         assets: list[SelectedAsset],
         date: str | None = None,
     ) -> list[SelectedAsset]:
-        """Apply regime gating to selected assets (currently NoOp).
+        """Apply regime gating to selected assets (currently a NoOp).
 
-        This method applies regime-based filtering to the asset list. The
-        current implementation is a NoOp that returns all assets unchanged,
-        regardless of the regime configuration.
+        This method is intended to filter an asset list based on the prevailing
+        macroeconomic regime. In its current implementation, it acts as a
+        pass-through, returning the original list of assets without any
+        modifications.
 
         Args:
-            assets: List of selected assets to potentially filter.
-            date: Optional date for regime evaluation (ISO format YYYY-MM-DD).
-                Currently ignored in NoOp implementation.
+            assets: A list of `SelectedAsset` objects to potentially filter.
+            date: An optional date for regime evaluation (e.g., "YYYY-MM-DD").
+                  This parameter is currently ignored.
 
         Returns:
-            List of assets after gating. Currently returns input unchanged.
-
-        Example:
-            >>> from portfolio_management.macro import RegimeConfig
-            >>> from portfolio_management.macro.regime import RegimeGate
-            >>> config = RegimeConfig(enable_gating=False)
-            >>> gate = RegimeGate(config)
-            >>> filtered = gate.apply_gating(assets, date="2025-10-23")
-            >>> assert filtered == assets  # NoOp behavior
-
+            The original list of assets, unchanged.
         """
         if not self.config.is_enabled():
             LOGGER.debug(
@@ -101,7 +100,6 @@ class RegimeGate:
             return assets
 
         # Even if enabled, current implementation is NoOp
-        # Future: implement actual regime detection and filtering
         LOGGER.debug(
             "Regime gating enabled but NoOp implementation active, "
             "passing through %d assets unchanged",
@@ -110,28 +108,28 @@ class RegimeGate:
         return assets
 
     def get_current_regime(self, date: str | None = None) -> dict[str, str]:
-        """Get the current regime classification (currently NoOp).
+        """Get the current regime classification (always returns 'neutral').
 
-        Returns a dictionary describing the current market regime. The
-        current implementation always returns neutral signals.
+        This method is designed to return the current market regime. As a NoOp,
+        it consistently returns a dictionary indicating a 'neutral' state for
+        all regime types.
 
         Args:
-            date: Optional date for regime evaluation (ISO format YYYY-MM-DD).
-                Currently ignored in NoOp implementation.
+            date: An optional date for which to determine the regime. This
+                  parameter is currently ignored.
 
         Returns:
-            Dictionary with regime classifications. Always returns neutral
-            in the current NoOp implementation.
+            A dictionary with predefined neutral regime classifications.
 
         Example:
-            >>> from portfolio_management.macro import RegimeConfig
+            >>> from portfolio_management.macro.models import RegimeConfig
             >>> from portfolio_management.macro.regime import RegimeGate
+            >>>
             >>> config = RegimeConfig()
             >>> gate = RegimeGate(config)
-            >>> regime = gate.get_current_regime(date="2025-10-23")
+            >>> regime = gate.get_current_regime()
             >>> print(regime)
             {'recession': 'neutral', 'risk_sentiment': 'neutral', 'mode': 'noop'}
-
         """
         # NoOp: always return neutral regime
         regime = {
@@ -152,27 +150,19 @@ class RegimeGate:
         assets: list[SelectedAsset],
         allowed_classes: list[str] | None = None,
     ) -> list[SelectedAsset]:
-        """Filter assets by asset class based on regime (currently NoOp).
+        """Filter assets by asset class based on regime (currently a NoOp).
 
-        This method could filter assets by asset class in risk-off regimes
-        (e.g., exclude equities, favor bonds). Current implementation is NoOp.
+        In a future implementation, this method could filter assets by their
+        class (e.g., exclude equities during a risk-off regime). Currently,
+        it returns the original list of assets without any filtering.
 
         Args:
-            assets: List of selected assets to filter.
-            allowed_classes: Optional list of allowed asset classes.
-                Currently ignored in NoOp implementation.
+            assets: A list of `SelectedAsset` objects to filter.
+            allowed_classes: An optional list of asset classes to permit. This
+                             parameter is currently ignored.
 
         Returns:
-            List of assets after filtering. Currently returns input unchanged.
-
-        Example:
-            >>> from portfolio_management.macro import RegimeConfig
-            >>> from portfolio_management.macro.regime import RegimeGate
-            >>> config = RegimeConfig()
-            >>> gate = RegimeGate(config)
-            >>> filtered = gate.filter_by_asset_class(assets, ["equity"])
-            >>> assert filtered == assets  # NoOp behavior
-
+            The original list of assets, unchanged.
         """
         # NoOp: always pass through unchanged
         LOGGER.debug(
@@ -186,27 +176,20 @@ class RegimeGate:
         assets: list[SelectedAsset],
         date: str | None = None,
     ) -> list[tuple[SelectedAsset, float]]:
-        """Adjust selection scores based on regime (currently NoOp).
+        """Adjust selection scores based on regime (currently a NoOp).
 
-        This method could adjust asset scores based on regime conditions.
-        Current implementation returns all assets with neutral score of 1.0.
+        This method is intended to adjust asset scores based on regime
+        conditions. In its current NoOp implementation, it returns all assets
+        with a neutral score of 1.0.
 
         Args:
-            assets: List of selected assets.
-            date: Optional date for regime evaluation (ISO format YYYY-MM-DD).
-                Currently ignored in NoOp implementation.
+            assets: A list of `SelectedAsset` objects.
+            date: An optional date for regime evaluation. This parameter is
+                  currently ignored.
 
         Returns:
-            List of (asset, score) tuples. Currently all scores are 1.0.
-
-        Example:
-            >>> from portfolio_management.macro import RegimeConfig
-            >>> from portfolio_management.macro.regime import RegimeGate
-            >>> config = RegimeConfig()
-            >>> gate = RegimeGate(config)
-            >>> scored = gate.adjust_selection_scores(assets, date="2025-10-23")
-            >>> assert all(score == 1.0 for _, score in scored)
-
+            A list of tuples, where each tuple contains the original asset and
+            a neutral score of 1.0.
         """
         # NoOp: return all assets with neutral score
         scored_assets = [(asset, 1.0) for asset in assets]

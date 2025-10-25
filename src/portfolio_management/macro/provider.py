@@ -1,4 +1,9 @@
-"""Macroeconomic signal provider for loading time series from Stooq."""
+"""Macroeconomic signal provider for loading time series from Stooq.
+
+This module provides the `MacroSignalProvider` class, which is responsible for
+locating and loading macroeconomic time series data from a local directory
+of files downloaded from Stooq.
+"""
 
 from __future__ import annotations
 
@@ -20,39 +25,28 @@ class MacroSignalProvider:
     """Load macroeconomic time series from local Stooq data directories.
 
     This class provides methods to locate and load macro series (e.g., GDP,
-    PMI, yields) from structured Stooq data directories. It supports both
-    individual series loading and batch operations.
-
-    The provider currently locates series files and returns metadata about
-    them. Future versions may add data loading, transformation, and regime
-    signal generation.
+    PMI, yields) from a structured local directory containing data from Stooq.
+    It supports locating single or multiple series and loading their data into
+    pandas DataFrames.
 
     Attributes:
-        data_dir: Path to the Stooq data directory root.
+        data_dir (Path): The root directory where the Stooq data is stored.
 
-    Example:
-        >>> from portfolio_management.macro import MacroSignalProvider
-        >>> provider = MacroSignalProvider(Path("data/stooq"))
-        >>> # Locate series (returns paths/metadata, doesn't load data yet)
-        >>> series = provider.locate_series(["gdp.us", "pmi.us"])
-        >>> print(f"Found {len(series)} series")
-        >>> # Load data for a specific date range
-        >>> data = provider.load_series_data("gdp.us", "2020-01-01", "2025-10-23")
-
+    Data Source:
+        This provider expects data files to be in the format provided by
+        Stooq (https://stooq.com/) and organized in a searchable directory
+        structure.
     """
 
     def __init__(self, data_dir: Path | str) -> None:
         """Initialize the MacroSignalProvider.
 
         Args:
-            data_dir: Path to the Stooq data directory root.
+            data_dir: The path to the Stooq data directory root.
 
         Raises:
-            DataDirectoryNotFoundError: If data_dir doesn't exist.
-
-        Example:
-            >>> provider = MacroSignalProvider("data/stooq")
-
+            DataDirectoryNotFoundError: If the specified `data_dir` does not
+                                        exist.
         """
         self.data_dir = Path(data_dir)
         if not self.data_dir.exists():
@@ -63,37 +57,26 @@ class MacroSignalProvider:
     def locate_series(self, ticker: str) -> MacroSeries | None:
         """Locate a macro series file in the Stooq data directory.
 
-        This method searches for a series file by ticker, following Stooq's
-        directory structure. It returns metadata about the series if found.
+        This method searches for a series file by its ticker, following a set
+        of predefined potential directory structures common to Stooq data.
 
         Args:
-            ticker: Ticker symbol for the macro series (e.g., "gdp.us").
+            ticker: The ticker symbol for the macro series (e.g., "gdp.us").
 
         Returns:
-            MacroSeries object with metadata if found, None otherwise.
-
-        Example:
-            >>> provider = MacroSignalProvider("data/stooq")
-            >>> series = provider.locate_series("gdp.us")
-            >>> if series:
-            ...     print(f"Found series at {series.rel_path}")
-
+            A `MacroSeries` object with metadata if the file is found,
+            otherwise `None`.
         """
-        # Try multiple potential paths for the ticker
-        # Stooq structure could be: data/daily/{region}/{category}/{ticker}.txt
         potential_paths = self._generate_search_paths(ticker)
 
         for potential_path in potential_paths:
             full_path = self.data_dir / potential_path
             if full_path.exists():
                 LOGGER.debug("Located series %s at %s", ticker, potential_path)
-                # Parse metadata from path
                 region, category = self._parse_path_metadata(potential_path)
-                # For now, return basic metadata without loading the file
-                # In production, we might want to read first/last dates from the file
                 return MacroSeries(
                     ticker=ticker,
-                    rel_path=potential_path,
+                    rel_path=str(potential_path),
                     start_date="",  # To be filled when data is loaded
                     end_date="",  # To be filled when data is loaded
                     region=region,
@@ -107,17 +90,11 @@ class MacroSignalProvider:
         """Locate multiple macro series files.
 
         Args:
-            tickers: List of ticker symbols to locate.
+            tickers: A list of ticker symbols to locate.
 
         Returns:
-            Dictionary mapping found tickers to their MacroSeries metadata.
-            Missing tickers are excluded from the result.
-
-        Example:
-            >>> provider = MacroSignalProvider("data/stooq")
-            >>> series = provider.locate_multiple_series(["gdp.us", "pmi.us"])
-            >>> print(f"Found {len(series)} out of 2 requested series")
-
+            A dictionary mapping the tickers that were found to their
+            `MacroSeries` metadata. Tickers that are not found are excluded.
         """
         result = {}
         for ticker in tickers:
@@ -142,26 +119,25 @@ class MacroSignalProvider:
     ) -> pd.DataFrame | None:
         """Load data for a macro series from its file.
 
+        This method first locates the series file and then loads its contents
+        into a pandas DataFrame. It can optionally filter the data by a
+        date range.
+
         Args:
-            ticker: Ticker symbol for the macro series.
-            start_date: Optional start date filter (ISO format YYYY-MM-DD).
-            end_date: Optional end date filter (ISO format YYYY-MM-DD).
+            ticker: The ticker symbol for the macro series.
+            start_date: An optional start date to filter the data (inclusive),
+                        in "YYYY-MM-DD" format.
+            end_date: An optional end date to filter the data (inclusive),
+                      in "YYYY-MM-DD" format.
 
         Returns:
-            DataFrame with the series data if found, None otherwise.
-            DataFrame has 'date' as index and columns for price/value data.
+            A pandas DataFrame with the series data, indexed by date, if the
+            file is found and valid. Otherwise, returns `None`.
 
         Raises:
-            DataValidationError: If the file exists but can't be read.
-
-        Example:
-            >>> provider = MacroSignalProvider("data/stooq")
-            >>> df = provider.load_series_data("gdp.us", "2020-01-01", "2025-10-23")
-            >>> if df is not None:
-            ...     print(f"Loaded {len(df)} rows")
-
+            DataValidationError: If the series file exists but cannot be read
+                                 or parsed as a valid CSV.
         """
-        # First locate the series
         series = self.locate_series(ticker)
         if series is None:
             return None
@@ -169,25 +145,21 @@ class MacroSignalProvider:
         full_path = self.data_dir / series.rel_path
 
         try:
-            # Load the CSV file (assuming Stooq format)
-            # Typical Stooq columns: ticker,per,date,time,open,high,low,close,volume,openint
             df = pd.read_csv(full_path, parse_dates=["date"])
 
-            # Filter by date range if specified
             if start_date:
                 df = df[df["date"] >= pd.to_datetime(start_date)]
             if end_date:
                 df = df[df["date"] <= pd.to_datetime(end_date)]
 
-            # Set date as index
             df = df.set_index("date").sort_index()
 
             LOGGER.debug(
                 "Loaded %d rows for series %s (date range: %s to %s)",
                 len(df),
                 ticker,
-                df.index[0] if len(df) > 0 else "N/A",
-                df.index[-1] if len(df) > 0 else "N/A",
+                df.index[0].date() if not df.empty else "N/A",
+                df.index[-1].date() if not df.empty else "N/A",
             )
 
             return df
@@ -198,16 +170,17 @@ class MacroSignalProvider:
             ) from e
 
     def _generate_search_paths(self, ticker: str) -> list[str]:
-        """Generate potential file paths for a ticker.
+        """Generate potential file paths for a given ticker.
+
+        This helper method constructs a list of likely file paths based on
+        common Stooq directory structures.
 
         Args:
-            ticker: Ticker symbol (e.g., "gdp.us", "pmi.us").
+            ticker: The ticker symbol (e.g., "gdp.us").
 
         Returns:
-            List of potential relative paths to search.
-
+            A list of potential relative file paths to search for.
         """
-        # Extract region from ticker (e.g., "gdp.us" -> "us")
         parts = ticker.lower().split(".")
         if len(parts) >= 2:
             base_ticker = parts[0]
@@ -216,8 +189,7 @@ class MacroSignalProvider:
             base_ticker = ticker.lower()
             region = "us"  # Default to US if no region specified
 
-        # Generate potential paths following Stooq structure
-        paths = [
+        return [
             f"data/daily/{region}/economic/{base_ticker}.txt",
             f"data/daily/{region}/indicators/{base_ticker}.txt",
             f"data/daily/{region}/macro/{base_ticker}.txt",
@@ -228,25 +200,22 @@ class MacroSignalProvider:
             f"{base_ticker}.txt",
         ]
 
-        return paths
-
     def _parse_path_metadata(self, rel_path: str) -> tuple[str, str]:
-        """Parse region and category from a relative path.
+        """Parse the region and category from a relative file path.
 
         Args:
-            rel_path: Relative path to the series file.
+            rel_path: The relative path to the series file.
 
         Returns:
-            Tuple of (region, category) extracted from path.
+            A tuple containing the extracted region and category as strings.
 
         Example:
             >>> provider = MacroSignalProvider("data/stooq")
             >>> region, category = provider._parse_path_metadata(
             ...     "data/daily/us/economic/gdp.txt"
             ... )
-            >>> print(region, category)
-            us economic
-
+            >>> print(f"Region: {region}, Category: {category}")
+            Region: us, Category: economic
         """
         parts = Path(rel_path).parts
         region = ""
