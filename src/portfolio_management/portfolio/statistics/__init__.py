@@ -4,6 +4,6 @@ This package provides efficient rolling statistics computation for portfolio str
 including caching mechanisms to avoid redundant calculations during rebalancing.
 """
 
-from .rolling_statistics import StatisticsCache
+from .rolling_statistics import StatisticsCache, RollingStatistics
 
-__all__ = ["StatisticsCache"]
+__all__ = ["StatisticsCache", "RollingStatistics"]

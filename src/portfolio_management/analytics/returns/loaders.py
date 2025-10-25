@@ -325,15 +325,22 @@ class PriceLoader:
         """Get cache statistics.
 
         Returns:
-            Dictionary with cache_size and cache_entries.
+            Dictionary with 'size' (current entries) and 'maxsize' (capacity).
 
         Useful for testing and monitoring.
         """
         with self._cache_lock:
             return {
-                "cache_size": self.cache_size,
-                "cache_entries": len(self._cache),
+                "size": len(self._cache),
+                "maxsize": self.cache_size,
             }
+
+    def cache_info(self) -> dict[str, int]:
+        """Return cache statistics for monitoring.
+
+        This method is an alias for get_cache_stats for backward compatibility.
+        """
+        return self.get_cache_stats()
 
     def _submit_load_tasks(
         self,

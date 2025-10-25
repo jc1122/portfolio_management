@@ -349,3 +349,5 @@ class StatisticsCache:
         # Ensure the cache count matches the new window length for correctness.
 
         return mean_returns, cov_matrix
+
+RollingStatistics = StatisticsCache
