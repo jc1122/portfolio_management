@@ -40,6 +40,12 @@ from typing import Any
 import pandas as pd
 import yaml
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC_ROOT = REPO_ROOT / "src"
+for path in (REPO_ROOT, SRC_ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
 from portfolio_management.analytics.indicators import (
     FilterHook,
     IndicatorConfig,
