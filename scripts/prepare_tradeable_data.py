@@ -44,7 +44,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import logging
-import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -63,58 +62,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from portfolio_management.core.utils import log_duration
-from portfolio_management.data import cache
-from portfolio_management.data.analysis import (
-    collect_available_extensions,
-    infer_currency,
-    log_summary_counts,
-    resolve_currency,
-    summarize_price_file,
+from portfolio_management.services import (  # noqa: E402  # isort: skip
+    DataPreparationConfig,
+    DataPreparationService,
 )
-from portfolio_management.data.ingestion import build_stooq_index
-from portfolio_management.data.io import (
-    export_tradeable_prices,
-    load_tradeable_instruments,
-    read_stooq_index,
-    write_match_report,
-    write_stooq_index,
-    write_unmatched_report,
-)
-from portfolio_management.data.matching import (
-    annotate_unmatched_instruments,
-    build_stooq_lookup,
-    determine_unmatched_reason,
-    match_tradeables,
-)
-from portfolio_management.data.models import (
-    ExportConfig,
-    StooqFile,
-    TradeableInstrument,
-    TradeableMatch,
-)
-
-__all__ = [
-    "ExportConfig",
-    "StooqFile",
-    "TradeableInstrument",
-    "TradeableMatch",
-    "annotate_unmatched_instruments",
-    "build_stooq_lookup",
-    "collect_available_extensions",
-    "determine_unmatched_reason",
-    "export_tradeable_prices",
-    "infer_currency",
-    "load_tradeable_instruments",
-    "log_summary_counts",
-    "match_tradeables",
-    "read_stooq_index",
-    "resolve_currency",
-    "summarize_price_file",
-    "write_match_report",
-    "write_stooq_index",
-    "write_unmatched_report",
-]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -199,7 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--incremental",
         action="store_true",
-        help="Enable incremental resume: skip processing if inputs unchanged and outputs exist.",
+        help="Enable incremental resume when inputs are unchanged.",
     )
     parser.add_argument(
         "--cache-metadata",
@@ -223,150 +174,57 @@ def configure_logging(level: str) -> None:
     )
 
 
-def _handle_stooq_index(args, index_workers):
-    if args.metadata_output.exists() and not args.force_reindex:
-        with log_duration("stooq_index_load"):
-            stooq_index = read_stooq_index(args.metadata_output)
-    else:
-        with log_duration("stooq_index_build"):
-            stooq_index = build_stooq_index(args.data_dir, max_workers=index_workers)
-        with log_duration("stooq_index_write"):
-            write_stooq_index(stooq_index, args.metadata_output)
-    return stooq_index
-
-
-def _load_and_match_tradeables(stooq_index, args, max_workers):
-    with log_duration("tradeable_load"):
-        tradeables = load_tradeable_instruments(args.tradeable_dir)
-
-    stooq_by_ticker, stooq_by_stem, stooq_by_base = build_stooq_lookup(stooq_index)
-    available_extensions = collect_available_extensions(stooq_index)
-    with log_duration("tradeable_match"):
-        matches, unmatched = match_tradeables(
-            tradeables,
-            stooq_by_ticker,
-            stooq_by_stem,
-            stooq_by_base,
-            max_workers=max_workers,
-        )
-    unmatched = annotate_unmatched_instruments(
-        unmatched,
-        stooq_by_base,
-        available_extensions,
-    )
-    return matches, unmatched
-
-
-def _generate_reports(matches, unmatched, args, data_dir, max_workers):
-    export_config = ExportConfig(
+def prepare_tradeable_data(args: argparse.Namespace) -> None:
+    """Run the tradeable data preparation workflow via the service layer."""
+    service = DataPreparationService(logger=LOGGER)
+    config = DataPreparationConfig(
         data_dir=args.data_dir,
-        dest_dir=args.prices_output,
-        overwrite=args.overwrite_prices,
-        max_workers=max_workers,
-        include_empty=args.include_empty_prices,
+        metadata_output=args.metadata_output,
+        tradeable_dir=args.tradeable_dir,
+        match_report=args.match_report,
+        unmatched_report=args.unmatched_report,
+        prices_output=args.prices_output,
+        overwrite_prices=args.overwrite_prices,
+        include_empty_prices=args.include_empty_prices,
+        lse_currency_policy=args.lse_currency_policy,
+        max_workers=args.max_workers,
+        index_workers=args.index_workers,
+        incremental=args.incremental,
+        cache_metadata=args.cache_metadata,
+        force_reindex=args.force_reindex,
     )
-    export_config.dest_dir.mkdir(parents=True, exist_ok=True)
-    with log_duration("tradeable_match_report"):
-        (
-            diagnostics_cache,
-            currency_counts,
-            data_status_counts,
-            empty_tickers,
-            flagged_samples,
-            exported_count,
-            skipped_count,
-        ) = write_match_report(
-            matches,
-            args.match_report,
-            data_dir,
-            lse_currency_policy=args.lse_currency_policy,
-            max_workers=max_workers,
-            export_config=export_config,
+    result = service.run(config)
+
+    if result.skipped:
+        LOGGER.info(
+            "Incremental resume: inputs unchanged and outputs exist - skipping processing",
         )
-    log_summary_counts(currency_counts, data_status_counts)
-    if empty_tickers:
-        sample = ", ".join(sorted(empty_tickers)[:5])
+        LOGGER.info("Match report: %s", result.match_report_path)
+        LOGGER.info("Unmatched report: %s", result.unmatched_report_path)
+        LOGGER.info("To force full rebuild, use --force-reindex or omit --incremental")
+        return
+
+    diagnostics = result.diagnostics
+    if diagnostics.empty_tickers:
+        sample = ", ".join(sorted(diagnostics.empty_tickers)[:5])
         LOGGER.warning(
             "Detected %s empty Stooq price files (e.g., %s)",
-            len(empty_tickers),
+            len(diagnostics.empty_tickers),
             sample,
         )
-    if flagged_samples:
+    if diagnostics.flagged_samples:
         preview = ", ".join(
             f"{symbol}->{ticker} [{flags}]"
-            for symbol, ticker, flags in flagged_samples[:5]
+            for symbol, ticker, flags in diagnostics.flagged_samples[:5]
         )
         LOGGER.warning(
             "Detected validation flags for %s matched instruments (e.g., %s)",
-            len(flagged_samples),
+            len(diagnostics.flagged_samples),
             preview,
         )
-    with log_duration("tradeable_unmatched_report"):
-        write_unmatched_report(unmatched, args.unmatched_report)
-    LOGGER.info("Exported %s price files to %s", exported_count, export_config.dest_dir)
-    if skipped_count:
-        LOGGER.warning("Skipped %s price files without usable data", skipped_count)
-    return diagnostics_cache
-
-
-def prepare_tradeable_data(args: argparse.Namespace) -> None:
-    """Run the end-to-end tradeable data preparation workflow."""
-    data_dir = args.data_dir
-    cpu_count = os.cpu_count() or 1
-    auto_workers = max(1, (cpu_count - 1) or 1)
-    max_workers = (
-        args.max_workers if args.max_workers and args.max_workers > 0 else auto_workers
-    )
-    max_workers = max(1, max_workers)
-    index_workers = (
-        args.index_workers
-        if args.index_workers and args.index_workers > 0
-        else max_workers
-    )
-    index_workers = max(1, index_workers)
-    LOGGER.info(
-        "Worker configuration: match/export=%s, index=%s (cpu=%s)",
-        max_workers,
-        index_workers,
-        cpu_count,
-    )
-
-    # Check for incremental resume opportunity
-    if args.incremental:
-        cache_metadata = cache.load_cache_metadata(args.cache_metadata)
-
-        # Check if we can skip processing
-        if cache.inputs_unchanged(
-            args.tradeable_dir,
-            args.metadata_output,
-            cache_metadata,
-        ) and cache.outputs_exist(args.match_report, args.unmatched_report):
-            LOGGER.info(
-                "Incremental resume: inputs unchanged and outputs exist - skipping processing",
-            )
-            LOGGER.info("Match report: %s", args.match_report)
-            LOGGER.info("Unmatched report: %s", args.unmatched_report)
-            LOGGER.info(
-                "To force full rebuild, use --force-reindex or omit --incremental",
-            )
-            return
-
-        LOGGER.info(
-            "Incremental resume: inputs changed or outputs missing - running full pipeline",
-        )
-
-    stooq_index = _handle_stooq_index(args, index_workers)
-    matches, unmatched = _load_and_match_tradeables(stooq_index, args, max_workers)
-    _generate_reports(matches, unmatched, args, data_dir, max_workers)
-
-    # Save cache metadata for next run if incremental mode enabled
-    if args.incremental:
-        new_cache_metadata = cache.create_cache_metadata(
-            args.tradeable_dir,
-            args.metadata_output,
-        )
-        cache.save_cache_metadata(args.cache_metadata, new_cache_metadata)
-        LOGGER.debug("Saved cache metadata for future incremental resumes")
+    LOGGER.info("Exported %s price files to %s", diagnostics.exported_count, result.export_directory)
+    if diagnostics.skipped_count:
+        LOGGER.warning("Skipped %s price files without usable data", diagnostics.skipped_count)
 
 
 def run_cli(args: argparse.Namespace) -> int:
