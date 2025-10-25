@@ -104,14 +104,41 @@ Having these structures in place allows the script to effectively find the corre
 
 The script performs the following sequence of operations:
 
-1. **Index Stooq Files**: It first recursively scans the entire Stooq data directory to build a master index of every available data file. This index is then saved to a CSV file to make subsequent runs much faster.
-1. **Load Tradeable Instruments**: It reads and combines all the user-provided CSV files that list the tradeable instruments.
-1. **Match Symbols**: This is the core logic. The script iterates through each tradeable instrument and uses a set of heuristics to find its corresponding data file in the Stooq index.
-1. **Analyze Data Quality**: For every successful match, it reads the contents of the price file and performs a series of validation checks, flagging common issues like missing data, large gaps, or periods of zero trading volume.
-1. **Generate Reports**: It produces two essential CSV reports:
-   - A **match report** for all successful matches, including the data quality flags.
-   - An **unmatched report** for all failures, including a reason to help with debugging.
-1. **Export Prices**: Finally, for every successful match, it exports the clean price history to a new CSV file in a dedicated output directory. This directory of clean price files is the primary output for the rest of the workflow.
+### Stage 1: Index Stooq Files
+Recursively scans the entire Stooq data directory to build a master index of every available data file. This index is saved to a CSV file to make subsequent runs much faster.
+
+**Example**: For a directory with 70,000+ files, this stage takes 30-60 seconds on first run, but is skipped on subsequent runs if using `--incremental`.
+
+### Stage 2: Load Tradeable Instruments
+Reads and combines all user-provided CSV files that list tradeable instruments from the specified directory.
+
+**Example**: Loading 3 CSV files with 500 instruments each takes <1 second.
+
+### Stage 3: Match Symbols
+The core matching logic. The script iterates through each tradeable instrument and uses heuristics to find its corresponding data file in the Stooq index.
+
+**Matching strategies**:
+- Direct ticker match (e.g., `CDR` → `cdr_pl.txt`)
+- Stem-based matching for variations
+- Market-aware disambiguation (e.g., differentiates `AAPL` on NYSE vs. LSE)
+
+### Stage 4: Analyze Data Quality
+For every successful match, reads the price file contents and performs validation checks, flagging issues like missing data, large gaps, or zero-volume periods.
+
+**Quality checks**:
+- Date continuity (gaps > 10 days flagged)
+- Price validity (positive, non-duplicate)
+- Volume analysis (zero-volume periods tracked)
+
+### Stage 5: Generate Reports
+Produces two essential CSV reports:
+- **Match report**: All successful matches with data quality flags
+- **Unmatched report**: All failures with diagnostic reasons
+
+### Stage 6: Export Prices
+Exports clean price histories to dedicated output directory. Each successfully matched instrument gets its own CSV file named by Stooq ticker (e.g., `aapl_us.csv`).
+
+**Performance**: With `--max-workers 8`, can export 500 files in 10-20 seconds.
 
 ## Script Products
 
@@ -252,4 +279,111 @@ This is an intermediate file created for performance. It acts as a cache, mappin
 
 ## Troubleshooting
 
-- **High Number of Unmatched Instruments**: If you see many unexpected failures in the unmatched report, first check the `reason` and `suggestion` columns. A common cause is that the required Stooq data has not been downloaded and unpacked into the `--data-dir` (e.g., you are trying to match German stocks but the `d_de_txt` directory is missing).
+### Common Issues
+
+#### High Number of Unmatched Instruments
+
+**Symptom**: Many unexpected failures in the unmatched report.
+
+**Diagnosis**: Check the `reason` and `suggestion` columns in the unmatched report.
+
+**Common causes**:
+- **Missing Stooq data**: Required market data not downloaded (e.g., trying to match German stocks but `d_de_txt` directory is missing)
+- **Symbol format mismatches**: Broker symbols don't align with Stooq conventions
+- **Market code errors**: Incorrect or missing `market` column in tradeable CSV
+
+**Resolution**:
+```bash
+# Check available markets in Stooq index
+python -c "import pandas as pd; df = pd.read_csv('data/metadata/stooq_index.csv'); print(df['market'].value_counts())"
+
+# Download missing Stooq archives from https://stooq.com/db/h/
+```
+
+#### Incremental Resume Not Working
+
+**Symptom**: Script always rebuilds even with `--incremental` flag.
+
+**Diagnosis**: Check logs for "inputs changed" or "outputs missing" messages.
+
+**Common causes**:
+- Cache file corrupted or deleted
+- Output files (match report, unmatched report) missing
+- Tradeable CSV files modified
+
+**Resolution**:
+```bash
+# Check cache file exists
+ls -la data/metadata/.prepare_cache.json
+
+# View cache status with debug logging
+python scripts/prepare_tradeable_data.py --incremental --log-level DEBUG
+
+# Force rebuild and regenerate cache
+python scripts/prepare_tradeable_data.py --force-reindex --incremental
+```
+
+#### Currency Mismatch Warnings for LSE Assets
+
+**Symptom**: Warnings about currency conflicts for London Stock Exchange assets.
+
+**Explanation**: LSE trades assets in multiple currencies (GBP, USD, EUR). Broker may report different currency than Stooq infers.
+
+**Resolution**:
+```bash
+# Use broker-specified currency (default, recommended)
+python scripts/prepare_tradeable_data.py --lse-currency-policy broker
+
+# Use Stooq-inferred currency
+python scripts/prepare_tradeable_data.py --lse-currency-policy stooq
+
+# Treat mismatches as errors (strict validation)
+python scripts/prepare_tradeable_data.py --lse-currency-policy strict
+```
+
+#### Empty or Invalid Price Files
+
+**Symptom**: Matched instruments have `data_status: error` or `EMPTY_FILE` flag.
+
+**Diagnosis**: Check the Stooq source file directly.
+
+**Common causes**:
+- Stooq file genuinely empty or corrupted
+- Delisted asset (historical data only)
+- Wrong file extension or encoding
+
+**Resolution**:
+```bash
+# Inspect problematic file
+cat data/stooq/d_pl_txt/data/daily/symbol_pl.txt | head -20
+
+# Re-download Stooq archive
+# Force rebuild of index
+python scripts/prepare_tradeable_data.py --force-reindex
+```
+
+#### Performance: Slow Indexing or Export
+
+**Symptom**: Indexing takes > 2 minutes or export takes > 1 minute.
+
+**Diagnosis**: Check worker configuration in logs.
+
+**Optimization**:
+```bash
+# Increase parallelism (default is CPU count - 1)
+python scripts/prepare_tradeable_data.py --max-workers 12 --index-workers 12
+
+# Profile with debug logging
+python scripts/prepare_tradeable_data.py --log-level DEBUG
+
+# Use incremental resume for iterative runs
+python scripts/prepare_tradeable_data.py --incremental
+```
+
+### Validation Best Practices
+
+1. **Always review unmatched report**: Understand why instruments failed to match
+2. **Check data quality flags**: Filter assets with `data_status: error` before analysis
+3. **Verify date ranges**: Ensure price histories cover your analysis period
+4. **Test with small sample first**: Use subset of tradeable instruments for initial validation
+5. **Enable incremental resume**: Use `--incremental` for faster iteration during development

@@ -59,7 +59,11 @@ The script's main feature is its rich set of filtering criteria, which are contr
 
 ## Usage Example
 
-Here is a typical command to select assets from the US and UK with at least two years of high-quality data:
+Here are common selection patterns with examples:
+
+### Example 1: Basic Quality Filter
+
+Select US and UK assets with at least two years of clean data:
 
 ```bash
 python scripts/select_assets.py \
@@ -69,6 +73,88 @@ python scripts/select_assets.py \
     --markets "LSE,NYSE,NSQ" \
     --data-status "ok"
 ```
+
+**Result**: Only assets with `data_status: ok`, trading on LSE/NYSE/NASDAQ, with 730+ days of history.
+
+### Example 2: Multi-Market, Multi-Currency
+
+Select European assets across multiple exchanges:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/european_assets.csv \
+    --regions "Europe" \
+    --currencies "EUR,GBP,CHF" \
+    --min-history-days 365 \
+    --data-status "ok"
+```
+
+### Example 3: Allowlist with Quality Filters
+
+Force-include specific assets while maintaining quality standards:
+
+```bash
+# Create allowlist file
+echo "AAPL" > /tmp/must_include.txt
+echo "MSFT" >> /tmp/must_include.txt
+
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/selected_assets.csv \
+    --min-history-days 365 \
+    --allowlist /tmp/must_include.txt \
+    --data-status "ok,warning"
+```
+
+**Note**: Allowlist items bypass all filters. Assets in allowlist will be included even if they don't meet other criteria.
+
+### Example 4: Blocklist Usage
+
+Exclude problematic assets from selection:
+
+```bash
+# Create blocklist file
+echo "INVALID_TICKER" > /tmp/exclude.txt
+echo "BAD_DATA_SYMBOL" >> /tmp/exclude.txt
+
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/selected_assets.csv \
+    --blocklist /tmp/exclude.txt \
+    --markets "WSE,NYSE"
+```
+
+### Example 5: Streaming Mode for Large Files
+
+Process large match reports memory-efficiently:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/selected_assets.csv \
+    --min-history-days 730 \
+    --markets "LSE,NYSE,NSQ" \
+    --data-status "ok" \
+    --chunk-size 5000
+```
+
+**Memory usage**: Bounded to ~5000 rows at a time instead of loading entire file.
+
+### Example 6: Dry Run
+
+Preview selection results without creating files:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --min-history-days 365 \
+    --markets "US" \
+    --data-status "ok" \
+    --dry-run
+```
+
+**Output**: Prints summary statistics without writing CSV.
 
 ## Command-Line Arguments
 
@@ -126,3 +212,190 @@ python scripts/select_assets.py \
   - Larger chunks: Higher memory usage, less overhead
 - **Default Behavior**: When `--chunk-size` is not specified, the script uses eager loading (loads entire file)
 - **Recommendation**: Start with `--chunk-size 5000` for files over 50,000 rows
+
+## Common Selection Patterns
+
+### Conservative Strategy (High Quality Only)
+
+For production portfolios where data quality is critical:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/conservative_selection.csv \
+    --data-status "ok" \
+    --min-history-days 1260 \
+    --min-price-rows 1000 \
+    --max-gap-days 5
+```
+
+**Result**: Only assets with 5+ years of clean data, minimal gaps.
+
+### Balanced Strategy (Quality with Flexibility)
+
+For research and testing, allowing some warnings:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/balanced_selection.csv \
+    --data-status "ok,warning" \
+    --min-history-days 730 \
+    --min-price-rows 500 \
+    --max-gap-days 10
+```
+
+**Result**: Assets with 2+ years of data, tolerates minor quality issues.
+
+### Aggressive Strategy (Maximum Universe Size)
+
+For explorative analysis, prioritizing universe size:
+
+```bash
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/aggressive_selection.csv \
+    --data-status "ok,warning,error" \
+    --min-history-days 365 \
+    --min-price-rows 252
+```
+
+**Result**: Maximum coverage, accepts all quality levels.
+
+### Region-Specific Selections
+
+Select assets by geographic focus:
+
+```bash
+# North America
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --regions "North America" \
+    --currencies "USD,CAD" \
+    --output /tmp/north_america.csv
+
+# Europe
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --regions "Europe" \
+    --currencies "EUR,GBP,CHF" \
+    --output /tmp/europe.csv
+
+# Emerging Markets
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --regions "Asia,Latin America" \
+    --output /tmp/emerging.csv
+```
+
+## Troubleshooting
+
+### No Assets Selected
+
+**Symptom**: Output file is empty or has very few rows.
+
+**Diagnosis**:
+```bash
+# Run with verbose logging
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --verbose \
+    --dry-run \
+    --data-status "ok"
+```
+
+**Common causes**:
+- Filters too restrictive (e.g., `--min-history-days` too high)
+- No assets match specified `--markets` or `--currencies`
+- Input match report has few `data_status: ok` entries
+
+**Resolution**: Relax filters incrementally:
+```bash
+# Start with minimal filters
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --output /tmp/test.csv
+
+# Inspect match report directly
+python -c "import pandas as pd; df = pd.read_csv('data/metadata/tradeable_matches.csv'); print(df['data_status'].value_counts())"
+```
+
+### Allowlist Items Not Found
+
+**Symptom**: Error message about missing allowlist items.
+
+**Diagnosis**: Check allowlist file format and content.
+
+**Resolution**:
+```bash
+# Verify allowlist file
+cat /tmp/allowlist.txt
+
+# Check if symbols exist in match report
+python -c "import pandas as pd; df = pd.read_csv('data/metadata/tradeable_matches.csv'); print(df[df['symbol'].isin(['AAPL', 'MSFT'])])"
+
+# Use ISINs instead of symbols (more reliable)
+echo "US0378331005" > /tmp/allowlist_isin.txt  # AAPL ISIN
+```
+
+### Memory Issues with Large Files
+
+**Symptom**: Script crashes or runs very slowly with large match reports.
+
+**Resolution**:
+```bash
+# Enable streaming mode
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --chunk-size 5000 \
+    --output /tmp/selected.csv
+
+# Reduce chunk size if still problematic
+python scripts/select_assets.py \
+    --chunk-size 1000 \
+    --output /tmp/selected.csv
+```
+
+### Blocklist Not Working
+
+**Symptom**: Blocked assets still appear in output.
+
+**Common causes**:
+- Allowlist overrides blocklist
+- Wrong identifier format (symbol vs. ISIN)
+- Typos in blocklist file
+
+**Resolution**:
+```bash
+# Verify blocklist format
+cat /tmp/blocklist.txt
+
+# Check for conflicts with allowlist
+# (allowlist takes precedence)
+```
+
+### Unexpected Asset Count
+
+**Symptom**: Output has more or fewer assets than expected.
+
+**Diagnosis**:
+```bash
+# Use --dry-run to see summary
+python scripts/select_assets.py \
+    --match-report data/metadata/tradeable_matches.csv \
+    --dry-run \
+    --verbose \
+    --data-status "ok"
+
+# Count by criteria
+python -c "import pandas as pd; df = pd.read_csv('data/metadata/tradeable_matches.csv'); print(f'Total: {len(df)}'); print(f'Status OK: {len(df[df[\"data_status\"] == \"ok\"])}')"
+```
+
+## Best Practices
+
+1. **Start with dry runs**: Use `--dry-run` to preview selections before creating files
+2. **Validate match report first**: Inspect `data_status` distribution before setting filters
+3. **Use allowlist sparingly**: Force-include only critical assets; allowlist bypasses all quality filters
+4. **Document selection criteria**: Save selection commands in scripts for reproducibility
+5. **Test with streaming mode**: For production pipelines, validate that streaming produces identical results
+6. **Iterate filters**: Start permissive, then tighten based on downstream analysis needs
