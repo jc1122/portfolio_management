@@ -65,6 +65,7 @@ def sample_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     return prices_df, returns_df
 
 
+@pytest.mark.integration
 class TestBacktestConfig:
     """Tests for BacktestConfig data class."""
 
@@ -97,6 +98,7 @@ class TestBacktestConfig:
             )
 
 
+@pytest.mark.integration
 class TestTransactionCostModel:
     """Tests for TransactionCostModel."""
 
@@ -132,6 +134,7 @@ class TestTransactionCostModel:
         assert cost == Decimal(0)
 
 
+@pytest.mark.integration
 class TestRebalanceEnums:
     """Tests for rebalancing enums."""
 
@@ -150,6 +153,7 @@ class TestRebalanceEnums:
         assert RebalanceTrigger.FORCED.value == "forced"
 
 
+@pytest.mark.integration
 class TestRebalanceEvent:
     """Tests for RebalanceEvent data model."""
 
@@ -170,6 +174,7 @@ class TestRebalanceEvent:
         assert len(event.trades) == 2
 
 
+@pytest.mark.integration
 class TestPerformanceMetrics:
     """Tests for PerformanceMetrics data model."""
 
@@ -196,6 +201,7 @@ class TestPerformanceMetrics:
         assert metrics.num_rebalances == 12
 
 
+@pytest.mark.integration
 class TestBacktestEngine:
     """Tests for BacktestEngine."""
 
@@ -339,6 +345,7 @@ class TestBacktestEngine:
         assert metrics.num_rebalances > 0
 
 
+@pytest.mark.integration
 class TestPITEligibility:
     """Tests for point-in-time eligibility filtering in backtesting."""
 

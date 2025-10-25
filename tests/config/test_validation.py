@@ -22,6 +22,7 @@ from portfolio_management.config.validation import (
 from portfolio_management.core.exceptions import ConfigurationError
 
 
+@pytest.mark.integration
 class TestValidationResult:
     """Test ValidationResult class."""
 
@@ -63,6 +64,7 @@ class TestValidationResult:
             result.raise_if_invalid()
 
 
+@pytest.mark.integration
 class TestPreselectionValidation:
     """Test preselection configuration validation."""
 
@@ -154,6 +156,7 @@ class TestPreselectionValidation:
             validate_preselection_config(top_k=0, strict=True)
 
 
+@pytest.mark.integration
 class TestMembershipValidation:
     """Test membership policy configuration validation."""
 
@@ -225,6 +228,7 @@ class TestMembershipValidation:
             validate_membership_config(buffer_rank=20, top_k=30, strict=True)
 
 
+@pytest.mark.integration
 class TestPITValidation:
     """Test point-in-time eligibility configuration validation."""
 
@@ -256,6 +260,7 @@ class TestPITValidation:
             validate_pit_config(min_history_days=0, strict=True)
 
 
+@pytest.mark.integration
 class TestCacheValidation:
     """Test caching configuration validation."""
 
@@ -298,6 +303,7 @@ class TestCacheValidation:
             validate_cache_config(max_age_days=-1, strict=True)
 
 
+@pytest.mark.integration
 class TestFeatureCompatibility:
     """Test feature compatibility validation."""
 
@@ -345,6 +351,7 @@ class TestFeatureCompatibility:
         assert result.valid is True
 
 
+@pytest.mark.integration
 class TestOptimalityChecks:
     """Test optimality warning checks."""
 
@@ -400,6 +407,7 @@ class TestOptimalityChecks:
         assert len(result.warnings) == 0
 
 
+@pytest.mark.integration
 class TestDependencyChecks:
     """Test dependency availability checks."""
 
@@ -416,6 +424,7 @@ class TestDependencyChecks:
         assert result.valid is True
 
 
+@pytest.mark.integration
 class TestSensibleDefaults:
     """Test sensible defaults retrieval."""
 

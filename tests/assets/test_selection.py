@@ -13,6 +13,7 @@ from portfolio_management.assets.selection import AssetSelector, FilterCriteria
 from portfolio_management.core.exceptions import DataValidationError
 
 
+@pytest.mark.integration
 class TestParseSeverity:
     """Tests for AssetSelector._parse_severity static method."""
 
@@ -59,6 +60,7 @@ class TestParseSeverity:
         assert AssetSelector._parse_severity("zero_volume_severity= high ") == "high"
 
 
+@pytest.mark.integration
 class TestFilterByDataQuality:
     """Tests for AssetSelector._filter_by_data_quality method."""
 
@@ -231,6 +233,7 @@ class TestFilterByDataQuality:
         assert len(result) == 4
 
 
+@pytest.mark.integration
 class TestAssetSelectorIntegration:
     """Integration tests with real fixture data."""
 
@@ -279,6 +282,7 @@ class TestAssetSelectorIntegration:
                 assert severity == "low"
 
 
+@pytest.mark.integration
 class TestFilterByCharacteristics:
     """Tests for AssetSelector._filter_by_characteristics method."""
 
@@ -539,6 +543,7 @@ class TestFilterByCharacteristics:
         assert all(result["category"].isin(["lse etfs/1", "lse etfs/2"]))
 
 
+@pytest.mark.integration
 class TestIsInList:
     """Tests for AssetSelector._is_in_list static method."""
 
@@ -580,6 +585,7 @@ class TestIsInList:
         assert result is False
 
 
+@pytest.mark.integration
 class TestApplyLists:
     """Tests for AssetSelector._apply_lists method."""
 
@@ -797,6 +803,7 @@ class TestApplyLists:
         assert set(result["symbol"]) == sample_symbols
 
 
+@pytest.mark.integration
 class TestCalculateHistoryDays:
     """Tests for AssetSelector._calculate_history_days static method."""
 
@@ -852,6 +859,7 @@ class TestCalculateHistoryDays:
         assert days > 2000
 
 
+@pytest.mark.integration
 class TestFilterByHistory:
     """Tests for AssetSelector._filter_by_history method."""
 
@@ -1017,6 +1025,7 @@ class TestFilterByHistory:
             assert row["price_rows"] >= 252
 
 
+@pytest.mark.integration
 class TestSelectAssets:
     """Tests for the main select_assets method."""
 

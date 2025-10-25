@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+import pytest
 
 from portfolio_management.data import cache
 
 
+@pytest.mark.integration
 def test_compute_directory_hash_empty_dir(tmp_path: Path) -> None:
     """Test hash computation for empty directory."""
     hash1 = cache.compute_directory_hash(tmp_path)
@@ -16,6 +18,7 @@ def test_compute_directory_hash_empty_dir(tmp_path: Path) -> None:
     assert len(hash1) == 64  # SHA256 hex digest
 
 
+@pytest.mark.integration
 def test_compute_directory_hash_with_files(tmp_path: Path) -> None:
     """Test hash changes when files are added."""
     initial_hash = cache.compute_directory_hash(tmp_path, "*.csv")
@@ -27,6 +30,7 @@ def test_compute_directory_hash_with_files(tmp_path: Path) -> None:
     assert hash_after_add != initial_hash
 
 
+@pytest.mark.integration
 def test_compute_directory_hash_file_modification(tmp_path: Path) -> None:
     """Test hash changes when file is modified."""
     test_file = tmp_path / "test.csv"
@@ -43,6 +47,7 @@ def test_compute_directory_hash_file_modification(tmp_path: Path) -> None:
     assert hash1 != hash2
 
 
+@pytest.mark.integration
 def test_compute_directory_hash_deterministic(tmp_path: Path) -> None:
     """Test hash is deterministic for same directory state."""
     (tmp_path / "a.csv").write_text("data1")
@@ -54,12 +59,14 @@ def test_compute_directory_hash_deterministic(tmp_path: Path) -> None:
     assert hash1 == hash2
 
 
+@pytest.mark.integration
 def test_compute_stooq_index_hash_nonexistent(tmp_path: Path) -> None:
     """Test hash for nonexistent file returns empty string."""
     hash_result = cache.compute_stooq_index_hash(tmp_path / "nonexistent.csv")
     assert hash_result == ""
 
 
+@pytest.mark.integration
 def test_compute_stooq_index_hash_file_exists(tmp_path: Path) -> None:
     """Test hash computation for existing file."""
     index_file = tmp_path / "index.csv"
@@ -72,6 +79,7 @@ def test_compute_stooq_index_hash_file_exists(tmp_path: Path) -> None:
     assert len(hash1) == 64
 
 
+@pytest.mark.integration
 def test_compute_stooq_index_hash_file_changes(tmp_path: Path) -> None:
     """Test hash changes when file content changes."""
     index_file = tmp_path / "index.csv"
@@ -85,12 +93,14 @@ def test_compute_stooq_index_hash_file_changes(tmp_path: Path) -> None:
     assert hash1 != hash2
 
 
+@pytest.mark.integration
 def test_load_cache_metadata_nonexistent(tmp_path: Path) -> None:
     """Test loading metadata from nonexistent file returns empty dict."""
     metadata = cache.load_cache_metadata(tmp_path / "nonexistent.json")
     assert metadata == {}
 
 
+@pytest.mark.integration
 def test_load_cache_metadata_invalid_json(tmp_path: Path) -> None:
     """Test loading invalid JSON returns empty dict."""
     cache_file = tmp_path / "cache.json"
@@ -100,6 +110,7 @@ def test_load_cache_metadata_invalid_json(tmp_path: Path) -> None:
     assert metadata == {}
 
 
+@pytest.mark.integration
 def test_save_and_load_cache_metadata(tmp_path: Path) -> None:
     """Test saving and loading cache metadata."""
     cache_file = tmp_path / "metadata" / "cache.json"
@@ -114,6 +125,7 @@ def test_save_and_load_cache_metadata(tmp_path: Path) -> None:
     assert loaded == test_metadata
 
 
+@pytest.mark.integration
 def test_inputs_unchanged_no_cache() -> None:
     """Test inputs considered changed when no cache exists."""
     result = cache.inputs_unchanged(
@@ -124,6 +136,7 @@ def test_inputs_unchanged_no_cache() -> None:
     assert result is False
 
 
+@pytest.mark.integration
 def test_inputs_unchanged_tradeable_dir_changed(tmp_path: Path) -> None:
     """Test inputs marked as changed when tradeable directory changes."""
     tradeable_dir = tmp_path / "tradeable"
@@ -141,6 +154,7 @@ def test_inputs_unchanged_tradeable_dir_changed(tmp_path: Path) -> None:
     assert result is False
 
 
+@pytest.mark.integration
 def test_inputs_unchanged_index_changed(tmp_path: Path) -> None:
     """Test inputs marked as changed when index changes."""
     tradeable_dir = tmp_path / "tradeable"
@@ -158,6 +172,7 @@ def test_inputs_unchanged_index_changed(tmp_path: Path) -> None:
     assert result is False
 
 
+@pytest.mark.integration
 def test_inputs_unchanged_nothing_changed(tmp_path: Path) -> None:
     """Test inputs marked as unchanged when nothing changes."""
     tradeable_dir = tmp_path / "tradeable"
@@ -175,6 +190,7 @@ def test_inputs_unchanged_nothing_changed(tmp_path: Path) -> None:
     assert result is True
 
 
+@pytest.mark.integration
 def test_outputs_exist_both_missing(tmp_path: Path) -> None:
     """Test outputs_exist returns False when both files missing."""
     result = cache.outputs_exist(
@@ -184,6 +200,7 @@ def test_outputs_exist_both_missing(tmp_path: Path) -> None:
     assert result is False
 
 
+@pytest.mark.integration
 def test_outputs_exist_one_missing(tmp_path: Path) -> None:
     """Test outputs_exist returns False when one file missing."""
     (tmp_path / "match.csv").write_text("data")
@@ -195,6 +212,7 @@ def test_outputs_exist_one_missing(tmp_path: Path) -> None:
     assert result is False
 
 
+@pytest.mark.integration
 def test_outputs_exist_both_present(tmp_path: Path) -> None:
     """Test outputs_exist returns True when both files present."""
     (tmp_path / "match.csv").write_text("data")
@@ -207,6 +225,7 @@ def test_outputs_exist_both_present(tmp_path: Path) -> None:
     assert result is True
 
 
+@pytest.mark.integration
 def test_create_cache_metadata(tmp_path: Path) -> None:
     """Test creating cache metadata."""
     tradeable_dir = tmp_path / "tradeable"

@@ -1,6 +1,7 @@
 """Tests for streaming diagnostics functionality in analysis module."""
 
 import pathlib
+import pytest
 import tempfile
 
 from portfolio_management.data.analysis.analysis import (
@@ -17,6 +18,7 @@ def create_test_file(file_path: pathlib.Path, content: str) -> None:
         f.write(content)
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_missing():
     """Test streaming with missing file."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -28,6 +30,7 @@ def test_stream_stooq_file_missing():
         assert diagnostics["price_rows"] == "0"
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_empty():
     """Test streaming with empty file."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -40,6 +43,7 @@ def test_stream_stooq_file_empty():
         assert diagnostics["data_status"] == "empty"
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_clean_data():
     """Test streaming with clean data."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -59,6 +63,7 @@ TEST,D,20200103,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert diagnostics["data_flags"] == ""
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_with_header():
     """Test streaming handles header row correctly."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -75,6 +80,7 @@ TEST,D,20200102,000000,102.0,108.0,100.0,106.0,12000,0"""
         assert diagnostics["price_rows"] == "2"
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_zero_volume():
     """Test detection of zero volume."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -92,6 +98,7 @@ TEST,D,20200103,000000,106.0,110.0,104.0,108.0,0,0"""
         assert "zero_volume_severity=critical" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_invalid_dates():
     """Test detection of invalid dates."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -106,6 +113,7 @@ TEST,D,20200103,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert "invalid_rows=1" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_non_numeric_prices():
     """Test detection of non-numeric prices."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -120,6 +128,7 @@ TEST,D,20200102,000000,102.0,108.0,100.0,106.0,12000,0"""
         assert "non_numeric_prices=1" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_non_positive_close():
     """Test detection of non-positive close prices."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -134,6 +143,7 @@ TEST,D,20200103,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert "non_positive_close=2" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_duplicate_dates():
     """Test detection of duplicate dates."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -148,6 +158,7 @@ TEST,D,20200102,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert "duplicate_dates" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_duplicate_dates_across_chunks():
     """Ensure duplicate dates are detected when they span chunk boundaries."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -178,6 +189,7 @@ def test_stream_stooq_file_duplicate_dates_across_chunks():
         assert "duplicate_dates" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_non_monotonic_dates():
     """Test detection of non-monotonic dates."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -192,6 +204,7 @@ TEST,D,20200101,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert "non_monotonic_dates" in diagnostics["data_flags"]
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_large_file():
     """Test streaming with a large file (multiple chunks)."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -216,6 +229,7 @@ def test_stream_stooq_file_large_file():
         assert diagnostics["price_rows"] == "15000"
 
 
+@pytest.mark.integration
 def test_summarize_price_file_integration():
     """Test the public summarize_price_file function."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -242,6 +256,7 @@ TEST,D,20200103,000000,106.0,110.0,104.0,108.0,15000,0"""
         assert diagnostics["price_rows"] == "3"
 
 
+@pytest.mark.integration
 def test_stream_stooq_file_whitespace_handling():
     """Test that whitespace is properly stripped."""
     with tempfile.TemporaryDirectory() as tmpdir:

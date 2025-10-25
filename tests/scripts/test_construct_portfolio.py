@@ -26,6 +26,7 @@ def returns_csv(tmp_path: Path) -> Path:
     return path
 
 
+@pytest.mark.integration
 def test_cli_constructs_equal_weight(tmp_path: Path, returns_csv: Path) -> None:
     """CLI writes portfolio weights for equal weight strategy."""
     output_path = Path(tmp_path) / "weights.csv"
@@ -89,6 +90,7 @@ def test_cli_compare_mode(
     assert "equal_weight" in comparison.columns
 
 
+@pytest.mark.integration
 def test_cli_invalid_strategy_returns_error(tmp_path: Path, returns_csv: Path) -> None:
     """Invalid strategy name returns a non-zero exit code."""
     output_path = Path(tmp_path) / "invalid.csv"

@@ -19,6 +19,7 @@ from portfolio_management.core.exceptions import AssetSelectionError
 from scripts.select_assets import process_chunked
 
 
+@pytest.mark.integration
 class TestProcessChunked:
     """Tests for process_chunked function."""
 
