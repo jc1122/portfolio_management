@@ -40,12 +40,83 @@ The script's output depends on its mode of operation:
 
 ### Portfolio Construction Strategies
 
-The core feature of the script is its ability to build a portfolio using different industry-standard strategies, controlled by the `--strategy` flag.
+The toolkit implements three well-established portfolio construction strategies, each with different optimization objectives:
 
-- `equal_weight`: The simplest baseline. It assigns an equal weight to every asset (1/N).
-- `mean_variance_max_sharpe`: A classic Modern Portfolio Theory strategy that finds the portfolio with the mathematically optimal risk-adjusted return (highest Sharpe Ratio).
-- `mean_variance_min_volatility`: An MPT strategy that finds the portfolio with the lowest possible risk (volatility), regardless of return.
-- `risk_parity`: An advanced strategy that allocates capital so that each asset contributes equally to the overall portfolio risk.
+#### 1. Equal Weight (`equal_weight`)
+
+The simplest baseline strategy. Assigns equal weight (1/N) to every asset in the universe.
+
+**Characteristics**:
+- **Optimization objective**: None (deterministic 1/N allocation)
+- **Computational cost**: O(n) - fastest
+- **Best for**: Small universes, benchmark comparison, when you believe in equal risk contribution without correlation assumptions
+
+**Advantages**:
+- No estimation error (no parameters to estimate)
+- Robust to outliers and data quality issues
+- No risk of optimization failure
+- Computationally trivial
+
+**Disadvantages**:
+- Ignores correlations and risk differences between assets
+- Can lead to concentrated risk if assets are highly correlated
+- No consideration of expected returns or volatility
+
+#### 2. Risk Parity (`risk_parity`)
+
+Allocates capital so that each asset contributes equally to overall portfolio risk (volatility).
+
+**Characteristics**:
+- **Optimization objective**: Equal risk contribution from each asset
+- **Computational cost**: O(n²) - moderate (covariance computation)
+- **Best for**: Medium to large universes (30-300 assets), when you want balanced risk exposure
+
+**Advantages**:
+- Diversifies risk exposure evenly across assets
+- Computationally efficient (faster than mean-variance)
+- More stable than mean-variance (uses only volatility, not expected returns)
+- Handles correlations explicitly
+
+**Disadvantages**:
+- Can overweight low-volatility (often defensive) assets
+- Ignores expected returns entirely
+- May concentrate in bonds/cash during high market volatility
+
+**Large-Universe Behavior**:
+- Automatically falls back to inverse-volatility when >300 assets
+- Applies covariance matrix stabilization (diagonal jitter) when near-singular
+- All portfolio constraints still enforced in fallback mode
+
+#### 3. Mean-Variance (`mean_variance_max_sharpe`, `mean_variance_min_volatility`)
+
+Finds the portfolio with optimal risk-adjusted return using Markowitz's mean-variance optimization.
+
+**Two variants**:
+- `mean_variance_max_sharpe`: Maximizes Sharpe ratio (risk-adjusted return)
+- `mean_variance_min_volatility`: Minimizes portfolio volatility
+
+**Characteristics**:
+- **Optimization objective**: Max Sharpe or min volatility
+- **Computational cost**: O(n³) - slowest (quadratic programming)
+- **Best for**: Small to medium universes (<100 assets), when you have confidence in return estimates
+
+**Advantages**:
+- Theoretically optimal (maximizes expected utility)
+- Explicitly considers expected returns
+- Can target specific risk/return profiles
+- Backed by decades of academic research
+
+**Disadvantages**:
+- Highly sensitive to estimation errors in expected returns
+- Computationally expensive for large universes
+- May produce extreme/concentrated weights
+- Can be unstable across rebalancing periods
+
+**Large-Universe Behavior**:
+- Applies covariance shrinkage for numerical stability
+- Falls back to closed-form tangency solution if optimizer fails
+- Sanitizes return inputs before optimization
+- All constraints validated after optimization
 
 ### Large-Universe Hardening
 
@@ -97,6 +168,236 @@ python scripts/construct_portfolio.py \
   --output outputs/portfolio_comparison.csv
 ```
 
+## Strategy Selection Guidance
+
+### Decision Framework
+
+Choose your strategy based on three key factors:
+
+1. **Universe Size**: How many assets are you investing in?
+2. **Data Quality**: How reliable are your return estimates?
+3. **Computational Budget**: How much time/resources do you have?
+
+| Universe Size | Data Quality | Recommended Strategy | Rationale |
+|---------------|--------------|---------------------|-----------|
+| Small (<30) | Any | Mean-Variance Max Sharpe | Optimization tractable, can fully exploit return estimates |
+| Medium (30-100) | High | Mean-Variance or Risk Parity | Both feasible, choose based on return confidence |
+| Medium (30-100) | Low | Risk Parity | More robust to estimation error |
+| Large (100-300) | Any | Risk Parity | Mean-variance too slow/unstable |
+| Very Large (300+) | Any | Equal Weight + Preselection | Use preselection to reduce universe first |
+
+### When to Use Each Strategy
+
+**Equal Weight**:
+- ✓ Benchmark comparison
+- ✓ Unknown/unreliable correlations
+- ✓ Very large universes (after preselection)
+- ✓ Regulatory/policy constraints on optimization
+- ✗ When you have good risk/return estimates
+- ✗ When assets have very different volatilities
+
+**Risk Parity**:
+- ✓ Want balanced risk exposure
+- ✓ Medium-large universes (30-300 assets)
+- ✓ Distrust return forecasts
+- ✓ Assets with different volatilities
+- ✗ When you have high-confidence return views
+- ✗ Very large universes (>300, unless with preselection)
+
+**Mean-Variance**:
+- ✓ Have reliable return estimates
+- ✓ Small-medium universes (<100 assets)
+- ✓ Want theoretically optimal allocation
+- ✓ Can tolerate concentration
+- ✗ Poor quality data
+- ✗ Large universes (computational cost)
+- ✗ Need stable weights across rebalancing
+
+### Combining with Preselection
+
+For large universes, combine preselection with strategy:
+
+```bash
+# Large universe → preselect → optimize
+python scripts/run_backtest.py risk_parity \
+    --preselect-method combined \
+    --preselect-top-k 50 \
+    # Now only 50 assets go into risk parity optimization
+```
+
+**Recommended Combinations**:
+- Equal Weight + Momentum Preselection: Simple factor tilt
+- Risk Parity + Combined Preselection: Balanced risk on selected universe
+- Mean-Variance + Low-Vol Preselection: Defensive optimization
+
+See `docs/preselection.md` for preselection details.
+
+## Optimization Troubleshooting
+
+### Common Issues and Solutions
+
+#### Issue 1: Optimizer Fails to Converge
+
+**Symptoms**:
+- Error: "Optimization failed" or "No solution found"
+- Mean-variance returns no weights
+
+**Causes**:
+- Ill-conditioned covariance matrix (near-singular)
+- Infeasible constraints (e.g., min-bond + max-equity impossible to satisfy)
+- Insufficient data (not enough history)
+
+**Solutions**:
+1. **Reduce universe size**: Use preselection to filter to top-K assets
+   ```bash
+   --preselect-method combined --preselect-top-k 50
+   ```
+
+2. **Relax constraints**: Check that constraints are feasible
+   ```bash
+   # Make sure min + max constraints are compatible
+   --max-equity 0.90 --min-bond 0.10  # Sum = 1.0, feasible
+   ```
+
+3. **Switch strategy**: Try risk parity (more robust) or equal weight (always works)
+
+4. **Check data quality**: Verify returns have sufficient history
+   ```bash
+   # Ensure enough data for covariance estimation
+   --lookback-periods 252  # At least 1 year
+   ```
+
+#### Issue 2: Extreme/Concentrated Weights
+
+**Symptoms**:
+- One or few assets get >50% allocation
+- Many assets get zero or near-zero weight
+
+**Causes**:
+- Mean-variance amplifying estimation errors
+- High correlation between assets
+- Extreme return forecasts
+
+**Solutions**:
+1. **Add position limits**:
+   ```bash
+   --max-weight 0.15 --min-weight 0.02
+   ```
+
+2. **Use risk parity instead** (naturally more diversified):
+   ```bash
+   --strategy risk_parity
+   ```
+
+3. **Apply preselection to reduce correlation**:
+   ```bash
+   --preselect-method low_vol --preselect-top-k 30
+   ```
+
+4. **Switch to equal weight** if optimization unreliable
+
+#### Issue 3: Unstable Weights Across Rebalancing
+
+**Symptoms**:
+- Weights change dramatically between rebalances
+- High turnover
+- Same strategy produces very different allocations
+
+**Causes**:
+- Mean-variance sensitivity to small data changes
+- Short lookback window
+- Noisy return estimates
+
+**Solutions**:
+1. **Use membership policy** to stabilize holdings:
+   ```bash
+   --membership-enabled \
+   --membership-buffer-rank 10 \
+   --membership-min-hold 3
+   ```
+
+2. **Increase lookback window**:
+   ```bash
+   --lookback-periods 504  # 2 years instead of 1
+   ```
+
+3. **Switch to risk parity** (more stable than mean-variance)
+
+4. **Apply preselection** (filters out marginal assets)
+
+#### Issue 4: Out of Memory
+
+**Symptoms**:
+- Python crashes with MemoryError
+- System runs out of RAM during optimization
+
+**Causes**:
+- Large universe (>500 assets)
+- Mean-variance O(n³) memory usage
+- Long lookback window
+
+**Solutions**:
+1. **Use preselection** to reduce universe:
+   ```bash
+   --preselect-method combined --preselect-top-k 50
+   ```
+
+2. **Switch to risk parity or equal weight** (lower memory):
+   - Risk parity: O(n²) instead of O(n³)
+   - Equal weight: O(n)
+
+3. **Reduce lookback window**:
+   ```bash
+   --lookback-periods 126  # 6 months instead of 1 year
+   ```
+
+4. **Run on machine with more RAM** or use smaller universe
+
+#### Issue 5: Negative Weights (Short Positions)
+
+**Symptoms**:
+- Some assets have negative weights
+- Portfolio seems to be shorting assets
+
+**Causes**:
+- Constraints allow shorting (not default behavior)
+- Bug in constraint enforcement
+
+**Solutions**:
+1. **Set minimum weight to zero** (no shorting):
+   ```bash
+   --min-weight 0.0  # This is the default
+   ```
+
+2. **Verify constraint enforcement** in output
+
+3. **Report issue** if negative weights appear despite min-weight=0
+
+### Performance Tips
+
+**For Small Universes (<50 assets)**:
+- All strategies work well
+- Mean-variance is tractable
+- Focus on data quality over computational efficiency
+
+**For Medium Universes (50-200 assets)**:
+- Prefer risk parity over mean-variance
+- Consider preselection for mean-variance
+- Enable caching for faster rebalancing
+
+**For Large Universes (200+ assets)**:
+- **Always use preselection** first
+- Prefer equal weight or risk parity
+- Mean-variance not recommended unless preselected to <100 assets
+- Enable caching and membership policy
+
+**General Best Practices**:
+1. Start with equal weight (baseline)
+2. Test risk parity (usually best balance)
+3. Try mean-variance only if <100 assets and good data
+4. Always run strategy comparison (`--compare`) first
+5. Use membership policy in production to control turnover
+
 ## Command-Line Arguments
 
 - `--returns`: **(Required)** Path to the CSV file containing asset returns.
@@ -132,3 +433,11 @@ For more information:
 
 - Current implementation: `docs/preselection.md`
 - Future design: `docs/cardinality_constraints.md`
+
+## See Also
+
+- [Backtesting](backtesting.md) - Running backtests with strategies
+- [Preselection](preselection.md) - Factor-based universe reduction
+- [Membership Policy](membership_policy.md) - Turnover control during rebalancing
+- [Universes](universes.md) - Universe configuration with YAML
+- [Cardinality Constraints](cardinality_constraints.md) - Future optimizer-integrated cardinality
