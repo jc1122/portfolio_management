@@ -1,18 +1,16 @@
 """Data I/O operations for Stooq and tradeable instrument files.
 
-This module provides functions for reading and writing CSV files related to:
+This module provides functions for reading and writing the core data files used
+in the portfolio management pipeline. It handles CSVs for Stooq indices,
+tradeable instrument lists, match reports, and price file exports.
 
-- Stooq price file indices (building and loading cached metadata)
-- Tradeable instrument lists from broker universes
-- Match reports showing instrument-to-Stooq mappings
-- Diagnostics and currency resolution results
-- Price file exports filtered for quality and availability
+Key Functions:
+    - read_stooq_index: Loads a cached Stooq index from a CSV file.
+    - write_stooq_index: Saves a Stooq index to a CSV file.
+    - load_tradeable_instruments: Loads and normalizes broker instrument lists.
+    - write_match_report: Generates a detailed report of matched instruments.
+    - export_tradeable_prices: Exports filtered price data to a destination directory.
 
-Key functions:
-    - read_stooq_index: Load cached Stooq index
-    - write_match_report: Generate matched instruments report with diagnostics
-    - export_tradeable_prices: Export filtered price files to destination
-    - load_tradeable_instruments: Load and normalize broker instrument lists
 """
 
 from __future__ import annotations
@@ -50,7 +48,12 @@ LOGGER = logging.getLogger(__name__)
 
 
 def write_stooq_index(entries: Sequence[StooqFile], output_path: pathlib.Path) -> None:
-    """Persist the Stooq index to CSV."""
+    """Persist the Stooq index to a CSV file.
+
+    Args:
+        entries: A sequence of `StooqFile` objects to write.
+        output_path: The path to the output CSV file.
+    """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     records = [
         {
@@ -68,7 +71,17 @@ def write_stooq_index(entries: Sequence[StooqFile], output_path: pathlib.Path) -
 
 
 def read_stooq_index(csv_path: pathlib.Path) -> list[StooqFile]:
-    """Load the Stooq index from an existing CSV."""
+    """Load the Stooq index from an existing CSV file.
+
+    Args:
+        csv_path: The path to the Stooq index CSV file.
+
+    Returns:
+        A list of `StooqFile` objects.
+
+    Raises:
+        FileNotFoundError: If the `csv_path` does not exist.
+    """
     index_frame = pd.read_csv(csv_path, dtype=str).fillna("")
     entries = [
         StooqFile(
@@ -112,7 +125,14 @@ def _load_tradeable_frame(
 def load_tradeable_instruments(
     tradeable_dir: pathlib.Path,
 ) -> list[TradeableInstrument]:
-    """Load and normalize tradeable instrument CSV files."""
+    """Load and normalize all tradeable instrument CSV files from a directory.
+
+    Args:
+        tradeable_dir: The directory containing the tradeable instrument CSVs.
+
+    Returns:
+        A list of `TradeableInstrument` objects.
+    """
     instruments: list[TradeableInstrument] = []
     csv_paths = sorted(tradeable_dir.glob("*.csv"))
     expected_cols = ["symbol", "isin", "market", "name", "currency"]
@@ -157,7 +177,12 @@ def write_unmatched_report(
     unmatched: Sequence[TradeableInstrument],
     output_path: pathlib.Path,
 ) -> None:
-    """Persist the unmatched instrument list for manual follow-up."""
+    """Persist the unmatched instrument list for manual follow-up.
+
+    Args:
+        unmatched: A sequence of `TradeableInstrument` objects that were not matched.
+        output_path: The path to the output CSV file.
+    """
     columns = ["symbol", "isin", "market", "name", "currency", "source_file", "reason"]
     _write_report(unmatched, output_path, columns)
     LOGGER.info("Unmatched report written to %s", output_path)
@@ -310,7 +335,22 @@ def write_match_report(
     int,
     int,
 ]:
-    """Persist the match report showing which tradeables map to which Stooq files."""
+    """Persist the match report, showing which tradeables map to which Stooq files.
+
+    This function generates a detailed CSV report that includes diagnostics,
+    currency analysis, and data quality flags for each match.
+
+    Args:
+        matches: A sequence of `TradeableMatch` objects.
+        output_path: The path to the output CSV report.
+        data_dir: The root directory of the Stooq data.
+        lse_currency_policy: The policy for resolving LSE currency ('GBp' or 'GBP').
+        max_workers: The maximum number of parallel workers for diagnostics.
+        export_config: Optional configuration for exporting price data concurrently.
+
+    Returns:
+        A tuple containing various summary statistics from the report generation.
+    """
     (
         rows,
         diagnostics_cache,
@@ -416,7 +456,7 @@ def _remove_existing_export(
 
 
 def _stream_price_file(source_path: pathlib.Path, target_path: pathlib.Path) -> int:
-    """Stream the raw Stooq file to CSV with normalized header; return rows written."""
+    """Stream the raw Stooq file to CSV with a normalized header."""
     target_path.parent.mkdir(parents=True, exist_ok=True)
     rows_written = 0
     with (
@@ -429,14 +469,10 @@ def _stream_price_file(source_path: pathlib.Path, target_path: pathlib.Path) -> 
     ):
         dst.write(",".join(STOOQ_COLUMNS) + "\n")
         for raw_line in src:
-            if not raw_line:
-                continue
-            if raw_line.startswith("<"):
+            if not raw_line or raw_line.startswith("<"):
                 continue
             stripped = raw_line.strip()
-            if not stripped:
-                continue
-            if stripped.lower().startswith("ticker"):
+            if not stripped or stripped.lower().startswith("ticker"):
                 continue
             dst.write(stripped)
             dst.write("\n")
@@ -578,9 +614,18 @@ def export_tradeable_prices(
     matches: Sequence[TradeableMatch],
     config: ExportConfig,
 ) -> tuple[int, int]:
-    """Convert matched Stooq price files into CSVs stored in the destination directory.
+    """Convert matched Stooq price files into CSVs in a destination directory.
 
-    Returns a tuple of (exported_count, skipped_count).
+    This function processes a list of matched instruments, filters them based
+    on the provided configuration, and exports the valid ones as clean CSV
+    price files.
+
+    Args:
+        matches: A sequence of `TradeableMatch` objects to process.
+        config: An `ExportConfig` object with settings for the export process.
+
+    Returns:
+        A tuple containing the number of exported and skipped files.
     """
     config.dest_dir.mkdir(parents=True, exist_ok=True)
     unique_matches = _deduplicate_matches(matches)

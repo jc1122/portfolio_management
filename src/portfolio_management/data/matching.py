@@ -1,4 +1,17 @@
-"""Tradeable instrument matching utilities."""
+"""Tradeable instrument matching utilities.
+
+This module provides a robust matching engine to link broker-provided tradeable
+instrument lists with the Stooq price data index. It uses a series of strategies,
+from direct ticker matching to suffix mapping and alias lookups, to find the
+correct Stooq file for each instrument.
+
+Key Functions:
+    - match_tradeables: The main entry point to run the matching process.
+    - candidate_tickers: Generates potential Stooq ticker variations for a symbol.
+    - suffix_to_extensions: Maps broker-specific suffixes (e.g., ':LN') to Stooq
+      extensions (e.g., '.UK').
+    - build_stooq_lookup: Creates efficient lookup tables from the Stooq index.
+"""
 
 from __future__ import annotations
 
@@ -48,7 +61,14 @@ def _extension_is_acceptable(entry_ext: str, desired_exts_set: set[str]) -> bool
 
 
 def split_symbol(symbol: str) -> tuple[str, str]:
-    """Split a broker symbol into base and suffix components."""
+    """Split a broker symbol into its base and suffix components.
+
+    Args:
+        symbol: The symbol to split (e.g., 'AAPL:US' or 'VOD.L').
+
+    Returns:
+        A tuple containing the base and suffix.
+    """
     if ":" in symbol:
         base, suffix = symbol.split(":", 1)
         return base, suffix
@@ -59,7 +79,15 @@ def split_symbol(symbol: str) -> tuple[str, str]:
 
 
 def suffix_to_extensions(suffix: str, market: str) -> Sequence[str]:
-    """Map broker suffixes to likely Stooq ticker extensions."""
+    """Map broker suffixes and market names to likely Stooq ticker extensions.
+
+    Args:
+        suffix: The symbol suffix (e.g., 'LN', 'US').
+        market: The market name (e.g., 'LSE', 'NASDAQ').
+
+    Returns:
+        A sequence of possible Stooq extensions (e.g., ['.UK'], ['.US']).
+    """
     suffix = suffix.upper()
     market = (market or "").upper()
 
@@ -142,7 +170,18 @@ def _get_desired_extensions(
 
 
 def candidate_tickers(symbol: str, market: str) -> Iterable[str]:
-    """Generate possible Stooq tickers for a tradeable symbol."""
+    """Generate possible Stooq tickers for a tradeable symbol.
+
+    This function produces a sequence of potential ticker variations to try
+    when matching against the Stooq index.
+
+    Args:
+        symbol: The broker symbol (e.g., 'AAPL:US').
+        market: The market name (e.g., 'NASDAQ').
+
+    Returns:
+        An iterable of candidate ticker strings.
+    """
     if not symbol:
         return []
 
@@ -188,7 +227,14 @@ def build_stooq_lookup(
     dict[str, StooqFile],
     dict[str, list[StooqFile]],
 ]:
-    """Create lookup dictionaries for efficient matching."""
+    """Create lookup dictionaries for efficient matching.
+
+    Args:
+        stooq_index: A sequence of `StooqFile` objects.
+
+    Returns:
+        A tuple of three dictionaries: by ticker, by stem, and by base symbol.
+    """
     by_ticker: dict[str, StooqFile] = {}
     by_stem: dict[str, StooqFile] = {}
     by_base: dict[str, list[StooqFile]] = {}
@@ -259,7 +305,7 @@ def _match_candidates(context: _MatchContext) -> TradeableMatch | None:
         if entry is None:
             continue
         entry_ext = _stooq_extension(entry.ticker)
-        if not _extension_is_acceptable(entry_ext, context.desired_exts):
+        if not _extension_is_acceptable(entry_ext, set(context.desired_exts)):
             continue
         strategy_name = (
             "ticker"
@@ -285,7 +331,7 @@ def _match_by_stem(
     if stem_entry is None:
         return None
     entry_ext = _stooq_extension(stem_entry.ticker)
-    if not _extension_is_acceptable(entry_ext, desired_exts):
+    if not _extension_is_acceptable(entry_ext, set(desired_exts)):
         return None
     return TradeableMatch(
         instrument=instrument,
@@ -305,7 +351,7 @@ def _match_by_base(
     filtered = [
         entry
         for entry in candidates
-        if _extension_is_acceptable(_stooq_extension(entry.ticker), desired_exts)
+        if _extension_is_acceptable(_stooq_extension(entry.ticker), set(desired_exts))
     ]
     if len(filtered) == 1:
         entry = filtered[0]
@@ -333,7 +379,19 @@ def match_tradeables(
     stooq_by_base: dict[str, list[StooqFile]],
     max_workers: int | None = None,
 ) -> tuple[list[TradeableMatch], list[TradeableInstrument]]:
-    """Match tradeable instruments to Stooq files."""
+    """Match a sequence of tradeable instruments to Stooq files in parallel.
+
+    Args:
+        tradeables: A sequence of `TradeableInstrument` objects.
+        stooq_by_ticker: A lookup from Stooq ticker to `StooqFile`.
+        stooq_by_stem: A lookup from Stooq stem to `StooqFile`.
+        stooq_by_base: A lookup from base symbol to a list of `StooqFile`s.
+        max_workers: The maximum number of parallel workers to use.
+
+    Returns:
+        A tuple containing a list of successful matches and a list of
+        unmatched instruments.
+    """
     if not tradeables:
         return [], []
 
@@ -372,7 +430,16 @@ def annotate_unmatched_instruments(
     stooq_by_base: dict[str, list[StooqFile]],
     available_extensions: set[str],
 ) -> list[TradeableInstrument]:
-    """Annotate unmatched instruments with reason codes."""
+    """Annotate unmatched instruments with reason codes for diagnostics.
+
+    Args:
+        unmatched: A list of `TradeableInstrument` objects that were not matched.
+        stooq_by_base: A lookup from base symbol to a list of `StooqFile`s.
+        available_extensions: A set of available Stooq extensions.
+
+    Returns:
+        A list of unmatched instruments with an added `reason` attribute.
+    """
     annotated: list[TradeableInstrument] = []
     for instrument in unmatched:
         reason = determine_unmatched_reason(
@@ -389,7 +456,16 @@ def determine_unmatched_reason(
     stooq_by_base: dict[str, list[StooqFile]],
     available_extensions: set[str],
 ) -> str:
-    """Determine why an instrument could not be matched."""
+    """Determine the most likely reason why an instrument could not be matched.
+
+    Args:
+        instrument: The unmatched `TradeableInstrument`.
+        stooq_by_base: A lookup from base symbol to a list of `StooqFile`s.
+        available_extensions: A set of available Stooq extensions.
+
+    Returns:
+        A string code representing the reason for the match failure.
+    """
     symbol = (instrument.symbol or "").strip()
     if not symbol:
         return "missing_symbol"

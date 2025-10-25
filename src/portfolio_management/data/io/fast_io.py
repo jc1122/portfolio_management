@@ -1,22 +1,37 @@
-"""Optional fast IO backends using polars or pyarrow.
+"""Optional fast IO backends using Polars or PyArrow.
 
-This module provides optional faster IO paths for reading CSV and Parquet files
-using polars or pyarrow when available. Falls back gracefully to pandas if the
-optional dependencies are not installed.
+This module provides faster alternatives for reading CSV and Parquet files by
+leveraging high-performance libraries like Polars and PyArrow. It gracefully
+falls back to pandas if these dependencies are not installed, ensuring
+compatibility while offering significant performance gains when available.
 
-The fast IO backends can provide 2-5x speedups for CSV reading and even more for
-Parquet files, especially beneficial for large datasets (1000+ assets, 5+ years).
+Key Functions:
+    - read_csv_fast: Reads a CSV file, auto-selecting the best available backend.
+    - read_parquet_fast: Reads a Parquet file, auto-selecting the best backend.
+    - get_available_backends: Lists the currently installed and available IO backends.
+
+Performance:
+    - Polars: Typically the fastest backend for both CSV and Parquet parsing.
+    - PyArrow: A strong alternative, especially for Parquet. Often installed
+      as a dependency for other data science libraries.
+    - Pandas: The reliable default, but slower for large files.
 
 Usage:
-    # Check which backends are available
-    from portfolio_management.data.io.fast_io import get_available_backends
-    print(get_available_backends())  # ['pandas', 'polars', 'pyarrow']
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from portfolio_management.data.io.fast_io import read_csv_fast, get_available_backends
+    >>>
+    >>> # Check available backends
+    >>> backends = get_available_backends()
+    >>> print(f"Available backends: {backends}") # doctest: +SKIP
+    >>>
+    >>> with tempfile.NamedTemporaryFile(mode='w+', suffix='.csv') as tmp:
+    ...     _ = tmp.write('a,b\\n1,2')
+    ...     _ = tmp.seek(0)
+    ...     df = read_csv_fast(tmp.name)
+    >>> print(df.shape)
+    (1, 2)
 
-    # Read CSV with automatic backend selection
-    from portfolio_management.data.io.fast_io import read_csv_fast
-    df = read_csv_fast('prices.csv', backend='polars')  # or 'pyarrow' or 'pandas'
-
-    # The result is always a pandas DataFrame for compatibility
 """
 
 from __future__ import annotations
@@ -35,21 +50,21 @@ _POLARS_AVAILABLE = False
 _PYARROW_AVAILABLE = False
 
 try:
-    import polars as pl  # noqa: F401
+    import polars as pl
 
     _POLARS_AVAILABLE = True
-    logger.debug("Polars backend available for fast IO")
+    logger.debug("Polars backend available for fast IO.")
 except ImportError:
-    logger.debug("Polars not installed - falling back to pandas for IO")
+    logger.debug("Polars not installed; falling back to pandas for IO.")
 
 try:
-    import pyarrow as pa  # noqa: F401
-    import pyarrow.csv as pa_csv  # noqa: F401
+    import pyarrow as pa
+    import pyarrow.csv as pa_csv
 
     _PYARROW_AVAILABLE = True
-    logger.debug("PyArrow backend available for fast IO")
+    logger.debug("PyArrow backend available for fast IO.")
 except ImportError:
-    logger.debug("PyArrow not installed - falling back to pandas for IO")
+    logger.debug("PyArrow not installed; falling back to pandas for IO.")
 
 # Always import pandas as the fallback
 try:
@@ -66,11 +81,17 @@ Backend = Literal["pandas", "polars", "pyarrow", "auto"]
 
 
 def get_available_backends() -> list[str]:
-    """Return list of available IO backends.
+    """Return a list of available IO backends.
+
+    The list always includes 'pandas' and will also contain 'polars' and/or
+    'pyarrow' if they are installed in the environment.
 
     Returns:
-        List of backend names: always includes 'pandas', optionally 'polars' and 'pyarrow'
+        A list of backend names.
 
+    Example:
+        >>> isinstance(get_available_backends(), list)
+        True
     """
     backends = ["pandas"]
     if _POLARS_AVAILABLE:
@@ -81,14 +102,13 @@ def get_available_backends() -> list[str]:
 
 
 def is_backend_available(backend: str) -> bool:
-    """Check if a specific backend is available.
+    """Check if a specific IO backend is available.
 
     Args:
-        backend: Backend name ('pandas', 'polars', 'pyarrow')
+        backend: The name of the backend ('pandas', 'polars', 'pyarrow').
 
     Returns:
-        True if backend is available, False otherwise
-
+        True if the backend is available, False otherwise.
     """
     if backend == "pandas":
         return True
@@ -100,21 +120,19 @@ def is_backend_available(backend: str) -> bool:
 
 
 def select_backend(requested: Backend) -> str:
-    """Select the best available backend based on request.
+    """Select the best available backend based on the user's request.
+
+    If 'auto' is requested, it selects the best available backend in the
+    order of preference: Polars, PyArrow, then Pandas. If a specific
+    backend is requested but unavailable, it falls back to pandas.
 
     Args:
-        requested: Requested backend ('auto', 'pandas', 'polars', 'pyarrow')
+        requested: The desired backend ('auto', 'pandas', 'polars', 'pyarrow').
 
     Returns:
-        Selected backend name
-
-    Notes:
-        - 'auto' selects polars > pyarrow > pandas (in order of preference)
-        - If requested backend is not available, falls back to pandas with warning
-
+        The name of the selected backend.
     """
     if requested == "auto":
-        # Auto-select best available backend
         if _POLARS_AVAILABLE:
             return "polars"
         if _PYARROW_AVAILABLE:
@@ -154,26 +172,25 @@ def read_csv_fast(
     backend: Backend = "auto",
     **kwargs,
 ) -> pd.DataFrame:
-    """Read CSV file using fast IO backend if available.
+    """Read a CSV file using the fastest available IO backend.
 
-    This function provides a unified interface for reading CSV files with
-    optional fast backends (polars, pyarrow) while always returning a
-    pandas DataFrame for compatibility.
+    This function provides a unified interface that delegates to the best
+    available parsing engine (Polars, PyArrow, or pandas) while always
+    returning a pandas DataFrame for API consistency.
 
     Args:
-        path: Path to CSV file
-        backend: IO backend to use ('auto', 'pandas', 'polars', 'pyarrow')
-        **kwargs: Additional arguments passed to the underlying read function
+        path: The path to the CSV file.
+        backend: The IO backend to use. Defaults to 'auto', which selects the
+                 fastest available option.
+        **kwargs: Additional arguments passed to the underlying read function.
 
     Returns:
-        pandas DataFrame with the CSV contents
+        A pandas DataFrame with the CSV contents.
 
-    Notes:
-        - Result is always a pandas DataFrame regardless of backend
-        - 'auto' selects the fastest available backend
-        - Falls back to pandas if requested backend unavailable
-        - Performance gains most significant for large files (100MB+)
-
+    Raises:
+        FileNotFoundError: If the specified path does not exist.
+        Exception: Can raise exceptions from the underlying parser if the
+                   file is malformed.
     """
     path = Path(path)
     selected = select_backend(backend)
@@ -193,38 +210,15 @@ def _read_csv_pandas(path: Path, **kwargs) -> pd.DataFrame:
 
 
 def _read_csv_polars(path: Path, **kwargs) -> pd.DataFrame:
-    """Read CSV using polars and convert to pandas.
-
-    Polars provides significant speedups for CSV parsing, especially for
-    large files with many columns. The result is converted to pandas for
-    compatibility with the rest of the system.
-    """
-    import polars as pl
-
-    # Read with polars
+    """Read CSV using Polars and convert to a pandas DataFrame."""
     df_pl = pl.read_csv(path, **kwargs)
-
-    # Convert to pandas
-    df_pd = df_pl.to_pandas()
-
-    return df_pd
+    return df_pl.to_pandas()
 
 
 def _read_csv_pyarrow(path: Path, **kwargs) -> pd.DataFrame:
-    """Read CSV using pyarrow and convert to pandas.
-
-    PyArrow provides good CSV parsing performance and is often already
-    installed as a pandas dependency for other operations.
-    """
-    import pyarrow.csv as pa_csv
-
-    # Read with pyarrow
+    """Read CSV using PyArrow and convert to a pandas DataFrame."""
     table = pa_csv.read_csv(path, **kwargs)
-
-    # Convert to pandas
-    df_pd = table.to_pandas()
-
-    return df_pd
+    return table.to_pandas()
 
 
 def read_parquet_fast(
@@ -232,26 +226,22 @@ def read_parquet_fast(
     backend: Backend = "auto",
     **kwargs,
 ) -> pd.DataFrame:
-    """Read Parquet file using fast IO backend if available.
+    """Read a Parquet file using the fastest available IO backend.
 
-    Parquet is a columnar storage format that can provide significant
-    speedups over CSV for large datasets. This function provides a unified
-    interface for reading Parquet files with optional fast backends.
+    This function provides a unified interface for reading Parquet files,
+    which is a highly efficient columnar storage format. It delegates to the
+    best available engine while always returning a pandas DataFrame.
 
     Args:
-        path: Path to Parquet file
-        backend: IO backend to use ('auto', 'pandas', 'polars', 'pyarrow')
-        **kwargs: Additional arguments passed to the underlying read function
+        path: The path to the Parquet file.
+        backend: The IO backend to use. Defaults to 'auto'.
+        **kwargs: Additional arguments passed to the underlying read function.
 
     Returns:
-        pandas DataFrame with the Parquet contents
+        A pandas DataFrame with the Parquet file contents.
 
-    Notes:
-        - Result is always a pandas DataFrame regardless of backend
-        - Parquet reading is typically 5-10x faster than CSV
-        - PyArrow is the recommended backend for Parquet (often default in pandas)
-        - Polars also provides excellent Parquet support
-
+    Raises:
+        FileNotFoundError: If the specified path does not exist.
     """
     path = Path(path)
     selected = select_backend(backend)
@@ -266,31 +256,17 @@ def read_parquet_fast(
 
 
 def _read_parquet_pandas(path: Path, **kwargs) -> pd.DataFrame:
-    """Read Parquet using pandas (uses pyarrow or fastparquet under the hood)."""
+    """Read Parquet using pandas, which internally uses PyArrow or FastParquet."""
     return pd.read_parquet(path, **kwargs)
 
 
 def _read_parquet_polars(path: Path, **kwargs) -> pd.DataFrame:
-    """Read Parquet using polars and convert to pandas."""
-    import polars as pl
-
-    # Read with polars
+    """Read Parquet using Polars and convert to a pandas DataFrame."""
     df_pl = pl.read_parquet(path, **kwargs)
-
-    # Convert to pandas
-    df_pd = df_pl.to_pandas()
-
-    return df_pd
+    return df_pl.to_pandas()
 
 
 def _read_parquet_pyarrow(path: Path, **kwargs) -> pd.DataFrame:
-    """Read Parquet using pyarrow and convert to pandas."""
-    import pyarrow.parquet as pq
-
-    # Read with pyarrow
-    table = pq.read_table(path, **kwargs)
-
-    # Convert to pandas
-    df_pd = table.to_pandas()
-
-    return df_pd
+    """Read Parquet using PyArrow and convert to a pandas DataFrame."""
+    table = pa.parquet.read_table(path, **kwargs)
+    return table.to_pandas()
