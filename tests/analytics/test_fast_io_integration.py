@@ -30,6 +30,7 @@ def price_files_dir(tmp_path: Path) -> Path:
     return prices_dir
 
 
+@pytest.mark.integration
 def test_price_loader_with_pandas_backend(price_files_dir: Path):
     """Test PriceLoader with pandas backend (always available)."""
     loader = PriceLoader(io_backend="pandas")
@@ -43,6 +44,7 @@ def test_price_loader_with_pandas_backend(price_files_dir: Path):
     assert series.iloc[0] == 100.0
 
 
+@pytest.mark.integration
 def test_price_loader_with_auto_backend(price_files_dir: Path):
     """Test PriceLoader with auto backend selection."""
     loader = PriceLoader(io_backend="auto")
@@ -60,6 +62,7 @@ def test_price_loader_with_auto_backend(price_files_dir: Path):
     "polars" not in get_available_backends(),
     reason="polars not installed",
 )
+@pytest.mark.integration
 def test_price_loader_with_polars_backend(price_files_dir: Path):
     """Test PriceLoader with polars backend (if available)."""
     loader = PriceLoader(io_backend="polars")
@@ -77,6 +80,7 @@ def test_price_loader_with_polars_backend(price_files_dir: Path):
     "pyarrow" not in get_available_backends(),
     reason="pyarrow not installed",
 )
+@pytest.mark.integration
 def test_price_loader_with_pyarrow_backend(price_files_dir: Path):
     """Test PriceLoader with pyarrow backend (if available)."""
     loader = PriceLoader(io_backend="pyarrow")
@@ -90,6 +94,7 @@ def test_price_loader_with_pyarrow_backend(price_files_dir: Path):
     assert series.iloc[0] == 100.0
 
 
+@pytest.mark.integration
 def test_price_loader_backend_consistency(price_files_dir: Path):
     """Test that all available backends produce consistent results."""
     price_path = price_files_dir / "asset_0.csv"
@@ -112,6 +117,7 @@ def test_price_loader_backend_consistency(price_files_dir: Path):
             )
 
 
+@pytest.mark.integration
 def test_price_loader_caching_with_fast_io(price_files_dir: Path):
     """Test that caching works correctly with fast IO backends."""
     loader = PriceLoader(io_backend="auto", cache_size=10)
@@ -132,6 +138,7 @@ def test_price_loader_caching_with_fast_io(price_files_dir: Path):
     assert cache_info_before["size"] == cache_info_after["size"]
 
 
+@pytest.mark.integration
 def test_price_loader_unavailable_backend_fallback(price_files_dir: Path):
     """Test fallback when requested backend is unavailable."""
     # This test ensures that requesting an unavailable backend doesn't crash

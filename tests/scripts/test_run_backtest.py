@@ -387,6 +387,7 @@ def test_load_data_preserves_data_values(
     pd.testing.assert_frame_equal(returns, expected_returns)
 
 
+@pytest.mark.integration
 def test_load_data_performance_with_large_universe(tmp_path: Path) -> None:
     """Test that load_data is efficient with a large universe.
 

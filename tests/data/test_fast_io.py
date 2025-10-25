@@ -29,6 +29,7 @@ def sample_csv(tmp_path: Path) -> Path:
     return csv_path
 
 
+@pytest.mark.integration
 def test_get_available_backends():
     """Test that pandas is always available."""
     backends = get_available_backends()
@@ -37,6 +38,7 @@ def test_get_available_backends():
     # polars and pyarrow may or may not be available
 
 
+@pytest.mark.integration
 def test_is_backend_available():
     """Test backend availability checks."""
     assert is_backend_available("pandas") is True
@@ -46,17 +48,20 @@ def test_is_backend_available():
     assert is_backend_available("nonexistent") is False
 
 
+@pytest.mark.integration
 def test_select_backend_pandas():
     """Test selecting pandas backend."""
     assert select_backend("pandas") == "pandas"
 
 
+@pytest.mark.integration
 def test_select_backend_auto():
     """Test auto-selection of backend."""
     selected = select_backend("auto")
     assert selected in ["pandas", "polars", "pyarrow"]
 
 
+@pytest.mark.integration
 def test_select_backend_unavailable_fallback():
     """Test that unavailable backends fall back to pandas."""
     # Request a backend that might not be available
@@ -67,6 +72,7 @@ def test_select_backend_unavailable_fallback():
     assert selected in ["pandas", "pyarrow"]  # Falls back if not available
 
 
+@pytest.mark.integration
 def test_read_csv_fast_pandas(sample_csv: Path):
     """Test reading CSV with pandas backend."""
     df = read_csv_fast(sample_csv, backend="pandas")
@@ -77,6 +83,7 @@ def test_read_csv_fast_pandas(sample_csv: Path):
     assert df["close"].iloc[0] == 100.0
 
 
+@pytest.mark.integration
 def test_read_csv_fast_auto(sample_csv: Path):
     """Test reading CSV with auto backend selection."""
     df = read_csv_fast(sample_csv, backend="auto")
@@ -90,6 +97,7 @@ def test_read_csv_fast_auto(sample_csv: Path):
     not is_backend_available("polars"),
     reason="polars not installed",
 )
+@pytest.mark.integration
 def test_read_csv_fast_polars(sample_csv: Path):
     """Test reading CSV with polars backend (if available)."""
     df = read_csv_fast(sample_csv, backend="polars")
@@ -104,6 +112,7 @@ def test_read_csv_fast_polars(sample_csv: Path):
     not is_backend_available("pyarrow"),
     reason="pyarrow not installed",
 )
+@pytest.mark.integration
 def test_read_csv_fast_pyarrow(sample_csv: Path):
     """Test reading CSV with pyarrow backend (if available)."""
     df = read_csv_fast(sample_csv, backend="pyarrow")
@@ -114,6 +123,7 @@ def test_read_csv_fast_pyarrow(sample_csv: Path):
     assert df["close"].iloc[0] == 100.0
 
 
+@pytest.mark.integration
 def test_read_csv_fast_with_usecols(sample_csv: Path):
     """Test reading CSV with column selection."""
     df = read_csv_fast(sample_csv, backend="pandas", usecols=["date", "close"])
@@ -124,6 +134,7 @@ def test_read_csv_fast_with_usecols(sample_csv: Path):
     assert "volume" not in df.columns
 
 
+@pytest.mark.integration
 def test_backend_consistency(sample_csv: Path):
     """Test that all backends produce identical results."""
     df_pandas = read_csv_fast(sample_csv, backend="pandas")

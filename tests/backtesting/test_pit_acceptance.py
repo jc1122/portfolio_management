@@ -51,6 +51,7 @@ def diverse_returns():
     return df
 
 
+@pytest.mark.integration
 class TestAcceptanceCriteria:
     """Tests that verify the acceptance criteria from the issue."""
 

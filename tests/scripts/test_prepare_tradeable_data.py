@@ -306,6 +306,7 @@ def test_export_tradeable_prices_include_empty(
     assert exported_files == ["hson.us.csv", "iemb.uk.csv", "wps.uk.csv"]
 
 
+@pytest.mark.integration
 def test_cli_end_to_end_matches_golden(tmp_path: Path) -> None:
     """Run the CLI over fixture bundles and compare outputs to golden files."""
     metadata_dir = tmp_path / "metadata"
@@ -372,6 +373,7 @@ def test_cli_end_to_end_matches_golden(tmp_path: Path) -> None:
     assert actual_exports == expected_exports
 
 
+@pytest.mark.integration
 def test_determine_unmatched_reason_variants() -> None:
     available_exts = {".US", ".UK"}
     stooq_us = _make_stooq_file(
@@ -469,6 +471,7 @@ def test_resolve_currency_lse_policies(
     assert status == expected_status
 
 
+@pytest.mark.integration
 def test_resolve_currency_non_lse_mismatch() -> None:
     instrument = _make_instrument(
         "SPY:US",
@@ -496,6 +499,7 @@ def test_resolve_currency_non_lse_mismatch() -> None:
     assert status == "mismatch"
 
 
+@pytest.mark.integration
 def test_export_tradeable_prices_deduplicates_and_overwrites(tmp_path: Path) -> None:
     data_dir = tmp_path / "stooq"
     rel_path = Path("daily/world/etfs/sample.us.txt")
@@ -615,6 +619,7 @@ def test_match_tradeables_parallel_consistency(
     )
 
 
+@pytest.mark.integration
 def test_write_unmatched_report_schema(tmp_path: Path) -> None:
     unmatched = [
         _make_instrument(

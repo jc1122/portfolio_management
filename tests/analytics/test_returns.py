@@ -64,6 +64,7 @@ def prices_dir(tmp_path: Path) -> Path:
     return prices_dir
 
 
+@pytest.mark.integration
 def test_return_config_validation() -> None:
     config = ReturnConfig.default()
     config.validate()  # should not raise
@@ -78,6 +79,7 @@ def test_return_config_validation() -> None:
         ReturnConfig(min_coverage=1.5).validate()
 
 
+@pytest.mark.integration
 class TestPriceLoader:
     def test_load_price_file_sorts_and_filters(
         self, price_loader: PriceLoader, prices_dir: Path
@@ -306,6 +308,7 @@ class TestPriceLoader:
             assert paths[0] not in loader._cache
 
 
+@pytest.mark.integration
 class TestReturnCalculator:
     @pytest.fixture
     def prices_df(self) -> pd.DataFrame:
