@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from portfolio_management.portfolio.constraints.models import PortfolioConstraints
-from portfolio_management.portfolio.statistics import RollingStatistics
+from portfolio_management.portfolio.statistics import StatisticsCache
 from portfolio_management.portfolio.strategies.equal_weight import EqualWeightStrategy
 
 
@@ -89,7 +89,7 @@ class TestRiskParityWithCache:
             pytest.skip("riskparityportfolio not available")
 
         # Create cache and strategy
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy = RiskParityStrategy(min_periods=100, statistics_cache=cache)
 
         # First construction - populates cache
@@ -118,7 +118,7 @@ class TestRiskParityWithCache:
         portfolio_no_cache = strategy_no_cache.construct(sample_returns, constraints)
 
         # Strategy with cache
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy_with_cache = RiskParityStrategy(
             min_periods=100, statistics_cache=cache
         )
@@ -162,7 +162,7 @@ class TestMeanVarianceWithCache:
             pytest.skip("pypfopt not available")
 
         # Create cache and strategy
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy = MeanVarianceStrategy(min_periods=100, statistics_cache=cache)
 
         # First construction - populates cache
@@ -201,7 +201,7 @@ class TestMeanVarianceWithCache:
         portfolio_no_cache = strategy_no_cache.construct(sample_returns, constraints)
 
         # Strategy with cache
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy_with_cache = MeanVarianceStrategy(
             min_periods=100, statistics_cache=cache
         )
@@ -239,7 +239,7 @@ class TestCacheInvalidation:
         if not available:
             pytest.skip("riskparityportfolio not available")
 
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy = RiskParityStrategy(min_periods=100, statistics_cache=cache)
 
         # First construction with 4 assets
@@ -263,7 +263,7 @@ class TestCacheInvalidation:
         if not available:
             pytest.skip("riskparityportfolio not available")
 
-        cache = RollingStatistics(window_size=252)
+        cache = StatisticsCache(window_size=252)
         strategy = RiskParityStrategy(min_periods=100, statistics_cache=cache)
 
         # First construction

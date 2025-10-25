@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_management.portfolio.statistics import RollingStatistics
+from portfolio_management.portfolio.statistics import StatisticsCache
 
 
-class TestRollingStatistics:
-    """Tests for RollingStatistics class."""
+class TestStatisticsCache:
+    """Tests for StatisticsCache class."""
 
     @pytest.fixture
     def sample_returns(self):
@@ -20,8 +20,8 @@ class TestRollingStatistics:
         return pd.DataFrame(data, index=dates, columns=tickers)
 
     def test_initialization(self):
-        """Test RollingStatistics initialization."""
-        stats = RollingStatistics(window_size=252, annualization_factor=252)
+        """Test StatisticsCache initialization."""
+        stats = StatisticsCache(window_size=252, annualization_factor=252)
         assert stats.window_size == 252
         assert stats.annualization_factor == 252
         assert stats._cached_data is None
@@ -31,7 +31,7 @@ class TestRollingStatistics:
 
     def test_get_covariance_matrix_no_cache(self, sample_returns):
         """Test covariance matrix computation without cache."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
         cov_matrix = stats.get_covariance_matrix(sample_returns, annualize=False)
 
         # Verify it matches pandas cov()
@@ -45,7 +45,7 @@ class TestRollingStatistics:
 
     def test_get_covariance_matrix_annualized(self, sample_returns):
         """Test annualized covariance matrix computation."""
-        stats = RollingStatistics(annualization_factor=252)
+        stats = StatisticsCache(annualization_factor=252)
         cov_matrix = stats.get_covariance_matrix(sample_returns, annualize=True)
 
         # Verify it matches annualized pandas cov()
@@ -54,7 +54,7 @@ class TestRollingStatistics:
 
     def test_get_expected_returns_no_cache(self, sample_returns):
         """Test expected returns computation without cache."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
         mean_returns = stats.get_expected_returns(sample_returns, annualize=False)
 
         # Verify it matches pandas mean()
@@ -67,7 +67,7 @@ class TestRollingStatistics:
 
     def test_get_expected_returns_annualized(self, sample_returns):
         """Test annualized expected returns computation."""
-        stats = RollingStatistics(annualization_factor=252)
+        stats = StatisticsCache(annualization_factor=252)
         mean_returns = stats.get_expected_returns(sample_returns, annualize=True)
 
         # Verify it matches annualized pandas mean()
@@ -76,7 +76,7 @@ class TestRollingStatistics:
 
     def test_get_statistics_no_cache(self, sample_returns):
         """Test combined statistics computation without cache."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
         mean_returns, cov_matrix = stats.get_statistics(sample_returns, annualize=False)
 
         # Verify both match pandas computations
@@ -92,7 +92,7 @@ class TestRollingStatistics:
 
     def test_get_statistics_annualized(self, sample_returns):
         """Test combined annualized statistics computation."""
-        stats = RollingStatistics(annualization_factor=252)
+        stats = StatisticsCache(annualization_factor=252)
         mean_returns, cov_matrix = stats.get_statistics(sample_returns, annualize=True)
 
         # Verify both match annualized pandas computations
@@ -103,7 +103,7 @@ class TestRollingStatistics:
 
     def test_cache_hit_same_data(self, sample_returns):
         """Test that cache is used when computing on same data twice."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # First computation - no cache
         cov1 = stats.get_covariance_matrix(sample_returns, annualize=False)
@@ -119,7 +119,7 @@ class TestRollingStatistics:
 
     def test_cache_invalidation_different_columns(self, sample_returns):
         """Test that cache is invalidated when columns change."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # First computation
         _ = stats.get_covariance_matrix(sample_returns, annualize=False)
@@ -135,7 +135,7 @@ class TestRollingStatistics:
 
     def test_cache_updates_when_shape_changes(self, sample_returns):
         """The cache should adapt when the window size changes."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # Populate cache with the full window
         _ = stats.get_covariance_matrix(sample_returns, annualize=False)
@@ -154,10 +154,10 @@ class TestRollingStatistics:
 
     def test_cache_updates_when_dates_shift(self, sample_returns):
         """The cache should reuse statistics when the window slides forward."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # Populate cache with the initial window
-        _ = stats.get_covariance_matrix(sample_returns, annualize=False)
+        _ = stats.get_covariance_matrix(sample__returns, annualize=False)
         cache_key1 = stats._cache_key
 
         # Shift the window forward by one month worth of data
@@ -174,14 +174,14 @@ class TestRollingStatistics:
 
     def test_manual_invalidate_cache(self, sample_returns):
         """Test manual cache invalidation."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # Populate cache
         _ = stats.get_covariance_matrix(sample_returns, annualize=False)
         assert stats._cache_key is not None
 
         # Manually invalidate
-        stats.invalidate_cache()
+        stats.clear_cache()
 
         # Verify cache is cleared
         assert stats._cached_data is None
@@ -191,7 +191,7 @@ class TestRollingStatistics:
 
     def test_cache_with_both_methods(self, sample_returns):
         """Test that cache works correctly when mixing covariance and mean calls."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # Get covariance first
         cov1 = stats.get_covariance_matrix(sample_returns, annualize=False)
@@ -211,7 +211,7 @@ class TestRollingStatistics:
 
     def test_get_statistics_single_call(self, sample_returns):
         """Test that get_statistics efficiently computes both in one pass."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
 
         # Get both statistics in one call
         mean, cov = stats.get_statistics(sample_returns, annualize=False)
@@ -226,7 +226,7 @@ class TestRollingStatistics:
 
     def test_empty_dataframe(self):
         """Test behavior with empty DataFrame."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
         empty_df = pd.DataFrame()
 
         # Should compute without error (pandas behavior)
@@ -235,7 +235,7 @@ class TestRollingStatistics:
 
     def test_single_asset(self):
         """Test behavior with single asset."""
-        stats = RollingStatistics()
+        stats = StatisticsCache()
         dates = pd.date_range("2020-01-01", periods=100, freq="D")
         single_asset = pd.DataFrame(
             np.random.randn(100) * 0.02,
@@ -250,8 +250,8 @@ class TestRollingStatistics:
     def test_different_window_sizes(self):
         """Test with different window sizes."""
         # Window size doesn't directly affect computation (just a parameter)
-        stats_short = RollingStatistics(window_size=60)
-        stats_long = RollingStatistics(window_size=252)
+        stats_short = StatisticsCache(window_size=60)
+        stats_long = StatisticsCache(window_size=252)
 
         dates = pd.date_range("2020-01-01", periods=100, freq="D")
         returns = pd.DataFrame(

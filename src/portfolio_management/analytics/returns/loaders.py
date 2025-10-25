@@ -89,8 +89,10 @@ class PriceLoader:
         ... #     print(price_df.info())
         >>>
         >>> # Check cache status
-        >>> print(loader.cache_info())
-        {'size': 0, 'maxsize': 500}
+        >>> stats = loader.get_cache_stats()
+        >>> print(f"Cache entries: {stats['cache_entries']}, "
+        ...       f"Cache size: {stats['cache_size']}")
+        Cache entries: 0, Cache size: 500
     """
 
     def __init__(
@@ -319,16 +321,18 @@ class PriceLoader:
             self._cache.clear()
             logger.debug("Cleared price loader cache")
 
-    def cache_info(self) -> dict[str, int]:
-        """Return cache statistics for monitoring.
+    def get_cache_stats(self) -> dict[str, int]:
+        """Get cache statistics.
 
         Returns:
-            dict: A dictionary with 'size' (current entries) and 'maxsize' (capacity).
+            Dictionary with cache_size and cache_entries.
+
+        Useful for testing and monitoring.
         """
         with self._cache_lock:
             return {
-                "size": len(self._cache),
-                "maxsize": self.cache_size,
+                "cache_size": self.cache_size,
+                "cache_entries": len(self._cache),
             }
 
     def _submit_load_tasks(

@@ -35,6 +35,7 @@ dev = [
     "pytest",
     "pytest-xdist",
     "pytest-timeout",
+    "pytest-randomly",
     "mdformat",
     "gitlint",
 ]

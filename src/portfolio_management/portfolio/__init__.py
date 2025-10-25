@@ -70,7 +70,7 @@ from .preselection import (
     create_preselection_from_dict,
 )
 from .rebalancing import RebalanceConfig
-from .statistics import RollingStatistics
+from .statistics import StatisticsCache
 from .strategies import (
     EqualWeightStrategy,
     MeanVarianceStrategy,
@@ -104,7 +104,7 @@ __all__ = [
     # Rebalancing
     "RebalanceConfig",
     # Statistics
-    "RollingStatistics",
+    "StatisticsCache",
     # Strategies
     "PortfolioStrategy",
     "EqualWeightStrategy",
