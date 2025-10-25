@@ -37,6 +37,7 @@ dev = [
     "pytest-timeout",
     "mdformat",
     "gitlint",
+    "import-linter",
 ]
 fast-io = [
     "polars>=0.19.0",

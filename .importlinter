@@ -1,0 +1,77 @@
+[importlinter]
+root_package = portfolio_management
+include_external_packages = False
+
+[importlinter:contract:core-independence]
+name = Core has no dependencies on other modules
+type = forbidden
+source_modules =
+    portfolio_management.core
+forbidden_modules =
+    portfolio_management.data
+    portfolio_management.assets
+    portfolio_management.analytics
+    portfolio_management.portfolio
+    portfolio_management.backtesting
+    portfolio_management.reporting
+    portfolio_management.macro
+
+[importlinter:contract:data-layer-boundaries]
+name = Data layer doesn't depend on higher layers
+type = forbidden
+source_modules =
+    portfolio_management.data
+forbidden_modules =
+    portfolio_management.portfolio
+    portfolio_management.backtesting
+    portfolio_management.reporting
+
+[importlinter:contract:assets-layer-boundaries]
+name = Assets layer doesn't depend on higher layers
+type = forbidden
+source_modules =
+    portfolio_management.assets
+forbidden_modules =
+    portfolio_management.analytics
+    portfolio_management.portfolio
+    portfolio_management.backtesting
+    portfolio_management.reporting
+
+[importlinter:contract:analytics-layer-boundaries]
+name = Analytics layer doesn't depend on portfolio or higher
+type = forbidden
+source_modules =
+    portfolio_management.analytics
+forbidden_modules =
+    portfolio_management.portfolio
+    portfolio_management.backtesting
+    portfolio_management.reporting
+
+[importlinter:contract:portfolio-layer-boundaries]
+name = Portfolio layer doesn't depend on backtesting or reporting
+type = forbidden
+source_modules =
+    portfolio_management.portfolio
+forbidden_modules =
+    portfolio_management.backtesting
+    portfolio_management.reporting
+
+[importlinter:contract:backtesting-no-reporting]
+name = Backtesting doesn't depend on reporting
+type = forbidden
+source_modules =
+    portfolio_management.backtesting
+forbidden_modules =
+    portfolio_management.reporting
+
+[importlinter:contract:macro-independence]
+name = Macro module minimal dependencies
+type = forbidden
+source_modules =
+    portfolio_management.macro
+forbidden_modules =
+    portfolio_management.assets
+    portfolio_management.analytics
+    portfolio_management.portfolio
+    portfolio_management.backtesting
+    portfolio_management.reporting
