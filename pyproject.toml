@@ -33,6 +33,7 @@ dev = [
     "pandas-stubs",
     "types-PyYAML",
     "pytest",
+    "pytest-timeout",
     "pytest-xdist",
     "mdformat",
     "gitlint",

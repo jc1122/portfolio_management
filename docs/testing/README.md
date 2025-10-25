@@ -4,7 +4,9 @@ This directory contains comprehensive testing documentation for the portfolio ma
 
 ## Quick Links
 
-- [Test Organization](overview.md) - Test structure and running tests
+- [Testing Overview](overview.md) - High-level structure and how to run tests
+- [Test Organization](TEST_ORGANIZATION.md) - Marker conventions and directory layout
+- [CI Test Strategy](CI_TEST_STRATEGY.md) - Pipeline-specific commands
 - [Test Strategy](test_strategy.md) - Testing philosophy and best practices
 - [Unit Testing](unit_testing.md) - Unit test guidelines and examples
 - [Integration Testing](integration_testing.md) - Integration test patterns
