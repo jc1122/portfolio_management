@@ -8,7 +8,6 @@ Run this to verify the implementation is correct before running full tests.
 """
 
 import ast
-import pytest
 import sys
 from pathlib import Path
 

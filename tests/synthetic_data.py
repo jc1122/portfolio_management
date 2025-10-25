@@ -8,7 +8,6 @@ zero volume, sparse histories, negative prices, and gapped segments).
 """
 
 from __future__ import annotations
-import pytest
 
 from collections.abc import Iterable
 from dataclasses import dataclass
